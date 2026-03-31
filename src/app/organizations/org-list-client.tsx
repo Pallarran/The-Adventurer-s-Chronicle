@@ -1,9 +1,30 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { OrganizationCard } from "@/components/organizations/organization-card";
 import { SearchInput } from "@/components/shared/search-input";
+import { Button } from "@/components/ui/button";
+import { ArrowUpDown, X } from "lucide-react";
 import type { OrganizationListItem } from "@/types";
+import type { AlignmentStance } from "@/generated/prisma/client";
+
+type SortOption = "name-asc" | "name-desc" | "recent" | "oldest";
+
+const sortLabels: Record<SortOption, string> = {
+  "name-asc": "Name A-Z",
+  "name-desc": "Name Z-A",
+  "recent": "Recent First",
+  "oldest": "Oldest First",
+};
+
+const STANCE_OPTIONS: { value: AlignmentStance; label: string; color: string }[] = [
+  { value: "ALLIED", label: "Allied", color: "#4a9a5a" },
+  { value: "FRIENDLY", label: "Friendly", color: "#5a9a8a" },
+  { value: "NEUTRAL", label: "Neutral", color: "#6a6a7a" },
+  { value: "SUSPICIOUS", label: "Suspicious", color: "#9a8a4a" },
+  { value: "HOSTILE", label: "Hostile", color: "#9a4a4a" },
+  { value: "UNKNOWN", label: "Unknown", color: "#5a5a6a" },
+];
 
 interface OrgListClientProps {
   organizations: OrganizationListItem[];
@@ -11,32 +32,196 @@ interface OrgListClientProps {
 
 export function OrgListClient({ organizations }: OrgListClientProps) {
   const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<SortOption>("name-asc");
+  const [stanceFilter, setStanceFilter] = useState<AlignmentStance | null>(null);
+  const [typeFilter, setTypeFilter] = useState<string | null>(null);
+  const [tagFilter, setTagFilter] = useState<string | null>(null);
 
-  const filtered = organizations.filter((org) => {
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return org.name.toLowerCase().includes(q);
-  });
+  // Extract unique types and tags
+  const allTypes = useMemo(() => {
+    const types = new Set<string>();
+    organizations.forEach((o) => {
+      if (o.type) types.add(o.type);
+    });
+    return Array.from(types).sort();
+  }, [organizations]);
 
-  const handleSearch = useCallback((value: string) => {
-    setSearch(value);
+  const allTags = useMemo(() => {
+    const tagSet = new Map<string, string>();
+    organizations.forEach((o) =>
+      o.tags.forEach((t) => tagSet.set(t.tag.id, t.tag.name))
+    );
+    return Array.from(tagSet, ([id, name]) => ({ id, name })).sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
+  }, [organizations]);
+
+  const handleSearch = useCallback((value: string) => setSearch(value), []);
+
+  const cycleSort = useCallback(() => {
+    setSort((prev) => {
+      const order: SortOption[] = ["name-asc", "name-desc", "recent", "oldest"];
+      return order[(order.indexOf(prev) + 1) % order.length];
+    });
   }, []);
+
+  const clearFilters = useCallback(() => {
+    setStanceFilter(null);
+    setTypeFilter(null);
+    setTagFilter(null);
+  }, []);
+
+  const hasFilters = stanceFilter !== null || typeFilter !== null || tagFilter !== null;
+
+  const results = useMemo(() => {
+    let items = [...organizations];
+
+    // Search
+    if (search) {
+      const q = search.toLowerCase();
+      items = items.filter(
+        (org) =>
+          org.name.toLowerCase().includes(q) ||
+          org.type?.toLowerCase().includes(q)
+      );
+    }
+
+    // Stance filter
+    if (stanceFilter) {
+      items = items.filter((org) => org.alignmentStance === stanceFilter);
+    }
+
+    // Type filter
+    if (typeFilter) {
+      items = items.filter((org) => org.type === typeFilter);
+    }
+
+    // Tag filter
+    if (tagFilter) {
+      items = items.filter((org) =>
+        org.tags.some((t) => t.tag.id === tagFilter)
+      );
+    }
+
+    // Sort
+    items.sort((a, b) => {
+      switch (sort) {
+        case "name-asc":
+          return a.name.localeCompare(b.name);
+        case "name-desc":
+          return b.name.localeCompare(a.name);
+        case "recent":
+          return (b.lastAppearanceSession?.sessionNumber ?? 0) - (a.lastAppearanceSession?.sessionNumber ?? 0);
+        case "oldest":
+          return (a.lastAppearanceSession?.sessionNumber ?? 0) - (b.lastAppearanceSession?.sessionNumber ?? 0);
+        default:
+          return 0;
+      }
+    });
+
+    return items;
+  }, [organizations, search, sort, stanceFilter, typeFilter, tagFilter]);
 
   return (
     <div className="space-y-4">
-      <SearchInput
-        onChange={handleSearch}
-        placeholder="Search organizations..."
-        className="max-w-sm"
-      />
+      {/* Search + Sort row */}
+      <div className="flex flex-wrap items-center gap-3">
+        <SearchInput
+          onChange={handleSearch}
+          placeholder="Search organizations..."
+          className="max-w-sm"
+        />
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1.5 text-xs"
+          onClick={cycleSort}
+        >
+          <ArrowUpDown className="h-3.5 w-3.5" />
+          {sortLabels[sort]}
+        </Button>
+        <span className="ml-auto text-xs text-muted-foreground">
+          {results.length} org{results.length !== 1 ? "s" : ""}
+        </span>
+      </div>
+
+      {/* Filter chips */}
+      <div className="flex flex-wrap items-center gap-2">
+        {/* Stance filters */}
+        {STANCE_OPTIONS.map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() =>
+              setStanceFilter(stanceFilter === opt.value ? null : opt.value)
+            }
+            className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors ${
+              stanceFilter === opt.value
+                ? "border-transparent"
+                : "border-border text-muted-foreground hover:text-foreground"
+            }`}
+            style={
+              stanceFilter === opt.value
+                ? { backgroundColor: `${opt.color}20`, color: opt.color, borderColor: `${opt.color}40` }
+                : undefined
+            }
+          >
+            {opt.label}
+          </button>
+        ))}
+
+        {/* Type filter */}
+        {allTypes.length > 0 && (
+          <select
+            value={typeFilter ?? ""}
+            onChange={(e) => setTypeFilter(e.target.value || null)}
+            className="rounded-full border border-border bg-background px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground focus:outline-none"
+          >
+            <option value="">All Types</option>
+            {allTypes.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </select>
+        )}
+
+        {/* Tag filter */}
+        {allTags.length > 0 && (
+          <select
+            value={tagFilter ?? ""}
+            onChange={(e) => setTagFilter(e.target.value || null)}
+            className="rounded-full border border-border bg-background px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground focus:outline-none"
+          >
+            <option value="">All Tags</option>
+            {allTags.map((tag) => (
+              <option key={tag.id} value={tag.id}>
+                {tag.name}
+              </option>
+            ))}
+          </select>
+        )}
+
+        {/* Clear all */}
+        {hasFilters && (
+          <button
+            onClick={clearFilters}
+            className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <X className="h-3 w-3" />
+            Clear
+          </button>
+        )}
+      </div>
+
+      {/* Grid */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((org) => (
+        {results.map((org) => (
           <OrganizationCard key={org.id} organization={org} />
         ))}
       </div>
-      {filtered.length === 0 && (
+      {results.length === 0 && (
         <p className="py-8 text-center text-sm text-muted-foreground">
-          No organizations match your search.
+          No organizations match your filters.
         </p>
       )}
     </div>

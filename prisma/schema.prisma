@@ -1,0 +1,324 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum NpcStatus {
+  ALIVE
+  DEAD
+  MISSING
+  UNKNOWN
+}
+
+enum AlignmentStance {
+  ALLIED
+  FRIENDLY
+  NEUTRAL
+  SUSPICIOUS
+  HOSTILE
+  UNKNOWN
+}
+
+enum CharacterSectionType {
+  OVERVIEW
+  BUILD
+  BACKSTORY
+}
+
+// ============================================================
+// CORE MODELS
+// ============================================================
+
+model Campaign {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sessions         Session[]
+  npcs             Npc[]
+  locations        Location[]
+  organizations    Organization[]
+  characterProfile CharacterProfile?
+  toolLinks        ToolLink[]
+  tags             Tag[]
+  quickNotes       QuickNote[]
+}
+
+model Session {
+  id              String   @id @default(cuid())
+  sessionNumber   Int
+  title           String?
+  realDatePlayed  DateTime
+  inGameDate      String?
+  notesBody       Json?
+  followUpActions Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id])
+
+  // Many-to-many relations
+  npcs          SessionNpc[]
+  locations     SessionLocation[]
+  organizations SessionOrganization[]
+  tags          SessionTag[]
+
+  // Reverse relations for first/last appearance
+  npcFirstAppearances      Npc[]          @relation("NpcFirstAppearance")
+  npcLastAppearances       Npc[]          @relation("NpcLastAppearance")
+  locationFirstAppearances Location[]     @relation("LocationFirstAppearance")
+  locationLastAppearances  Location[]     @relation("LocationLastAppearance")
+  orgFirstAppearances      Organization[] @relation("OrgFirstAppearance")
+  orgLastAppearances       Organization[] @relation("OrgLastAppearance")
+
+  @@unique([campaignId, sessionNumber])
+}
+
+model Npc {
+  id          String    @id @default(cuid())
+  name        String
+  aliasTitle  String?
+  gender      String?
+  classRole   String?
+  status      NpcStatus @default(ALIVE)
+  partyMember Boolean   @default(false)
+  notesBody   Json?
+  mainImage   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id])
+
+  organizationId String?
+  organization   Organization? @relation("NpcPrimaryOrg", fields: [organizationId], references: [id])
+
+  firstAppearanceSessionId String?
+  firstAppearanceSession   Session? @relation("NpcFirstAppearance", fields: [firstAppearanceSessionId], references: [id])
+  lastAppearanceSessionId  String?
+  lastAppearanceSession    Session? @relation("NpcLastAppearance", fields: [lastAppearanceSessionId], references: [id])
+
+  sessions      SessionNpc[]
+  organizations OrganizationNpc[]
+  tags          NpcTag[]
+}
+
+model Location {
+  id        String   @id @default(cuid())
+  name      String
+  type      String?
+  notesBody Json?
+  mainImage String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id])
+
+  parentLocationId String?
+  parentLocation   Location?  @relation("LocationHierarchy", fields: [parentLocationId], references: [id])
+  childLocations   Location[] @relation("LocationHierarchy")
+
+  firstAppearanceSessionId String?
+  firstAppearanceSession   Session? @relation("LocationFirstAppearance", fields: [firstAppearanceSessionId], references: [id])
+  lastAppearanceSessionId  String?
+  lastAppearanceSession    Session? @relation("LocationLastAppearance", fields: [lastAppearanceSessionId], references: [id])
+
+  sessions           SessionLocation[]
+  organizations      LocationOrganization[]
+  tags               LocationTag[]
+  basedOrganizations Organization[] @relation("OrgBaseLocation")
+}
+
+model Organization {
+  id              String          @id @default(cuid())
+  name            String
+  type            String?
+  alignmentStance AlignmentStance @default(UNKNOWN)
+  notesBody       Json?
+  mainImage       String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id])
+
+  baseLocationId String?
+  baseLocation   Location? @relation("OrgBaseLocation", fields: [baseLocationId], references: [id])
+
+  firstAppearanceSessionId String?
+  firstAppearanceSession   Session? @relation("OrgFirstAppearance", fields: [firstAppearanceSessionId], references: [id])
+  lastAppearanceSessionId  String?
+  lastAppearanceSession    Session? @relation("OrgLastAppearance", fields: [lastAppearanceSessionId], references: [id])
+
+  sessions    SessionOrganization[]
+  npcs        OrganizationNpc[]
+  locations   LocationOrganization[]
+  tags        OrganizationTag[]
+  primaryNpcs Npc[] @relation("NpcPrimaryOrg")
+}
+
+model CharacterProfile {
+  id        String   @id @default(cuid())
+  name      String
+  classInfo String?
+  level     Int?
+  portrait  String?
+  summary   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  campaignId String   @unique
+  campaign   Campaign @relation(fields: [campaignId], references: [id])
+
+  sections CharacterSection[]
+}
+
+model CharacterSection {
+  id        String               @id @default(cuid())
+  type      CharacterSectionType
+  content   Json?
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+
+  characterProfileId String
+  characterProfile   CharacterProfile @relation(fields: [characterProfileId], references: [id])
+
+  @@unique([characterProfileId, type])
+}
+
+model ToolLink {
+  id                String   @id @default(cuid())
+  name              String
+  url               String
+  icon              String?
+  category          String?
+  pinnedToDashboard Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id])
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id])
+
+  npcs          NpcTag[]
+  locations     LocationTag[]
+  organizations OrganizationTag[]
+  sessions      SessionTag[]
+
+  @@unique([campaignId, name])
+}
+
+model QuickNote {
+  id        String   @id @default(cuid())
+  content   Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id])
+}
+
+// ============================================================
+// JOIN TABLES
+// ============================================================
+
+model SessionNpc {
+  sessionId String
+  session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  npcId     String
+  npc       Npc     @relation(fields: [npcId], references: [id], onDelete: Cascade)
+
+  @@id([sessionId, npcId])
+}
+
+model SessionLocation {
+  sessionId  String
+  session    Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  locationId String
+  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@id([sessionId, locationId])
+}
+
+model SessionOrganization {
+  sessionId      String
+  session        Session      @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@id([sessionId, organizationId])
+}
+
+model OrganizationNpc {
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  npcId          String
+  npc            Npc          @relation(fields: [npcId], references: [id], onDelete: Cascade)
+
+  @@id([organizationId, npcId])
+}
+
+model LocationOrganization {
+  locationId     String
+  location       Location     @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@id([locationId, organizationId])
+}
+
+model NpcTag {
+  npcId String
+  npc   Npc    @relation(fields: [npcId], references: [id], onDelete: Cascade)
+  tagId String
+  tag   Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([npcId, tagId])
+}
+
+model LocationTag {
+  locationId String
+  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  tagId      String
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([locationId, tagId])
+}
+
+model OrganizationTag {
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  tagId          String
+  tag            Tag          @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([organizationId, tagId])
+}
+
+model SessionTag {
+  sessionId String
+  session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  tagId     String
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([sessionId, tagId])
+}

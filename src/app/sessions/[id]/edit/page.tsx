@@ -1,0 +1,48 @@
+import { notFound } from "next/navigation";
+import { getSession } from "@/lib/actions/sessions";
+import { getActiveCampaign } from "@/lib/campaign";
+import { getNpcs } from "@/lib/actions/npcs";
+import { getLocations } from "@/lib/actions/locations";
+import { getOrganizations } from "@/lib/actions/organizations";
+import { getTags } from "@/lib/actions/tags";
+import { PageHeader } from "@/components/shared/page-header";
+import { SessionForm } from "@/components/sessions/session-form";
+
+export const dynamic = "force-dynamic";
+
+export default async function EditSessionPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const [session, campaign] = await Promise.all([
+    getSession(id),
+    getActiveCampaign(),
+  ]);
+  if (!session) notFound();
+
+  const [npcs, locations, organizations, tags] = await Promise.all([
+    getNpcs(campaign.id),
+    getLocations(campaign.id),
+    getOrganizations(campaign.id),
+    getTags(campaign.id),
+  ]);
+
+  return (
+    <div>
+      <PageHeader
+        title={`Edit Session #${session.sessionNumber}`}
+        description="Update session details."
+      />
+      <SessionForm
+        campaignId={campaign.id}
+        session={session}
+        allNpcs={npcs.map((n) => ({ id: n.id, name: n.name }))}
+        allLocations={locations.map((l) => ({ id: l.id, name: l.name }))}
+        allOrganizations={organizations.map((o) => ({ id: o.id, name: o.name }))}
+        allTags={tags.map((t) => ({ id: t.id, name: t.name }))}
+      />
+    </div>
+  );
+}

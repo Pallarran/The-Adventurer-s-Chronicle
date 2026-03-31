@@ -1,0 +1,50 @@
+import { notFound } from "next/navigation";
+import { getLocation, getLocations } from "@/lib/actions/locations";
+import { getActiveCampaign } from "@/lib/campaign";
+import { getSessions } from "@/lib/actions/sessions";
+import { getOrganizations } from "@/lib/actions/organizations";
+import { getTags } from "@/lib/actions/tags";
+import { PageHeader } from "@/components/shared/page-header";
+import { LocationForm } from "@/components/locations/location-form";
+
+export const dynamic = "force-dynamic";
+
+export default async function EditLocationPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const [location, campaign] = await Promise.all([
+    getLocation(id),
+    getActiveCampaign(),
+  ]);
+  if (!location) notFound();
+
+  const [locations, sessions, organizations, tags] = await Promise.all([
+    getLocations(campaign.id),
+    getSessions(campaign.id),
+    getOrganizations(campaign.id),
+    getTags(campaign.id),
+  ]);
+
+  return (
+    <div>
+      <PageHeader
+        title={`Edit ${location.name}`}
+        description="Update location details."
+      />
+      <LocationForm
+        campaignId={campaign.id}
+        location={location}
+        allLocations={locations.map((l) => ({ id: l.id, name: l.name }))}
+        allSessions={sessions.map((s) => ({
+          id: s.id,
+          name: `#${s.sessionNumber}${s.title ? ` — ${s.title}` : ""}`,
+        }))}
+        allOrganizations={organizations.map((o) => ({ id: o.id, name: o.name }))}
+        allTags={tags.map((t) => ({ id: t.id, name: t.name }))}
+      />
+    </div>
+  );
+}

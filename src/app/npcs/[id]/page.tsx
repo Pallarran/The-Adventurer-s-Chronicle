@@ -5,7 +5,6 @@ import { getNpc } from "@/lib/actions/npcs";
 import { PageHeader } from "@/components/shared/page-header";
 import { RichTextDisplay } from "@/components/shared/rich-text-display";
 import { Badge, badgeVariants } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   Pencil,
@@ -43,7 +42,7 @@ export default async function NpcDetailPage({
         title={npc.name}
         description={npc.aliasTitle ?? undefined}
       >
-        <Link href={`/npcs/${npc.id}/edit`} className={cn(buttonVariants({variant: "outline", size: "sm"}))}>
+        <Link href={`/npcs/${npc.id}/edit`} className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground">
             <Pencil className="mr-2 h-4 w-4" />
             Edit
         </Link>

@@ -2,8 +2,6 @@ import { getNpcs } from "@/lib/actions/npcs";
 import { getActiveCampaign } from "@/lib/campaign";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { Users, Plus } from "lucide-react";
 import Link from "next/link";
 import { NpcListClient } from "./npc-list-client";
@@ -20,7 +18,7 @@ export default async function NpcsPage() {
         title="NPCs"
         description="Characters you've encountered in your campaign."
       >
-        <Link href="/npcs/new" className={cn(buttonVariants())}>
+        <Link href="/npcs/new" className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
             <Plus className="mr-2 h-4 w-4" />
             New NPC
         </Link>
@@ -32,7 +30,7 @@ export default async function NpcsPage() {
           title="No NPCs Yet"
           description="Create your first NPC to start tracking the characters in your campaign."
         >
-          <Link href="/npcs/new" className={cn(buttonVariants())}>
+          <Link href="/npcs/new" className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
               <Plus className="mr-2 h-4 w-4" />
               Create NPC
           </Link>

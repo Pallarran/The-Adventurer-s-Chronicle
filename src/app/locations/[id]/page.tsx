@@ -5,7 +5,6 @@ import { getLocation } from "@/lib/actions/locations";
 import { PageHeader } from "@/components/shared/page-header";
 import { RichTextDisplay } from "@/components/shared/rich-text-display";
 import { Badge, badgeVariants } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Pencil, MapPin, Shield, ScrollText, Building } from "lucide-react";
 import { LocationDeleteButton } from "./delete-button";
@@ -25,7 +24,7 @@ export default async function LocationDetailPage({
   return (
     <div>
       <PageHeader title={location.name}>
-        <Link href={`/locations/${location.id}/edit`} className={cn(buttonVariants({variant: "outline", size: "sm"}))}>
+        <Link href={`/locations/${location.id}/edit`} className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground">
             <Pencil className="mr-2 h-4 w-4" />
             Edit
         </Link>

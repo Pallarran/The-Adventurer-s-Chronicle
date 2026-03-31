@@ -50,7 +50,7 @@ export async function CharacterHeroCard({ campaignId }: CharacterHeroCardProps) 
         <div className="relative flex h-28 w-28 shrink-0 items-center justify-center self-center overflow-hidden rounded-lg border border-gold/20 bg-gold/5 shadow-[0_0_20px_rgba(201,170,85,0.08)] sm:self-start">
           {profile.portrait ? (
             <Image
-              src={profile.portrait}
+              src={profile.portrait.startsWith("/") || profile.portrait.startsWith("http") ? profile.portrait : `/api/upload/${profile.portrait}`}
               alt={profile.name}
               fill
               className="object-cover"

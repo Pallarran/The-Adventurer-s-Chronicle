@@ -4,8 +4,6 @@ import { Users, User } from "lucide-react";
 import { getNpcs } from "@/lib/actions/npcs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/shared/empty-state";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 interface PartyMembersProps {
   campaignId: string;
@@ -28,7 +26,7 @@ export async function PartyMembers({ campaignId }: PartyMembersProps) {
       >
         <Link
           href="/npcs"
-          className={cn(buttonVariants({ variant: "outline" }))}
+          className="inline-flex items-center rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
         >
           <Users className="mr-2 h-4 w-4" />
           Browse NPCs

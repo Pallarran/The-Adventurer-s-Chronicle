@@ -3,8 +3,6 @@ import { Link2, ExternalLink, Star, Wrench } from "lucide-react";
 import { getToolLinks } from "@/lib/actions/tools";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/shared/empty-state";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 interface PinnedToolsProps {
   campaignId: string;
@@ -23,7 +21,7 @@ export async function PinnedTools({ campaignId }: PinnedToolsProps) {
       >
         <Link
           href="/tools"
-          className={cn(buttonVariants({ variant: "outline" }))}
+          className="inline-flex items-center rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
         >
           <Wrench className="mr-2 h-4 w-4" />
           Manage Tools
@@ -42,10 +40,7 @@ export async function PinnedTools({ campaignId }: PinnedToolsProps) {
           </CardTitle>
           <Link
             href="/tools"
-            className={cn(
-              buttonVariants({ variant: "ghost", size: "sm" }),
-              "text-muted-foreground hover:text-foreground"
-            )}
+            className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             Manage Tools
           </Link>

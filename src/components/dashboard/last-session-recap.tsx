@@ -4,8 +4,6 @@ import { getSessions } from "@/lib/actions/sessions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/empty-state";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 interface LastSessionRecapProps {
   campaignId: string;
@@ -51,7 +49,7 @@ export async function LastSessionRecap({ campaignId }: LastSessionRecapProps) {
       >
         <Link
           href="/sessions/new"
-          className={cn(buttonVariants({ variant: "outline" }))}
+          className="inline-flex items-center rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
         >
           <BookOpen className="mr-2 h-4 w-4" />
           Log First Session
@@ -107,10 +105,7 @@ export async function LastSessionRecap({ campaignId }: LastSessionRecapProps) {
         <div className="mt-auto pt-2">
           <Link
             href={`/sessions/${latestSession.id}`}
-            className={cn(
-              buttonVariants({ variant: "ghost", size: "sm" }),
-              "text-gold hover:text-gold/80"
-            )}
+            className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium text-gold hover:bg-gold/10 hover:text-gold/80"
           >
             View Full Session
             <ArrowRight className="ml-1 h-4 w-4" />

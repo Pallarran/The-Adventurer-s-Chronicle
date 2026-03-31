@@ -5,8 +5,6 @@ import { getCharacterProfile } from "@/lib/actions/character";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/empty-state";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 interface CharacterHeroCardProps {
   campaignId: string;
@@ -25,7 +23,7 @@ export async function CharacterHeroCard({ campaignId }: CharacterHeroCardProps) 
       >
         <Link
           href="/character"
-          className={cn(buttonVariants({ variant: "outline" }))}
+          className="inline-flex items-center rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
         >
           <Swords className="mr-2 h-4 w-4" />
           Create Character
@@ -87,10 +85,7 @@ export async function CharacterHeroCard({ campaignId }: CharacterHeroCardProps) 
           <div className="mt-auto pt-2">
             <Link
               href="/character"
-              className={cn(
-                buttonVariants({ variant: "ghost", size: "sm" }),
-                "text-gold hover:text-gold/80"
-              )}
+              className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium text-gold hover:bg-gold/10 hover:text-gold/80"
             >
               View Full Profile
               <ArrowRight className="ml-1 h-4 w-4" />

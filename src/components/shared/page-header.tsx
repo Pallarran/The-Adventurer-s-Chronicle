@@ -21,8 +21,9 @@ export function PageHeader({
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
           {title}
         </h1>
+        <div className="mt-2 h-0.5 w-12 rounded-full bg-gradient-to-r from-gold to-gold/0" />
         {description && (
-          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+          <p className="mt-2 text-sm text-muted-foreground">{description}</p>
         )}
       </div>
       {children && <div className="flex items-center gap-2">{children}</div>}

@@ -29,8 +29,8 @@ export function Sidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 z-30 flex w-60 flex-col border-r border-sidebar-border bg-sidebar">
       {/* Logo / App Title */}
-      <div className="flex h-14 items-center gap-2 px-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gold/10">
+      <div className="flex h-14 items-center gap-2.5 px-4">
+        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gold/10 ring-1 ring-gold/20">
           <ScrollText className="h-4 w-4 text-gold" />
         </div>
         <div className="flex flex-col">
@@ -46,7 +46,10 @@ export function Sidebar() {
       <Separator className="bg-sidebar-border" />
 
       {/* Main Navigation */}
-      <nav className="flex-1 space-y-1 px-3 py-3">
+      <nav className="flex-1 space-y-0.5 px-3 py-3">
+        <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+          Campaign
+        </p>
         {mainNavItems.map((item) => (
           <NavLink key={item.href} {...item} />
         ))}
@@ -55,7 +58,10 @@ export function Sidebar() {
       <Separator className="bg-sidebar-border" />
 
       {/* Utility Navigation */}
-      <nav className="space-y-1 px-3 py-3">
+      <nav className="space-y-0.5 px-3 py-3">
+        <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+          Utilities
+        </p>
         {utilityNavItems.map((item) => (
           <NavLink key={item.href} {...item} />
         ))}

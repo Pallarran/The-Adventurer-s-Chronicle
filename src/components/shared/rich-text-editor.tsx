@@ -1,12 +1,13 @@
 "use client";
 
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, ReactRenderer } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
 import Placeholder from "@tiptap/extension-placeholder";
+import Mention from "@tiptap/extension-mention";
 import {
   Bold,
   Italic,
@@ -25,8 +26,163 @@ import {
 import { cn } from "@/lib/utils";
 import { Toggle } from "@/components/ui/toggle";
 import type { JSONContent } from "@tiptap/react";
-import { useCallback } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
+import type { SuggestionProps, SuggestionKeyDownProps } from "@tiptap/suggestion";
+import tippy, { type Instance as TippyInstance } from "tippy.js";
 
+// ---------- Mention suggestion types ----------
+interface MentionSuggestion {
+  id: string;
+  name: string;
+  type: "npc" | "location" | "organization";
+}
+
+// ---------- Mention suggestion list component ----------
+interface MentionListProps {
+  items: MentionSuggestion[];
+  command: (item: { id: string; label: string; type: string }) => void;
+}
+
+interface MentionListRef {
+  onKeyDown: (props: SuggestionKeyDownProps) => boolean;
+}
+
+const MentionList = forwardRef<MentionListRef, MentionListProps>(
+  ({ items, command }, ref) => {
+    const [selectedIndex, setSelectedIndex] = useState(0);
+
+    useEffect(() => {
+      setSelectedIndex(0);
+    }, [items]);
+
+    const selectItem = useCallback(
+      (index: number) => {
+        const item = items[index];
+        if (item) {
+          command({ id: item.id, label: item.name, type: item.type });
+        }
+      },
+      [items, command]
+    );
+
+    useImperativeHandle(ref, () => ({
+      onKeyDown: ({ event }: SuggestionKeyDownProps) => {
+        if (event.key === "ArrowUp") {
+          setSelectedIndex((i) => (i + items.length - 1) % items.length);
+          return true;
+        }
+        if (event.key === "ArrowDown") {
+          setSelectedIndex((i) => (i + 1) % items.length);
+          return true;
+        }
+        if (event.key === "Enter") {
+          selectItem(selectedIndex);
+          return true;
+        }
+        return false;
+      },
+    }));
+
+    if (items.length === 0) {
+      return (
+        <div className="rounded-lg border border-border bg-popover p-2 shadow-md">
+          <span className="text-xs text-muted-foreground">No results</span>
+        </div>
+      );
+    }
+
+    const typeLabel = { npc: "NPC", location: "Location", organization: "Org" };
+
+    return (
+      <div className="rounded-lg border border-border bg-popover p-1 shadow-md">
+        {items.map((item, index) => (
+          <button
+            key={item.id}
+            className={cn(
+              "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm",
+              index === selectedIndex
+                ? "bg-accent text-accent-foreground"
+                : "text-foreground hover:bg-accent/50"
+            )}
+            onClick={() => selectItem(index)}
+            type="button"
+          >
+            <span className="flex-1">{item.name}</span>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              {typeLabel[item.type]}
+            </span>
+          </button>
+        ))}
+      </div>
+    );
+  }
+);
+MentionList.displayName = "MentionList";
+
+// ---------- Mention suggestion config ----------
+const mentionSuggestion = {
+  items: async ({ query }: { query: string }): Promise<MentionSuggestion[]> => {
+    try {
+      const res = await fetch(`/api/mentions?q=${encodeURIComponent(query)}`);
+      if (!res.ok) return [];
+      return res.json();
+    } catch {
+      return [];
+    }
+  },
+  render: () => {
+    let component: ReactRenderer<MentionListRef> | null = null;
+    let popup: TippyInstance[] | null = null;
+
+    return {
+      onStart: (props: SuggestionProps<MentionSuggestion>) => {
+        component = new ReactRenderer(MentionList, {
+          props,
+          editor: props.editor,
+        });
+
+        if (!props.clientRect) return;
+
+        popup = tippy("body", {
+          getReferenceClientRect: props.clientRect as () => DOMRect,
+          appendTo: () => document.body,
+          content: component.element,
+          showOnCreate: true,
+          interactive: true,
+          trigger: "manual",
+          placement: "bottom-start",
+        });
+      },
+      onUpdate: (props: SuggestionProps<MentionSuggestion>) => {
+        component?.updateProps(props);
+        if (popup && props.clientRect) {
+          popup[0]?.setProps({
+            getReferenceClientRect: props.clientRect as () => DOMRect,
+          });
+        }
+      },
+      onKeyDown: (props: SuggestionKeyDownProps) => {
+        if (props.event.key === "Escape") {
+          popup?.[0]?.hide();
+          return true;
+        }
+        return component?.ref?.onKeyDown(props) ?? false;
+      },
+      onExit: () => {
+        popup?.[0]?.destroy();
+        component?.destroy();
+      },
+    };
+  },
+};
+
+// ---------- Main editor component ----------
 interface RichTextEditorProps {
   content?: JSONContent | null;
   onChange?: (content: JSONContent) => void;
@@ -56,6 +212,12 @@ export function RichTextEditor({
       TaskList,
       TaskItem.configure({ nested: true }),
       Placeholder.configure({ placeholder }),
+      Mention.configure({
+        HTMLAttributes: {
+          class: "mention",
+        },
+        suggestion: mentionSuggestion,
+      }),
     ],
     content: content ?? undefined,
     onUpdate: ({ editor }) => {

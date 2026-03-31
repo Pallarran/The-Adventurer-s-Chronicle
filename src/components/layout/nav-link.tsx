@@ -19,13 +19,22 @@ export function NavLink({ href, label, icon: Icon }: NavLinkProps) {
     <Link
       href={href}
       className={cn(
-        "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+        "group relative flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200",
         isActive
-          ? "bg-accent text-gold border-l-2 border-gold"
+          ? "bg-gold/10 text-gold"
           : "text-muted-foreground hover:bg-accent hover:text-foreground"
       )}
     >
-      <Icon className={cn("h-4 w-4 shrink-0", isActive && "text-gold")} />
+      {/* Active indicator bar */}
+      {isActive && (
+        <span className="absolute inset-y-1 left-0 w-0.5 rounded-full bg-gold" />
+      )}
+      <Icon
+        className={cn(
+          "h-4 w-4 shrink-0 transition-colors",
+          isActive ? "text-gold" : "group-hover:text-foreground"
+        )}
+      />
       <span>{label}</span>
     </Link>
   );

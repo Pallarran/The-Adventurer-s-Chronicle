@@ -23,7 +23,7 @@ export async function CharacterHeroCard({ campaignId }: CharacterHeroCardProps) 
       >
         <Link
           href="/character"
-          className="inline-flex items-center rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
+          className="inline-flex items-center rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors"
         >
           <Swords className="mr-2 h-4 w-4" />
           Create Character
@@ -33,9 +33,10 @@ export async function CharacterHeroCard({ campaignId }: CharacterHeroCardProps) 
   }
 
   return (
-    <Card className="relative h-full overflow-hidden border-gold/20 bg-gradient-to-br from-card via-card to-gold/5">
+    <Card className="relative h-full overflow-hidden border-gold/20 bg-gradient-to-br from-card via-card to-gold/5 shadow-[0_0_15px_rgba(201,170,85,0.06)]">
       {/* Decorative corner accent */}
-      <div className="absolute top-0 right-0 h-24 w-24 bg-gradient-to-bl from-gold/10 to-transparent" />
+      <div className="absolute top-0 right-0 h-32 w-32 bg-gradient-to-bl from-gold/8 to-transparent" />
+      <div className="absolute bottom-0 left-0 h-20 w-20 bg-gradient-to-tr from-gold/4 to-transparent" />
 
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-gold">
@@ -46,7 +47,7 @@ export async function CharacterHeroCard({ campaignId }: CharacterHeroCardProps) 
 
       <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-start">
         {/* Portrait */}
-        <div className="relative flex h-28 w-28 shrink-0 items-center justify-center self-center overflow-hidden rounded-lg border border-gold/20 bg-gold/5 sm:self-start">
+        <div className="relative flex h-28 w-28 shrink-0 items-center justify-center self-center overflow-hidden rounded-lg border border-gold/20 bg-gold/5 shadow-[0_0_20px_rgba(201,170,85,0.08)] sm:self-start">
           {profile.portrait ? (
             <Image
               src={profile.portrait}
@@ -66,7 +67,7 @@ export async function CharacterHeroCard({ campaignId }: CharacterHeroCardProps) 
             <h3 className="text-xl font-bold tracking-tight text-foreground">
               {profile.name}
             </h3>
-            <div className="mt-1 flex flex-wrap items-center gap-2">
+            <div className="mt-1.5 flex flex-wrap items-center gap-2">
               {profile.classInfo && (
                 <Badge variant="secondary">{profile.classInfo}</Badge>
               )}
@@ -77,7 +78,7 @@ export async function CharacterHeroCard({ campaignId }: CharacterHeroCardProps) 
           </div>
 
           {profile.summary && (
-            <p className="line-clamp-3 text-sm text-muted-foreground">
+            <p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground">
               {profile.summary}
             </p>
           )}
@@ -85,7 +86,7 @@ export async function CharacterHeroCard({ campaignId }: CharacterHeroCardProps) 
           <div className="mt-auto pt-2">
             <Link
               href="/character"
-              className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium text-gold hover:bg-gold/10 hover:text-gold/80"
+              className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium text-gold transition-colors hover:bg-gold/10"
             >
               View Full Profile
               <ArrowRight className="ml-1 h-4 w-4" />

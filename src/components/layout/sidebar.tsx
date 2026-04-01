@@ -11,8 +11,9 @@ import {
 } from "lucide-react";
 import { NavLink } from "./nav-link";
 import { Separator } from "@/components/ui/separator";
+import { useSidebarStats } from "./use-sidebar-stats";
 
-const mainNavItems = [
+export const mainNavItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/sessions", label: "Sessions", icon: ScrollText },
   { href: "/npcs", label: "NPCs", icon: Users },
@@ -21,13 +22,15 @@ const mainNavItems = [
   { href: "/character", label: "Character", icon: Swords },
 ];
 
-const utilityNavItems = [
+export const utilityNavItems = [
   { href: "/tools", label: "Links & Tools", icon: Link2 },
 ];
 
 export function Sidebar() {
+  const { getCount } = useSidebarStats();
+
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 flex w-60 flex-col border-r border-sidebar-border bg-sidebar">
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-sidebar-border bg-sidebar md:flex">
       {/* Logo / App Title */}
       <div className="flex h-14 items-center gap-2.5 px-4">
         <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gold/10 ring-1 ring-gold/20">
@@ -51,7 +54,7 @@ export function Sidebar() {
           Campaign
         </p>
         {mainNavItems.map((item) => (
-          <NavLink key={item.href} {...item} />
+          <NavLink key={item.href} {...item} count={getCount(item.href)} />
         ))}
       </nav>
 

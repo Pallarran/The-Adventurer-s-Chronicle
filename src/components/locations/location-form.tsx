@@ -11,8 +11,24 @@ import { TagInput, type TagOption } from "@/components/shared/tag-input";
 import { ImageUpload } from "@/components/shared/image-upload";
 import { createLocation, updateLocation } from "@/lib/actions/locations";
 import { createTag } from "@/lib/actions/tags";
+import { toast } from "sonner";
+import { MapPin, CalendarDays, Shield, Tag } from "lucide-react";
 import type { JSONContent } from "@tiptap/react";
 import type { LocationDetail } from "@/types";
+
+export function LocationFormActions({ isEdit }: { isEdit: boolean }) {
+  const router = useRouter();
+  return (
+    <>
+      <Button type="submit" form="location-form">
+        {isEdit ? "Save Changes" : "Create Location"}
+      </Button>
+      <Button type="button" variant="outline" onClick={() => router.back()}>
+        Cancel
+      </Button>
+    </>
+  );
+}
 
 interface LocationFormProps {
   campaignId: string;
@@ -71,7 +87,6 @@ export function LocationForm({
   );
   const [saving, setSaving] = useState(false);
 
-  // Filter out the current location from the parent options to prevent self-reference
   const parentOptions = allLocations.filter((l) => l.id !== location?.id);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -99,11 +114,15 @@ export function LocationForm({
           lastAppearanceSessionId: selectedLastAppearance[0]?.id ?? null,
           mainImage: mainImage,
         });
+        toast.success("Location updated.");
         router.push(`/locations/${location.id}`);
       } else {
         const newLocation = await createLocation({ ...data, campaignId });
+        toast.success("Location created.");
         router.push(`/locations/${newLocation.id}`);
       }
+    } catch {
+      toast.error("Failed to save location.");
     } finally {
       setSaving(false);
     }
@@ -115,76 +134,92 @@ export function LocationForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="name">Name</Label>
-          <Input
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Location name"
-            required
+    <form id="location-form" onSubmit={handleSubmit} className="space-y-6">
+      <fieldset disabled={saving} className="space-y-6">
+      {/* Identity — image left, fields right */}
+      <div className="flex flex-col gap-6 sm:flex-row">
+        <div className="w-full space-y-2 sm:w-48 sm:shrink-0">
+          <Label>Image</Label>
+          <ImageUpload value={mainImage} onChange={setMainImage} className="aspect-[4/3]" />
+        </div>
+        <div className="flex-1 space-y-4">
+          <div className="flex flex-wrap items-end gap-4">
+            <div className="min-w-[200px] flex-1 space-y-2">
+              <Label htmlFor="name">Name *</Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Location name"
+                required
+              />
+            </div>
+            <div className="w-48 space-y-2">
+              <Label htmlFor="type">Type</Label>
+              <Input
+                id="type"
+                value={type}
+                onChange={(e) => setType(e.target.value)}
+                placeholder="e.g. City, Dungeon, Tavern"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Relations + Tags — bordered cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="rounded-lg border border-border p-4">
+          <RelationPicker
+            label={<><MapPin className="h-4 w-4" /> Parent Location</>}
+            options={parentOptions}
+            selected={selectedParent}
+            onChange={setSelectedParent}
+            placeholder="Search locations..."
+            single
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="type">Type</Label>
-          <Input
-            id="type"
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-            placeholder="e.g. City, Dungeon, Tavern, Forest"
+        <div className="rounded-lg border border-border p-4">
+          <RelationPicker
+            label={<><CalendarDays className="h-4 w-4" /> First Appearance</>}
+            options={allSessions}
+            selected={selectedFirstAppearance}
+            onChange={setSelectedFirstAppearance}
+            placeholder="Search sessions..."
+            single
+          />
+        </div>
+        <div className="rounded-lg border border-border p-4">
+          <RelationPicker
+            label={<><CalendarDays className="h-4 w-4" /> Last Appearance</>}
+            options={allSessions}
+            selected={selectedLastAppearance}
+            onChange={setSelectedLastAppearance}
+            placeholder="Search sessions..."
+            single
+          />
+        </div>
+        <div className="rounded-lg border border-border p-4">
+          <RelationPicker
+            label={<><Shield className="h-4 w-4" /> Organizations</>}
+            options={allOrganizations}
+            selected={selectedOrgs}
+            onChange={setSelectedOrgs}
+            placeholder="Search organizations..."
+          />
+        </div>
+        <div className="rounded-lg border border-border p-4">
+          <TagInput
+            label={<><Tag className="h-4 w-4" /> Tags</>}
+            availableTags={allTags}
+            selectedTags={selectedTags}
+            onChange={setSelectedTags}
+            onCreateTag={handleCreateTag}
           />
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label>Image</Label>
-        <ImageUpload value={mainImage} onChange={setMainImage} />
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <RelationPicker
-          label="Parent Location"
-          options={parentOptions}
-          selected={selectedParent}
-          onChange={setSelectedParent}
-          placeholder="Search locations..."
-          single
-        />
-        <RelationPicker
-          label="First Appearance"
-          options={allSessions}
-          selected={selectedFirstAppearance}
-          onChange={setSelectedFirstAppearance}
-          placeholder="Search sessions..."
-          single
-        />
-        <RelationPicker
-          label="Last Appearance"
-          options={allSessions}
-          selected={selectedLastAppearance}
-          onChange={setSelectedLastAppearance}
-          placeholder="Search sessions..."
-          single
-        />
-      </div>
-
-      <RelationPicker
-        label="Associated Organizations"
-        options={allOrganizations}
-        selected={selectedOrgs}
-        onChange={setSelectedOrgs}
-        placeholder="Search organizations..."
-      />
-
-      <TagInput
-        availableTags={allTags}
-        selectedTags={selectedTags}
-        onChange={setSelectedTags}
-        onCreateTag={handleCreateTag}
-      />
-
+      {/* Notes */}
       <div className="space-y-2">
         <Label>Notes</Label>
         <RichTextEditor
@@ -193,15 +228,7 @@ export function LocationForm({
           placeholder="Write notes about this location..."
         />
       </div>
-
-      <div className="flex gap-3">
-        <Button type="submit" disabled={saving}>
-          {saving ? "Saving..." : isEdit ? "Save Changes" : "Create Location"}
-        </Button>
-        <Button type="button" variant="outline" onClick={() => router.back()}>
-          Cancel
-        </Button>
-      </div>
+      </fieldset>
     </form>
   );
 }

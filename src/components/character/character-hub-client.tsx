@@ -30,6 +30,7 @@ interface CharacterHubClientProps {
     id: string;
     name: string;
     classInfo: string | null;
+    race: string | null;
     level: number | null;
     portrait: string | null;
     summary: string | null;
@@ -68,6 +69,7 @@ export function CharacterHubClient({ profile }: CharacterHubClientProps) {
   // Profile fields
   const [name, setName] = useState(profile.name);
   const [classInfo, setClassInfo] = useState(profile.classInfo ?? "");
+  const [race, setRace] = useState(profile.race ?? "");
   const [level, setLevel] = useState<number | "">(profile.level ?? "");
   const [portrait, setPortrait] = useState<string | null>(
     profile.portrait ?? null
@@ -123,6 +125,7 @@ export function CharacterHubClient({ profile }: CharacterHubClientProps) {
       await updateCharacterProfile(profile.id, {
         name: name.trim() || profile.name,
         classInfo: classInfo.trim() || null,
+        race: race.trim() || null,
         level: level === "" ? null : Number(level),
         portrait,
       });
@@ -131,7 +134,7 @@ export function CharacterHubClient({ profile }: CharacterHubClientProps) {
       console.error("Failed to save profile:", err);
       setProfileSaveStatus("idle");
     }
-  }, [profile.id, profile.name, name, classInfo, level, portrait, showSaved]);
+  }, [profile.id, profile.name, name, classInfo, race, level, portrait, showSaved]);
 
   // Save section
   const handleSaveSection = useCallback(
@@ -188,7 +191,7 @@ export function CharacterHubClient({ profile }: CharacterHubClientProps) {
               ) : (
                 <button
                   type="button"
-                  className="group relative h-40 w-40 overflow-hidden rounded-lg border border-border transition-colors hover:border-gold/50"
+                  className="group relative w-40 aspect-[2/3] overflow-hidden rounded-lg border border-border transition-colors hover:border-gold/50"
                   onClick={() => setEditingPortrait(true)}
                   title="Click to change portrait"
                 >
@@ -196,7 +199,7 @@ export function CharacterHubClient({ profile }: CharacterHubClientProps) {
                     src={`/api/upload/${portrait}`}
                     alt={name}
                     fill
-                    className="object-cover"
+                    className="object-contain"
                   />
                   <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
                     <User className="h-6 w-6 text-gold" />
@@ -207,7 +210,7 @@ export function CharacterHubClient({ profile }: CharacterHubClientProps) {
 
             {/* Fields */}
             <div className="flex flex-1 flex-col gap-4">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="char-name">Character Name</Label>
                   <Input
@@ -215,6 +218,15 @@ export function CharacterHubClient({ profile }: CharacterHubClientProps) {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Character name"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="char-race">Race</Label>
+                  <Input
+                    id="char-race"
+                    value={race}
+                    onChange={(e) => setRace(e.target.value)}
+                    placeholder="e.g. Half-Elf, Tiefling"
                   />
                 </div>
                 <div className="space-y-1.5">

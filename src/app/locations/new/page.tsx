@@ -3,8 +3,8 @@ import { getLocations } from "@/lib/actions/locations";
 import { getSessions } from "@/lib/actions/sessions";
 import { getOrganizations } from "@/lib/actions/organizations";
 import { getTags } from "@/lib/actions/tags";
-import { PageHeader } from "@/components/shared/page-header";
-import { LocationForm } from "@/components/locations/location-form";
+import { PageHeaderSetter } from "@/components/layout/page-header-setter";
+import { LocationForm, LocationFormActions } from "@/components/locations/location-form";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +19,11 @@ export default async function NewLocationPage() {
 
   return (
     <div>
-      <PageHeader title="New Location" description="Add a new location to your campaign." />
+      <PageHeaderSetter title="New Location" />
+
+      <div className="flex items-center gap-2 pb-4">
+        <LocationFormActions isEdit={false} />
+      </div>
       <LocationForm
         campaignId={campaign.id}
         allLocations={locations.map((l) => ({ id: l.id, name: l.name }))}

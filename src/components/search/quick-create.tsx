@@ -2,14 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { Plus, ScrollText, Users, MapPin, Shield, Link2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuLabel,
   DropdownMenuItem,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
 const createItems = [
@@ -32,21 +31,22 @@ export function QuickCreate() {
         <span className="sr-only">Quick create</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" sideOffset={8}>
-        <DropdownMenuLabel>Create New</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {createItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <DropdownMenuItem
-              key={item.href}
-              onClick={() => router.push(item.href)}
-              className="cursor-pointer gap-2"
-            >
-              <Icon className="h-4 w-4" />
-              {item.label}
-            </DropdownMenuItem>
-          );
-        })}
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Create New</DropdownMenuLabel>
+          {createItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <DropdownMenuItem
+                key={item.href}
+                onClick={() => router.push(item.href)}
+                className="cursor-pointer gap-2"
+              >
+                <Icon className="h-4 w-4" />
+                {item.label}
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );

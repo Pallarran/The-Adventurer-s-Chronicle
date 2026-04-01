@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
     prisma.npc.findMany({
       where: {
         campaignId: campaign.id,
+        deletedAt: null,
         ...(q ? { name: { contains: q, mode: "insensitive" as const } } : {}),
       },
       select: { id: true, name: true },
@@ -27,6 +28,7 @@ export async function GET(request: NextRequest) {
     prisma.location.findMany({
       where: {
         campaignId: campaign.id,
+        deletedAt: null,
         ...(q ? { name: { contains: q, mode: "insensitive" as const } } : {}),
       },
       select: { id: true, name: true },
@@ -36,6 +38,7 @@ export async function GET(request: NextRequest) {
     prisma.organization.findMany({
       where: {
         campaignId: campaign.id,
+        deletedAt: null,
         ...(q ? { name: { contains: q, mode: "insensitive" as const } } : {}),
       },
       select: { id: true, name: true },

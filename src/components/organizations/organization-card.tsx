@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Shield, Users } from "lucide-react";
 import type { AlignmentStance } from "@/generated/prisma/client";
 import type { OrganizationListItem } from "@/types";
@@ -33,67 +33,65 @@ export function OrganizationCard({ organization }: OrganizationCardProps) {
 
   return (
     <Link href={`/organizations/${organization.id}`}>
-      <Card className="transition-colors hover:border-gold/30 hover:bg-card/80">
-        <CardHeader className="pb-2">
-          <div className="flex items-start gap-3">
-            {organization.mainImage ? (
-              <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md border border-border">
-                <Image
-                  src={`/api/upload/${organization.mainImage}`}
-                  alt={organization.name}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-            ) : (
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-muted/50">
-                <Shield className="h-5 w-5 text-muted-foreground" />
-              </div>
-            )}
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <span className="truncate text-sm font-medium text-foreground">
-                  {organization.name}
-                </span>
-              </div>
-              {organization.type && (
-                <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                  {organization.type}
-                </p>
-              )}
+      <Card className="h-full overflow-hidden transition-colors hover:border-gold/30 hover:bg-card/80 hover:shadow-lg hover:shadow-gold/10">
+        {/* Image */}
+        <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
+          {organization.mainImage ? (
+            <Image
+              src={`/api/upload/${organization.mainImage}`}
+              alt={organization.name}
+              fill
+              className="object-cover"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center">
+              <Shield className="h-10 w-10 text-muted-foreground/40" />
             </div>
+          )}
+          <Badge
+            variant="outline"
+            className="absolute bottom-2 left-2 text-xs backdrop-blur-sm bg-background/70 border-transparent"
+            style={{
+              backgroundColor: `${stanceColor}40`,
+              color: stanceColor,
+            }}
+          >
+            {STANCE_LABELS[organization.alignmentStance]}
+          </Badge>
+        </div>
+
+        {/* Info — fixed height for consistency */}
+        <div className="flex min-h-[5.5rem] flex-col justify-between p-3">
+          <div className="space-y-0.5">
+            <p className="truncate text-sm font-bold">{organization.name}</p>
+            <p className="truncate text-xs text-muted-foreground">
+              {organization.type || "\u00A0"}
+            </p>
+            <p className="truncate text-xs text-muted-foreground">
+              {organization.npcs.length > 0 ? (
+                <span className="flex items-center gap-1">
+                  <Users className="h-3 w-3" />
+                  {organization.npcs.length} member{organization.npcs.length !== 1 && "s"}
+                </span>
+              ) : (
+                "\u00A0"
+              )}
+            </p>
           </div>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            <Badge
-              variant="outline"
-              className="border-transparent text-xs"
-              style={{
-                backgroundColor: `${stanceColor}20`,
-                color: stanceColor,
-              }}
-            >
-              {STANCE_LABELS[organization.alignmentStance]}
-            </Badge>
-            {organization.npcs.length > 0 && (
-              <span className="flex items-center gap-1">
-                <Users className="h-3 w-3" />
-                {organization.npcs.length} member
-                {organization.npcs.length !== 1 && "s"}
-              </span>
-            )}
-          </div>
+
           {organization.tags.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1">
-              {organization.tags.map((t) => (
-                <Badge key={t.tag.id} variant="outline" className="text-xs">
+            <div className="mt-1.5 flex flex-wrap gap-1">
+              {organization.tags.slice(0, 2).map((t) => (
+                <Badge key={t.tag.id} variant="outline" className="text-xs px-1.5 py-0">
                   {t.tag.name}
                 </Badge>
               ))}
+              {organization.tags.length > 2 && (
+                <span className="text-xs text-muted-foreground">+{organization.tags.length - 2}</span>
+              )}
             </div>
           )}
-        </CardContent>
+        </div>
       </Card>
     </Link>
   );

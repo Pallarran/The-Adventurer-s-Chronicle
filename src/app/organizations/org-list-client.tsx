@@ -28,9 +28,10 @@ const STANCE_OPTIONS: { value: AlignmentStance; label: string; color: string }[]
 
 interface OrgListClientProps {
   organizations: OrganizationListItem[];
+  headerActions?: React.ReactNode;
 }
 
-export function OrgListClient({ organizations }: OrgListClientProps) {
+export function OrgListClient({ organizations, headerActions }: OrgListClientProps) {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<SortOption>("name-asc");
   const [stanceFilter, setStanceFilter] = useState<AlignmentStance | null>(null);
@@ -140,9 +141,7 @@ export function OrgListClient({ organizations }: OrgListClientProps) {
           <ArrowUpDown className="h-3.5 w-3.5" />
           {sortLabels[sort]}
         </Button>
-        <span className="ml-auto text-xs text-muted-foreground">
-          {results.length} org{results.length !== 1 ? "s" : ""}
-        </span>
+        <div className="ml-auto">{headerActions}</div>
       </div>
 
       {/* Filter chips */}
@@ -214,7 +213,7 @@ export function OrgListClient({ organizations }: OrgListClientProps) {
       </div>
 
       {/* Grid */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {results.map((org) => (
           <OrganizationCard key={org.id} organization={org} />
         ))}

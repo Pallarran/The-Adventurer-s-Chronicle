@@ -47,6 +47,7 @@ export async function getNpcs(campaignId: string, filters?: NpcFilters): Promise
   return prisma.npc.findMany({
     where: {
       campaignId,
+      deletedAt: null,
       ...(search
         ? {
             OR: [
@@ -67,7 +68,7 @@ export async function getNpcs(campaignId: string, filters?: NpcFilters): Promise
 
 export async function getNpc(id: string): Promise<NpcDetail | null> {
   return prisma.npc.findUnique({
-    where: { id },
+    where: { id, deletedAt: null },
     include: npcDetailInclude,
   }) as Promise<NpcDetail | null>;
 }
@@ -78,6 +79,7 @@ interface CreateNpcData {
   aliasTitle?: string;
   gender?: string;
   classRole?: string;
+  race?: string;
   status?: NpcStatus;
   partyMember?: boolean;
   organizationId?: string;
@@ -96,6 +98,7 @@ export async function createNpc(data: CreateNpcData) {
       aliasTitle: data.aliasTitle,
       gender: data.gender,
       classRole: data.classRole,
+      race: data.race,
       status: data.status ?? "ALIVE",
       partyMember: data.partyMember ?? false,
       organizationId: data.organizationId || null,
@@ -118,6 +121,7 @@ interface UpdateNpcData {
   aliasTitle?: string;
   gender?: string;
   classRole?: string;
+  race?: string;
   status?: NpcStatus;
   partyMember?: boolean;
   organizationId?: string | null;
@@ -140,6 +144,7 @@ export async function updateNpc(id: string, data: UpdateNpcData) {
       aliasTitle: data.aliasTitle,
       gender: data.gender,
       classRole: data.classRole,
+      race: data.race,
       status: data.status,
       partyMember: data.partyMember,
       organizationId: data.organizationId,
@@ -159,6 +164,22 @@ export async function updateNpc(id: string, data: UpdateNpcData) {
 }
 
 export async function deleteNpc(id: string) {
-  await prisma.npc.delete({ where: { id } });
+  await prisma.npc.update({
+    where: { id },
+    data: { deletedAt: new Date() },
+  });
   revalidatePath("/npcs");
+  revalidatePath(`/npcs/${id}`);
+}
+
+export async function restoreNpc(id: string) {
+  await prisma.npc.update({
+    where: { id },
+    data: { deletedAt: null },
+  });
+  revalidatePath("/npcs");
+}
+
+export async function purgeNpc(id: string) {
+  await prisma.npc.delete({ where: { id } });
 }

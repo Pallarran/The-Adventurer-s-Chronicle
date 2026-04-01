@@ -1,11 +1,10 @@
 import { getSessions } from "@/lib/actions/sessions";
 import { getActiveCampaign } from "@/lib/campaign";
-import { PageHeader } from "@/components/shared/page-header";
-import { SessionCard } from "@/components/sessions/session-card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ScrollText, Plus } from "lucide-react";
 import Link from "next/link";
 import { SessionListClient } from "./session-list-client";
+import { PageHeaderSetter } from "@/components/layout/page-header-setter";
 
 export const dynamic = "force-dynamic";
 
@@ -15,12 +14,7 @@ export default async function SessionsPage() {
 
   return (
     <div>
-      <PageHeader title="Sessions" description="Your campaign session log.">
-        <Link href="/sessions/new" className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
-            <Plus className="mr-2 h-4 w-4" />
-            New Session
-        </Link>
-      </PageHeader>
+      <PageHeaderSetter title="Sessions" description="Your campaign session log." />
 
       {sessions.length === 0 ? (
         <EmptyState
@@ -34,7 +28,15 @@ export default async function SessionsPage() {
           </Link>
         </EmptyState>
       ) : (
-        <SessionListClient sessions={sessions} />
+        <SessionListClient
+          sessions={sessions}
+          headerActions={
+            <Link href="/sessions/new" className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
+              <Plus className="mr-2 h-4 w-4" />
+              New Session
+            </Link>
+          }
+        />
       )}
     </div>
   );

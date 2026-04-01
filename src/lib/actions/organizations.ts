@@ -42,6 +42,7 @@ export async function getOrganizations(campaignId: string, filters?: Organizatio
   return prisma.organization.findMany({
     where: {
       campaignId,
+      deletedAt: null,
       ...(search ? { name: { contains: search, mode: "insensitive" as const } } : {}),
       ...(type ? { type: { contains: type, mode: "insensitive" as const } } : {}),
       ...(alignmentStance ? { alignmentStance } : {}),
@@ -54,7 +55,7 @@ export async function getOrganizations(campaignId: string, filters?: Organizatio
 
 export async function getOrganization(id: string): Promise<OrganizationDetail | null> {
   return prisma.organization.findUnique({
-    where: { id },
+    where: { id, deletedAt: null },
     include: orgDetailInclude,
   }) as Promise<OrganizationDetail | null>;
 }
@@ -147,6 +148,22 @@ export async function updateOrganization(id: string, data: UpdateOrganizationDat
 }
 
 export async function deleteOrganization(id: string) {
-  await prisma.organization.delete({ where: { id } });
+  await prisma.organization.update({
+    where: { id },
+    data: { deletedAt: new Date() },
+  });
   revalidatePath("/organizations");
+  revalidatePath(`/organizations/${id}`);
+}
+
+export async function restoreOrganization(id: string) {
+  await prisma.organization.update({
+    where: { id },
+    data: { deletedAt: null },
+  });
+  revalidatePath("/organizations");
+}
+
+export async function purgeOrganization(id: string) {
+  await prisma.organization.delete({ where: { id } });
 }

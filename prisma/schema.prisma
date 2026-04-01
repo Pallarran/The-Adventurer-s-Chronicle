@@ -55,15 +55,16 @@ model Campaign {
 }
 
 model Session {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
   sessionNumber   Int
   title           String?
   realDatePlayed  DateTime
   inGameDate      String?
   notesBody       Json?
   followUpActions Json?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
 
   campaignId String
   campaign   Campaign @relation(fields: [campaignId], references: [id])
@@ -91,12 +92,14 @@ model Npc {
   aliasTitle  String?
   gender      String?
   classRole   String?
+  race        String?
   status      NpcStatus @default(ALIVE)
   partyMember Boolean   @default(false)
   notesBody   Json?
   mainImage   String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
 
   campaignId String
   campaign   Campaign @relation(fields: [campaignId], references: [id])
@@ -115,13 +118,14 @@ model Npc {
 }
 
 model Location {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   name      String
   type      String?
   notesBody Json?
   mainImage String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   campaignId String
   campaign   Campaign @relation(fields: [campaignId], references: [id])
@@ -150,6 +154,7 @@ model Organization {
   mainImage       String?
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
+  deletedAt       DateTime?
 
   campaignId String
   campaign   Campaign @relation(fields: [campaignId], references: [id])
@@ -173,6 +178,7 @@ model CharacterProfile {
   id        String   @id @default(cuid())
   name      String
   classInfo String?
+  race      String?
   level     Int?
   portrait  String?
   summary   String?

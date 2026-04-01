@@ -3,9 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
-import { deleteSession } from "@/lib/actions/sessions";
+import { deleteSession, restoreSession, purgeSession } from "@/lib/actions/sessions";
+
+const UNDO_TIMEOUT = 5000;
 
 export function SessionDeleteButton({ id }: { id: string }) {
   const router = useRouter();
@@ -16,6 +19,25 @@ export function SessionDeleteButton({ id }: { id: string }) {
     setLoading(true);
     await deleteSession(id);
     router.push("/sessions");
+
+    let purged = false;
+    const purgeTimer = setTimeout(async () => {
+      purged = true;
+      await purgeSession(id);
+    }, UNDO_TIMEOUT);
+
+    toast("Session deleted", {
+      action: {
+        label: "Undo",
+        onClick: async () => {
+          if (purged) return;
+          clearTimeout(purgeTimer);
+          await restoreSession(id);
+          router.push(`/sessions/${id}`);
+        },
+      },
+      duration: UNDO_TIMEOUT,
+    });
   };
 
   return (
@@ -28,7 +50,7 @@ export function SessionDeleteButton({ id }: { id: string }) {
         open={open}
         onOpenChange={setOpen}
         title="Delete Session"
-        description="This will permanently delete this session and all its relations. This cannot be undone."
+        description="This session will be deleted. You'll have a few seconds to undo."
         onConfirm={handleDelete}
         loading={loading}
       />

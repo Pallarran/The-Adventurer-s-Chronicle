@@ -3,9 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
-import { deleteLocation } from "@/lib/actions/locations";
+import { deleteLocation, restoreLocation, purgeLocation } from "@/lib/actions/locations";
+
+const UNDO_TIMEOUT = 5000;
 
 export function LocationDeleteButton({ id }: { id: string }) {
   const router = useRouter();
@@ -16,6 +19,25 @@ export function LocationDeleteButton({ id }: { id: string }) {
     setLoading(true);
     await deleteLocation(id);
     router.push("/locations");
+
+    let purged = false;
+    const purgeTimer = setTimeout(async () => {
+      purged = true;
+      await purgeLocation(id);
+    }, UNDO_TIMEOUT);
+
+    toast("Location deleted", {
+      action: {
+        label: "Undo",
+        onClick: async () => {
+          if (purged) return;
+          clearTimeout(purgeTimer);
+          await restoreLocation(id);
+          router.push(`/locations/${id}`);
+        },
+      },
+      duration: UNDO_TIMEOUT,
+    });
   };
 
   return (
@@ -28,7 +50,7 @@ export function LocationDeleteButton({ id }: { id: string }) {
         open={open}
         onOpenChange={setOpen}
         title="Delete Location"
-        description="This will permanently delete this location and all its relations. This cannot be undone."
+        description="This location will be deleted. You'll have a few seconds to undo."
         onConfirm={handleDelete}
         loading={loading}
       />

@@ -10,12 +10,29 @@ import { RelationPicker, type RelationOption } from "@/components/shared/relatio
 import { TagInput, type TagOption } from "@/components/shared/tag-input";
 import { createSession, updateSession } from "@/lib/actions/sessions";
 import { createTag } from "@/lib/actions/tags";
+import { toast } from "sonner";
+import { Users, MapPin, Shield, Tag } from "lucide-react";
 import type { JSONContent } from "@tiptap/react";
 import type { SessionDetail } from "@/types";
+
+export function SessionFormActions({ isEdit }: { isEdit: boolean }) {
+  const router = useRouter();
+  return (
+    <>
+      <Button type="submit" form="session-form">
+        {isEdit ? "Save Changes" : "Create Session"}
+      </Button>
+      <Button type="button" variant="outline" onClick={() => router.back()}>
+        Cancel
+      </Button>
+    </>
+  );
+}
 
 interface SessionFormProps {
   campaignId: string;
   session?: SessionDetail;
+  defaultSessionNumber?: number;
   allNpcs: RelationOption[];
   allLocations: RelationOption[];
   allOrganizations: RelationOption[];
@@ -25,6 +42,7 @@ interface SessionFormProps {
 export function SessionForm({
   campaignId,
   session,
+  defaultSessionNumber,
   allNpcs,
   allLocations,
   allOrganizations,
@@ -33,7 +51,7 @@ export function SessionForm({
   const router = useRouter();
   const isEdit = !!session;
 
-  const [sessionNumber, setSessionNumber] = useState(session?.sessionNumber ?? 1);
+  const [sessionNumber, setSessionNumber] = useState(session?.sessionNumber ?? defaultSessionNumber ?? 1);
   const [title, setTitle] = useState(session?.title ?? "");
   const [realDatePlayed, setRealDatePlayed] = useState(
     session ? new Date(session.realDatePlayed).toISOString().split("T")[0] : new Date().toISOString().split("T")[0]
@@ -79,11 +97,15 @@ export function SessionForm({
 
       if (isEdit) {
         await updateSession(session.id, data);
+        toast.success("Session updated.");
         router.push(`/sessions/${session.id}`);
       } else {
         const newSession = await createSession({ ...data, campaignId });
+        toast.success("Session created.");
         router.push(`/sessions/${newSession.id}`);
       }
+    } catch {
+      toast.error("Failed to save session.");
     } finally {
       setSaving(false);
     }
@@ -95,10 +117,21 @@ export function SessionForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="space-y-2">
-          <Label htmlFor="sessionNumber">Session Number</Label>
+    <form id="session-form" onSubmit={handleSubmit} className="space-y-6">
+      <fieldset disabled={saving} className="space-y-6">
+      {/* Title + compact metadata row */}
+      <div className="flex flex-wrap items-end gap-4">
+        <div className="min-w-[200px] flex-1 space-y-2">
+          <Label htmlFor="title">Title</Label>
+          <Input
+            id="title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Session title (optional)"
+          />
+        </div>
+        <div className="w-24 space-y-2">
+          <Label htmlFor="sessionNumber">Session #</Label>
           <Input
             id="sessionNumber"
             type="number"
@@ -107,7 +140,7 @@ export function SessionForm({
             required
           />
         </div>
-        <div className="space-y-2">
+        <div className="w-44 space-y-2">
           <Label htmlFor="realDatePlayed">Date Played</Label>
           <Input
             id="realDatePlayed"
@@ -117,7 +150,7 @@ export function SessionForm({
             required
           />
         </div>
-        <div className="space-y-2">
+        <div className="w-88 space-y-2">
           <Label htmlFor="inGameDate">In-Game Date</Label>
           <Input
             id="inGameDate"
@@ -128,16 +161,47 @@ export function SessionForm({
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="title">Title</Label>
-        <Input
-          id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Session title (optional)"
-        />
+      {/* Relations + Tags — bordered cards in single row */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-lg border border-border p-4">
+          <RelationPicker
+            label={<><Users className="h-4 w-4" /> Featured NPCs</>}
+            options={allNpcs}
+            selected={selectedNpcs}
+            onChange={setSelectedNpcs}
+            placeholder="Search NPCs..."
+          />
+        </div>
+        <div className="rounded-lg border border-border p-4">
+          <RelationPicker
+            label={<><MapPin className="h-4 w-4" /> Featured Locations</>}
+            options={allLocations}
+            selected={selectedLocations}
+            onChange={setSelectedLocations}
+            placeholder="Search locations..."
+          />
+        </div>
+        <div className="rounded-lg border border-border p-4">
+          <RelationPicker
+            label={<><Shield className="h-4 w-4" /> Featured Organizations</>}
+            options={allOrganizations}
+            selected={selectedOrgs}
+            onChange={setSelectedOrgs}
+            placeholder="Search organizations..."
+          />
+        </div>
+        <div className="rounded-lg border border-border p-4">
+          <TagInput
+            label={<><Tag className="h-4 w-4" /> Tags</>}
+            availableTags={allTags}
+            selectedTags={selectedTags}
+            onChange={setSelectedTags}
+            onCreateTag={handleCreateTag}
+          />
+        </div>
       </div>
 
+      {/* Session Notes */}
       <div className="space-y-2">
         <Label>Session Notes</Label>
         <RichTextEditor
@@ -147,6 +211,7 @@ export function SessionForm({
         />
       </div>
 
+      {/* Follow-Up Actions */}
       <div className="space-y-2">
         <Label>Follow-Up Actions</Label>
         <RichTextEditor
@@ -155,46 +220,7 @@ export function SessionForm({
           placeholder="Things to remember for next session..."
         />
       </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <RelationPicker
-          label="Featured NPCs"
-          options={allNpcs}
-          selected={selectedNpcs}
-          onChange={setSelectedNpcs}
-          placeholder="Search NPCs..."
-        />
-        <RelationPicker
-          label="Featured Locations"
-          options={allLocations}
-          selected={selectedLocations}
-          onChange={setSelectedLocations}
-          placeholder="Search locations..."
-        />
-        <RelationPicker
-          label="Featured Organizations"
-          options={allOrganizations}
-          selected={selectedOrgs}
-          onChange={setSelectedOrgs}
-          placeholder="Search organizations..."
-        />
-      </div>
-
-      <TagInput
-        availableTags={allTags}
-        selectedTags={selectedTags}
-        onChange={setSelectedTags}
-        onCreateTag={handleCreateTag}
-      />
-
-      <div className="flex gap-3">
-        <Button type="submit" disabled={saving}>
-          {saving ? "Saving..." : isEdit ? "Save Changes" : "Create Session"}
-        </Button>
-        <Button type="button" variant="outline" onClick={() => router.back()}>
-          Cancel
-        </Button>
-      </div>
+      </fieldset>
     </form>
   );
 }

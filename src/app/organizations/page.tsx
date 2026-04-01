@@ -1,10 +1,10 @@
 import { getOrganizations } from "@/lib/actions/organizations";
 import { getActiveCampaign } from "@/lib/campaign";
-import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Shield, Plus } from "lucide-react";
 import Link from "next/link";
 import { OrgListClient } from "./org-list-client";
+import { PageHeaderSetter } from "@/components/layout/page-header-setter";
 
 export const dynamic = "force-dynamic";
 
@@ -14,15 +14,7 @@ export default async function OrganizationsPage() {
 
   return (
     <div>
-      <PageHeader
-        title="Organizations"
-        description="Factions, guilds, and groups shaping the campaign."
-      >
-        <Link href="/organizations/new" className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
-            <Plus className="mr-2 h-4 w-4" />
-            New Organization
-        </Link>
-      </PageHeader>
+      <PageHeaderSetter title="Organizations" description="Factions, guilds, and groups shaping the campaign." />
 
       {organizations.length === 0 ? (
         <EmptyState
@@ -36,7 +28,15 @@ export default async function OrganizationsPage() {
           </Link>
         </EmptyState>
       ) : (
-        <OrgListClient organizations={organizations} />
+        <OrgListClient
+          organizations={organizations}
+          headerActions={
+            <Link href="/organizations/new" className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
+              <Plus className="mr-2 h-4 w-4" />
+              New Organization
+            </Link>
+          }
+        />
       )}
     </div>
   );

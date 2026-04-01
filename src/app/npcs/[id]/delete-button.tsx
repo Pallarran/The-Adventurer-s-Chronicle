@@ -3,9 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
-import { deleteNpc } from "@/lib/actions/npcs";
+import { deleteNpc, restoreNpc, purgeNpc } from "@/lib/actions/npcs";
+
+const UNDO_TIMEOUT = 5000;
 
 export function NpcDeleteButton({ id }: { id: string }) {
   const router = useRouter();
@@ -16,6 +19,25 @@ export function NpcDeleteButton({ id }: { id: string }) {
     setLoading(true);
     await deleteNpc(id);
     router.push("/npcs");
+
+    let purged = false;
+    const purgeTimer = setTimeout(async () => {
+      purged = true;
+      await purgeNpc(id);
+    }, UNDO_TIMEOUT);
+
+    toast("NPC deleted", {
+      action: {
+        label: "Undo",
+        onClick: async () => {
+          if (purged) return;
+          clearTimeout(purgeTimer);
+          await restoreNpc(id);
+          router.push(`/npcs/${id}`);
+        },
+      },
+      duration: UNDO_TIMEOUT,
+    });
   };
 
   return (
@@ -28,7 +50,7 @@ export function NpcDeleteButton({ id }: { id: string }) {
         open={open}
         onOpenChange={setOpen}
         title="Delete NPC"
-        description="This will permanently delete this NPC and all its relations. This cannot be undone."
+        description="This NPC will be deleted. You'll have a few seconds to undo."
         onConfirm={handleDelete}
         loading={loading}
       />

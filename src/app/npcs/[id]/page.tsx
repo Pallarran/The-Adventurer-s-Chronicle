@@ -2,19 +2,22 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { getNpc } from "@/lib/actions/npcs";
-import { PageHeader } from "@/components/shared/page-header";
+import { PageHeaderSetter } from "@/components/layout/page-header-setter";
 import { RichTextDisplay } from "@/components/shared/rich-text-display";
 import { Badge, badgeVariants } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button-variants";
 import {
   Pencil,
   User,
   Star,
   Shield,
+  CalendarDays,
   ScrollText,
   Tag,
 } from "lucide-react";
 import { NpcDeleteButton } from "./delete-button";
+import { ImageLightbox } from "@/components/shared/image-lightbox";
 import type { JSONContent } from "@tiptap/react";
 import type { NpcStatus } from "@/generated/prisma/client";
 
@@ -38,150 +41,164 @@ export default async function NpcDetailPage({
 
   return (
     <div>
-      <PageHeader
+      <PageHeaderSetter
         title={npc.name}
         description={npc.aliasTitle ?? undefined}
-      >
-        <Link href={`/npcs/${npc.id}/edit`} className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground">
-            <Pencil className="mr-2 h-4 w-4" />
-            Edit
+        backHref="/npcs"
+        backLabel="NPCs"
+      />
+
+      <div className="flex items-center gap-2 pb-4">
+        <Link href={`/npcs/${npc.id}/edit`} className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+          <Pencil className="mr-2 h-4 w-4" />
+          Edit
         </Link>
         <NpcDeleteButton id={npc.id} />
-      </PageHeader>
+      </div>
 
-      {/* Hero Section */}
-      <div className="mb-6 flex flex-col gap-6 sm:flex-row">
-        {/* Portrait */}
-        <div className="relative h-48 w-48 shrink-0 overflow-hidden rounded-lg border border-border bg-muted">
-          {npc.mainImage ? (
+      {/* Portrait */}
+      {npc.mainImage && (
+        <ImageLightbox src={`/api/upload/${npc.mainImage}`} alt={npc.name}>
+          <div className="relative mb-6 w-48 aspect-[2/3] overflow-hidden rounded-lg border border-border bg-muted">
             <Image
               src={`/api/upload/${npc.mainImage}`}
               alt={npc.name}
               fill
-              className="object-cover"
+              className="object-contain"
             />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center">
-              <User className="h-16 w-16 text-muted-foreground" />
+          </div>
+        </ImageLightbox>
+      )}
+
+      {/* Metadata — compact inline (matches form identity fields order) */}
+      <div className="mb-6 flex items-center gap-4 text-sm text-muted-foreground">
+        <Badge
+          variant="outline"
+          style={{
+            borderColor: STATUS_COLORS[npc.status as NpcStatus],
+            color: STATUS_COLORS[npc.status as NpcStatus],
+          }}
+        >
+          {npc.status}
+        </Badge>
+        {npc.partyMember && (
+          <span className="flex items-center gap-1 text-gold">
+            <Star className="h-4 w-4 fill-gold" />
+            Party Member
+          </span>
+        )}
+        {npc.race && (
+          <>
+            <span className="text-border">·</span>
+            <span>{npc.race}</span>
+          </>
+        )}
+        {npc.gender && (
+          <>
+            <span className="text-border">·</span>
+            <span>{npc.gender}</span>
+          </>
+        )}
+        {npc.classRole && (
+          <>
+            <span className="text-border">·</span>
+            <span>{npc.classRole}</span>
+          </>
+        )}
+      </div>
+
+      {/* Relations + Tags — bordered cards (matches form card order) */}
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-lg border border-border p-4">
+          <div className="mb-2 flex items-center gap-2 text-sm font-medium">
+            <Shield className="h-4 w-4" /> Organization
+          </div>
+          {npc.organization ? (
+            <div className="flex flex-wrap gap-1.5">
+              <Link href={`/organizations/${npc.organization.id}`} className={cn(badgeVariants({variant: "secondary"}))}>
+                {npc.organization.name}
+              </Link>
             </div>
+          ) : (
+            <p className="text-sm italic text-muted-foreground/60">None</p>
           )}
         </div>
-
-        {/* Info Card */}
-        <div className="flex-1 rounded-lg border border-border bg-card p-4">
-          <div className="mb-4 flex items-center gap-3">
-            <Badge
-              variant="outline"
-              className="text-sm"
-              style={{
-                borderColor: STATUS_COLORS[npc.status as NpcStatus],
-                color: STATUS_COLORS[npc.status as NpcStatus],
-              }}
-            >
-              {npc.status}
-            </Badge>
-            {npc.partyMember && (
-              <span className="flex items-center gap-1 text-sm text-gold">
-                <Star className="h-4 w-4 fill-gold" />
-                Party Member
-              </span>
-            )}
+        <div className="rounded-lg border border-border p-4">
+          <div className="mb-2 flex items-center gap-2 text-sm font-medium">
+            <CalendarDays className="h-4 w-4" /> First Appearance
           </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {npc.gender && (
-              <div>
-                <span className="text-xs font-medium text-muted-foreground">Gender</span>
-                <p className="mt-1 text-sm">{npc.gender}</p>
-              </div>
-            )}
-            {npc.classRole && (
-              <div>
-                <span className="text-xs font-medium text-muted-foreground">Class / Role</span>
-                <p className="mt-1 text-sm">{npc.classRole}</p>
-              </div>
-            )}
-            {npc.organization && (
-              <div>
-                <span className="text-xs font-medium text-muted-foreground">Organization</span>
-                <div className="mt-1">
-                  <Link href={`/organizations/${npc.organization.id}`} className={cn(badgeVariants({variant: "secondary"}))}>
-                      <Shield className="mr-1 h-3 w-3" />
-                      {npc.organization.name}
-                  </Link>
-                </div>
-              </div>
-            )}
-            {npc.firstAppearanceSession && (
-              <div>
-                <span className="text-xs font-medium text-muted-foreground">First Appearance</span>
-                <div className="mt-1">
-                  <Link href={`/sessions/${npc.firstAppearanceSession.id}`} className={cn(badgeVariants({variant: "secondary"}))}>
-                      <ScrollText className="mr-1 h-3 w-3" />
-                      Session #{npc.firstAppearanceSession.sessionNumber}
-                      {npc.firstAppearanceSession.title && ` — ${npc.firstAppearanceSession.title}`}
-                  </Link>
-                </div>
-              </div>
-            )}
-            {npc.lastAppearanceSession && (
-              <div>
-                <span className="text-xs font-medium text-muted-foreground">Last Appearance</span>
-                <div className="mt-1">
-                  <Link href={`/sessions/${npc.lastAppearanceSession.id}`} className={cn(badgeVariants({variant: "secondary"}))}>
-                      <ScrollText className="mr-1 h-3 w-3" />
-                      Session #{npc.lastAppearanceSession.sessionNumber}
-                      {npc.lastAppearanceSession.title && ` — ${npc.lastAppearanceSession.title}`}
-                  </Link>
-                </div>
-              </div>
-            )}
+          {npc.firstAppearanceSession ? (
+            <div className="flex flex-wrap gap-1.5">
+              <Link href={`/sessions/${npc.firstAppearanceSession.id}`} className={cn(badgeVariants({variant: "secondary"}))}>
+                #{npc.firstAppearanceSession.sessionNumber}
+                {npc.firstAppearanceSession.title && ` — ${npc.firstAppearanceSession.title}`}
+              </Link>
+            </div>
+          ) : (
+            <p className="text-sm italic text-muted-foreground/60">None</p>
+          )}
+        </div>
+        <div className="rounded-lg border border-border p-4">
+          <div className="mb-2 flex items-center gap-2 text-sm font-medium">
+            <CalendarDays className="h-4 w-4" /> Last Appearance
           </div>
+          {npc.lastAppearanceSession ? (
+            <div className="flex flex-wrap gap-1.5">
+              <Link href={`/sessions/${npc.lastAppearanceSession.id}`} className={cn(badgeVariants({variant: "secondary"}))}>
+                #{npc.lastAppearanceSession.sessionNumber}
+                {npc.lastAppearanceSession.title && ` — ${npc.lastAppearanceSession.title}`}
+              </Link>
+            </div>
+          ) : (
+            <p className="text-sm italic text-muted-foreground/60">None</p>
+          )}
+        </div>
+        <div className="rounded-lg border border-border p-4">
+          <div className="mb-2 flex items-center gap-2 text-sm font-medium">
+            <Tag className="h-4 w-4" /> Tags
+          </div>
+          {npc.tags.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5">
+              {npc.tags.map((t) => (
+                <Badge key={t.tag.id} variant="outline">
+                  {t.tag.name}
+                </Badge>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm italic text-muted-foreground/60">None</p>
+          )}
         </div>
       </div>
 
-      {/* Sessions this NPC appeared in */}
+      {/* Featured Sessions (read-only, not in form) */}
       {npc.sessions && npc.sessions.length > 0 && (
-        <div className="mb-6">
-          <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-            <ScrollText className="h-3.5 w-3.5" /> Featured Sessions
+        <div className="mb-6 rounded-lg border border-border p-4">
+          <div className="mb-2 flex items-center gap-2 text-sm font-medium">
+            <ScrollText className="h-4 w-4" /> Featured Sessions
           </div>
           <div className="flex flex-wrap gap-1.5">
             {npc.sessions.map((s) => (
               <Link key={s.session.id} href={`/sessions/${s.session.id}`} className={cn(badgeVariants({variant: "secondary"}))}>
-                  Session #{s.session.sessionNumber}
-                  {s.session.title && ` — ${s.session.title}`}
+                #{s.session.sessionNumber}
+                {s.session.title && ` — ${s.session.title}`}
               </Link>
             ))}
           </div>
         </div>
       )}
 
-      {/* Tags */}
-      {npc.tags.length > 0 && (
-        <div className="mb-6">
-          <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-            <Tag className="h-3.5 w-3.5" /> Tags
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {npc.tags.map((t) => (
-              <Badge key={t.tag.id} variant="outline">
-                {t.tag.name}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Notes */}
-      {npc.notesBody && (
-        <div className="mb-6">
-          <h2 className="mb-3 text-lg font-semibold">Notes</h2>
-          <div className="rounded-lg border border-border bg-card p-4">
+      <div className="mb-6">
+        <h2 className="mb-3 text-lg font-semibold">Notes</h2>
+        <div className="rounded-lg border border-border bg-card p-4">
+          {npc.notesBody ? (
             <RichTextDisplay content={npc.notesBody as JSONContent} />
-          </div>
+          ) : (
+            <p className="text-sm italic text-muted-foreground/60">No notes yet.</p>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

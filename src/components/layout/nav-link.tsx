@@ -9,9 +9,10 @@ interface NavLinkProps {
   href: string;
   label: string;
   icon: LucideIcon;
+  count?: number;
 }
 
-export function NavLink({ href, label, icon: Icon }: NavLinkProps) {
+export function NavLink({ href, label, icon: Icon, count }: NavLinkProps) {
   const pathname = usePathname();
   const isActive = pathname === href || pathname.startsWith(`${href}/`);
 
@@ -36,6 +37,16 @@ export function NavLink({ href, label, icon: Icon }: NavLinkProps) {
         )}
       />
       <span>{label}</span>
+      {count !== undefined && (
+        <span
+          className={cn(
+            "ml-auto text-[11px] tabular-nums",
+            isActive ? "text-gold/60" : "text-muted-foreground/50"
+          )}
+        >
+          {count}
+        </span>
+      )}
     </Link>
   );
 }

@@ -18,6 +18,7 @@ export async function updateCharacterProfile(
   data: {
     name?: string;
     classInfo?: string | null;
+    race?: string | null;
     level?: number | null;
     portrait?: string | null;
     summary?: string | null;

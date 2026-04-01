@@ -61,8 +61,8 @@ export function ImageUpload({ value, onChange, className }: ImageUploadProps) {
 
   if (value) {
     return (
-      <div className={cn("relative group", className)}>
-        <div className="relative aspect-video w-full overflow-hidden rounded-md border border-border">
+      <div className={cn("relative group")}>
+        <div className={cn("relative aspect-video w-full overflow-hidden rounded-md border border-border", className)}>
           <Image
             src={`/api/upload/${value}`}
             alt="Uploaded image"

@@ -1,10 +1,10 @@
 import { getNpcs } from "@/lib/actions/npcs";
 import { getActiveCampaign } from "@/lib/campaign";
-import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Users, Plus } from "lucide-react";
 import Link from "next/link";
 import { NpcListClient } from "./npc-list-client";
+import { PageHeaderSetter } from "@/components/layout/page-header-setter";
 
 export const dynamic = "force-dynamic";
 
@@ -14,15 +14,7 @@ export default async function NpcsPage() {
 
   return (
     <div>
-      <PageHeader
-        title="NPCs"
-        description="Characters you've encountered in your campaign."
-      >
-        <Link href="/npcs/new" className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
-            <Plus className="mr-2 h-4 w-4" />
-            New NPC
-        </Link>
-      </PageHeader>
+      <PageHeaderSetter title="NPCs" description="Characters you've encountered in your campaign." />
 
       {npcs.length === 0 ? (
         <EmptyState
@@ -36,7 +28,15 @@ export default async function NpcsPage() {
           </Link>
         </EmptyState>
       ) : (
-        <NpcListClient npcs={npcs} />
+        <NpcListClient
+          npcs={npcs}
+          headerActions={
+            <Link href="/npcs/new" className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
+              <Plus className="mr-2 h-4 w-4" />
+              New NPC
+            </Link>
+          }
+        />
       )}
     </div>
   );

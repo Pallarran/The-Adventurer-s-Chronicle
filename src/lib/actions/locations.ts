@@ -40,6 +40,7 @@ export async function getLocations(campaignId: string, filters?: LocationFilters
   return prisma.location.findMany({
     where: {
       campaignId,
+      deletedAt: null,
       ...(search ? { name: { contains: search, mode: "insensitive" as const } } : {}),
       ...(type ? { type: { contains: type, mode: "insensitive" as const } } : {}),
       ...(tagId ? { tags: { some: { tagId } } } : {}),
@@ -51,7 +52,7 @@ export async function getLocations(campaignId: string, filters?: LocationFilters
 
 export async function getLocation(id: string): Promise<LocationDetail | null> {
   return prisma.location.findUnique({
-    where: { id },
+    where: { id, deletedAt: null },
     include: locationDetailInclude,
   }) as Promise<LocationDetail | null>;
 }
@@ -140,6 +141,22 @@ export async function updateLocation(id: string, data: UpdateLocationData) {
 }
 
 export async function deleteLocation(id: string) {
-  await prisma.location.delete({ where: { id } });
+  await prisma.location.update({
+    where: { id },
+    data: { deletedAt: new Date() },
+  });
   revalidatePath("/locations");
+  revalidatePath(`/locations/${id}`);
+}
+
+export async function restoreLocation(id: string) {
+  await prisma.location.update({
+    where: { id },
+    data: { deletedAt: null },
+  });
+  revalidatePath("/locations");
+}
+
+export async function purgeLocation(id: string) {
+  await prisma.location.delete({ where: { id } });
 }

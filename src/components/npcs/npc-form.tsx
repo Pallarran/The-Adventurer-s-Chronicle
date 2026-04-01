@@ -19,11 +19,27 @@ import { TagInput, type TagOption } from "@/components/shared/tag-input";
 import { ImageUpload } from "@/components/shared/image-upload";
 import { createNpc, updateNpc } from "@/lib/actions/npcs";
 import { createTag } from "@/lib/actions/tags";
+import { toast } from "sonner";
+import { Shield, CalendarDays, Tag } from "lucide-react";
 import type { JSONContent } from "@tiptap/react";
 import type { NpcStatus } from "@/generated/prisma/client";
 import type { NpcDetail } from "@/types";
 
 const NPC_STATUSES: NpcStatus[] = ["ALIVE", "DEAD", "MISSING", "UNKNOWN"];
+
+export function NpcFormActions({ isEdit }: { isEdit: boolean }) {
+  const router = useRouter();
+  return (
+    <>
+      <Button type="submit" form="npc-form">
+        {isEdit ? "Save Changes" : "Create NPC"}
+      </Button>
+      <Button type="button" variant="outline" onClick={() => router.back()}>
+        Cancel
+      </Button>
+    </>
+  );
+}
 
 interface NpcFormProps {
   campaignId: string;
@@ -47,6 +63,7 @@ export function NpcForm({
   const [aliasTitle, setAliasTitle] = useState(npc?.aliasTitle ?? "");
   const [gender, setGender] = useState(npc?.gender ?? "");
   const [classRole, setClassRole] = useState(npc?.classRole ?? "");
+  const [race, setRace] = useState(npc?.race ?? "");
   const [status, setStatus] = useState<NpcStatus>(npc?.status ?? "ALIVE");
   const [partyMember, setPartyMember] = useState(npc?.partyMember ?? false);
   const [mainImage, setMainImage] = useState<string | null>(npc?.mainImage ?? null);
@@ -91,6 +108,7 @@ export function NpcForm({
         aliasTitle: aliasTitle || undefined,
         gender: gender || undefined,
         classRole: classRole || undefined,
+        race: race || undefined,
         status,
         partyMember,
         organizationId: selectedOrg[0]?.id || undefined,
@@ -109,11 +127,15 @@ export function NpcForm({
           lastAppearanceSessionId: data.lastAppearanceSessionId ?? null,
           mainImage: mainImage,
         });
+        toast.success("NPC updated.");
         router.push(`/npcs/${npc.id}`);
       } else {
         const newNpc = await createNpc({ ...data, campaignId });
+        toast.success("NPC created.");
         router.push(`/npcs/${newNpc.id}`);
       }
+    } catch {
+      toast.error("Failed to save NPC.");
     } finally {
       setSaving(false);
     }
@@ -125,118 +147,141 @@ export function NpcForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Name and Alias */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="name">Name *</Label>
-          <Input
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="NPC name"
-            required
+    <form id="npc-form" onSubmit={handleSubmit} className="space-y-6">
+      <fieldset disabled={saving} className="space-y-6">
+      {/* Identity — portrait left, fields right */}
+      <div className="flex flex-col gap-6 sm:flex-row">
+        {/* Portrait */}
+        <div className="w-full space-y-2 sm:w-48 sm:shrink-0">
+          <Label>Portrait</Label>
+          <ImageUpload value={mainImage} onChange={setMainImage} className="aspect-square" />
+        </div>
+
+        {/* Identity fields */}
+        <div className="flex-1 space-y-4">
+          {/* Row 1: Name (wide) + Alias */}
+          <div className="flex flex-wrap items-end gap-4">
+            <div className="min-w-[200px] flex-1 space-y-2">
+              <Label htmlFor="name">Name *</Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="NPC name"
+                required
+              />
+            </div>
+            <div className="min-w-[200px] flex-1 space-y-2">
+              <Label htmlFor="aliasTitle">Alias / Title</Label>
+              <Input
+                id="aliasTitle"
+                value={aliasTitle}
+                onChange={(e) => setAliasTitle(e.target.value)}
+                placeholder='e.g. "The Shadow Broker"'
+              />
+            </div>
+          </div>
+
+          {/* Row 2: Race, Gender, Class/Role, Status */}
+          <div className="flex flex-wrap items-end gap-4">
+            <div className="w-36 space-y-2">
+              <Label htmlFor="race">Race</Label>
+              <Input
+                id="race"
+                value={race}
+                onChange={(e) => setRace(e.target.value)}
+                placeholder="e.g. Elf"
+              />
+            </div>
+            <div className="w-32 space-y-2">
+              <Label htmlFor="gender">Gender</Label>
+              <Input
+                id="gender"
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+                placeholder="e.g. Male"
+              />
+            </div>
+            <div className="min-w-[140px] flex-1 space-y-2">
+              <Label htmlFor="classRole">Class / Role</Label>
+              <Input
+                id="classRole"
+                value={classRole}
+                onChange={(e) => setClassRole(e.target.value)}
+                placeholder="e.g. Wizard, Merchant"
+              />
+            </div>
+            <div className="w-32 space-y-2">
+              <Label>Status</Label>
+              <Select value={status} onValueChange={(val) => setStatus(val as NpcStatus)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {NPC_STATUSES.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Row 3: Party Member toggle */}
+          <div className="flex items-center gap-3">
+            <Switch
+              checked={partyMember}
+              onCheckedChange={setPartyMember}
+              id="partyMember"
+            />
+            <Label htmlFor="partyMember">Party Member</Label>
+          </div>
+        </div>
+      </div>
+
+      {/* Relations + Tags — bordered cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-lg border border-border p-4">
+          <RelationPicker
+            label={<><Shield className="h-4 w-4" /> Organization</>}
+            options={allOrganizations}
+            selected={selectedOrg}
+            onChange={setSelectedOrg}
+            placeholder="Search organizations..."
+            single
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="aliasTitle">Alias / Title</Label>
-          <Input
-            id="aliasTitle"
-            value={aliasTitle}
-            onChange={(e) => setAliasTitle(e.target.value)}
-            placeholder='e.g. "The Shadow Broker"'
+        <div className="rounded-lg border border-border p-4">
+          <RelationPicker
+            label={<><CalendarDays className="h-4 w-4" /> First Appearance</>}
+            options={allSessions}
+            selected={selectedFirstSession}
+            onChange={setSelectedFirstSession}
+            placeholder="Search sessions..."
+            single
+          />
+        </div>
+        <div className="rounded-lg border border-border p-4">
+          <RelationPicker
+            label={<><CalendarDays className="h-4 w-4" /> Last Appearance</>}
+            options={allSessions}
+            selected={selectedLastSession}
+            onChange={setSelectedLastSession}
+            placeholder="Search sessions..."
+            single
+          />
+        </div>
+        <div className="rounded-lg border border-border p-4">
+          <TagInput
+            label={<><Tag className="h-4 w-4" /> Tags</>}
+            availableTags={allTags}
+            selectedTags={selectedTags}
+            onChange={setSelectedTags}
+            onCreateTag={handleCreateTag}
           />
         </div>
       </div>
-
-      {/* Gender, Class/Role, Status */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="space-y-2">
-          <Label htmlFor="gender">Gender</Label>
-          <Input
-            id="gender"
-            value={gender}
-            onChange={(e) => setGender(e.target.value)}
-            placeholder="e.g. Male, Female, Non-binary"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="classRole">Class / Role</Label>
-          <Input
-            id="classRole"
-            value={classRole}
-            onChange={(e) => setClassRole(e.target.value)}
-            placeholder="e.g. Wizard, Merchant, Guard"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Status</Label>
-          <Select value={status} onValueChange={(val) => setStatus(val as NpcStatus)}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select status" />
-            </SelectTrigger>
-            <SelectContent>
-              {NPC_STATUSES.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {s}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Party Member */}
-      <div className="flex items-center gap-3">
-        <Switch
-          checked={partyMember}
-          onCheckedChange={setPartyMember}
-          id="partyMember"
-        />
-        <Label htmlFor="partyMember">Party Member</Label>
-      </div>
-
-      {/* Portrait Image */}
-      <div className="space-y-2">
-        <Label>Portrait Image</Label>
-        <ImageUpload value={mainImage} onChange={setMainImage} />
-      </div>
-
-      {/* Organization */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <RelationPicker
-          label="Organization"
-          options={allOrganizations}
-          selected={selectedOrg}
-          onChange={setSelectedOrg}
-          placeholder="Search organizations..."
-          single
-        />
-        <RelationPicker
-          label="First Appearance"
-          options={allSessions}
-          selected={selectedFirstSession}
-          onChange={setSelectedFirstSession}
-          placeholder="Search sessions..."
-          single
-        />
-        <RelationPicker
-          label="Last Appearance"
-          options={allSessions}
-          selected={selectedLastSession}
-          onChange={setSelectedLastSession}
-          placeholder="Search sessions..."
-          single
-        />
-      </div>
-
-      {/* Tags */}
-      <TagInput
-        availableTags={allTags}
-        selectedTags={selectedTags}
-        onChange={setSelectedTags}
-        onCreateTag={handleCreateTag}
-      />
 
       {/* Notes */}
       <div className="space-y-2">
@@ -247,16 +292,7 @@ export function NpcForm({
           placeholder="Write notes about this NPC..."
         />
       </div>
-
-      {/* Actions */}
-      <div className="flex gap-3">
-        <Button type="submit" disabled={saving}>
-          {saving ? "Saving..." : isEdit ? "Save Changes" : "Create NPC"}
-        </Button>
-        <Button type="button" variant="outline" onClick={() => router.back()}>
-          Cancel
-        </Button>
-      </div>
+      </fieldset>
     </form>
   );
 }

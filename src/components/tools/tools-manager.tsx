@@ -240,7 +240,7 @@ export function ToolsManager({ campaignId, initialTools }: ToolsManagerProps) {
           </Button>
         </EmptyState>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {tools.map((tool) => (
             <Card key={tool.id} size="sm">
               <CardContent className="space-y-3">

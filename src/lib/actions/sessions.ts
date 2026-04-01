@@ -26,6 +26,7 @@ export async function getSessions(campaignId: string, filters?: SessionFilters):
   return prisma.session.findMany({
     where: {
       campaignId,
+      deletedAt: null,
       ...(search
         ? {
             OR: [
@@ -42,7 +43,7 @@ export async function getSessions(campaignId: string, filters?: SessionFilters):
 
 export async function getSession(id: string): Promise<SessionDetail | null> {
   return prisma.session.findUnique({
-    where: { id },
+    where: { id, deletedAt: null },
     include: sessionInclude,
   }) as Promise<SessionDetail | null>;
 }
@@ -141,7 +142,48 @@ export async function updateSession(id: string, data: UpdateSessionData) {
   return session;
 }
 
+export async function getRecentSessions(campaignId: string, limit: number = 5) {
+  return prisma.session.findMany({
+    where: { campaignId, deletedAt: null },
+    select: {
+      id: true,
+      sessionNumber: true,
+      title: true,
+      realDatePlayed: true,
+      inGameDate: true,
+      notesBody: true,
+      followUpActions: true,
+    },
+    orderBy: { sessionNumber: "desc" },
+    take: limit,
+  });
+}
+
+export async function getNextSessionNumber(campaignId: string): Promise<number> {
+  const result = await prisma.session.aggregate({
+    where: { campaignId, deletedAt: null },
+    _max: { sessionNumber: true },
+  });
+  return (result._max.sessionNumber ?? 0) + 1;
+}
+
 export async function deleteSession(id: string) {
-  await prisma.session.delete({ where: { id } });
+  await prisma.session.update({
+    where: { id },
+    data: { deletedAt: new Date() },
+  });
   revalidatePath("/sessions");
+  revalidatePath(`/sessions/${id}`);
+}
+
+export async function restoreSession(id: string) {
+  await prisma.session.update({
+    where: { id },
+    data: { deletedAt: null },
+  });
+  revalidatePath("/sessions");
+}
+
+export async function purgeSession(id: string) {
+  await prisma.session.delete({ where: { id } });
 }

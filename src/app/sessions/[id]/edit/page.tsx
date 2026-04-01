@@ -5,8 +5,8 @@ import { getNpcs } from "@/lib/actions/npcs";
 import { getLocations } from "@/lib/actions/locations";
 import { getOrganizations } from "@/lib/actions/organizations";
 import { getTags } from "@/lib/actions/tags";
-import { PageHeader } from "@/components/shared/page-header";
-import { SessionForm } from "@/components/sessions/session-form";
+import { PageHeaderSetter } from "@/components/layout/page-header-setter";
+import { SessionForm, SessionFormActions } from "@/components/sessions/session-form";
 
 export const dynamic = "force-dynamic";
 
@@ -31,10 +31,11 @@ export default async function EditSessionPage({
 
   return (
     <div>
-      <PageHeader
-        title={`Edit Session #${session.sessionNumber}`}
-        description="Update session details."
-      />
+      <PageHeaderSetter title={`Edit Session #${session.sessionNumber}`} backHref={`/sessions/${id}`} backLabel="Session detail" />
+
+      <div className="flex items-center gap-2 pb-4">
+        <SessionFormActions isEdit={true} />
+      </div>
       <SessionForm
         campaignId={campaign.id}
         session={session}

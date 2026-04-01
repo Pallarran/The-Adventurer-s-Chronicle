@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useId } from "react";
 import { X, Search, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -20,7 +20,7 @@ export interface RelationOption {
 }
 
 interface RelationPickerProps {
-  label: string;
+  label: React.ReactNode;
   options: RelationOption[];
   selected: RelationOption[];
   onChange: (selected: RelationOption[]) => void;
@@ -37,6 +37,7 @@ export function RelationPicker({
   placeholder = "Search...",
   single = false,
 }: RelationPickerProps) {
+  const labelId = useId();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -69,9 +70,9 @@ export function RelationPicker({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">{label}</span>
+        <span id={labelId} className="flex items-center gap-2 text-sm font-medium">{label}</span>
         <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger className={cn(buttonVariants({variant: "outline", size: "sm"}), "h-7 gap-1")}>
+          <PopoverTrigger aria-labelledby={labelId} className={cn(buttonVariants({variant: "outline", size: "sm"}), "h-7 gap-1")}>
               <Plus className="h-3 w-3" />
               Add
           </PopoverTrigger>
@@ -109,6 +110,11 @@ export function RelationPicker({
                 </div>
               )}
             </ScrollArea>
+            {filtered.length > 0 && (
+              <p className="mt-1.5 border-t border-border pt-1.5 text-center text-[10px] text-muted-foreground/50">
+                Click to select
+              </p>
+            )}
           </PopoverContent>
         </Popover>
       </div>
@@ -125,6 +131,7 @@ export function RelationPicker({
               <button
                 onClick={() => remove(item.id)}
                 className="ml-0.5 rounded-full p-0.5 hover:bg-background/50"
+                aria-label={`Remove ${item.name}`}
               >
                 <X className="h-3 w-3" />
               </button>

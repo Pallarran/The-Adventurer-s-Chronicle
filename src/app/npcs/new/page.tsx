@@ -2,8 +2,8 @@ import { getActiveCampaign } from "@/lib/campaign";
 import { getSessions } from "@/lib/actions/sessions";
 import { getOrganizations } from "@/lib/actions/organizations";
 import { getTags } from "@/lib/actions/tags";
-import { PageHeader } from "@/components/shared/page-header";
-import { NpcForm } from "@/components/npcs/npc-form";
+import { PageHeaderSetter } from "@/components/layout/page-header-setter";
+import { NpcForm, NpcFormActions } from "@/components/npcs/npc-form";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +17,11 @@ export default async function NewNpcPage() {
 
   return (
     <div>
-      <PageHeader title="New NPC" description="Add a new character to your campaign." />
+      <PageHeaderSetter title="New NPC" />
+
+      <div className="flex items-center gap-2 pb-4">
+        <NpcFormActions isEdit={false} />
+      </div>
       <NpcForm
         campaignId={campaign.id}
         allOrganizations={organizations.map((o) => ({ id: o.id, name: o.name }))}

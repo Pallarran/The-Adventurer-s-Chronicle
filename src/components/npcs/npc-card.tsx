@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { User, Star, Shield } from "lucide-react";
 import type { NpcStatus } from "@/generated/prisma/client";
 import type { NpcListItem } from "@/types";
@@ -20,78 +20,71 @@ interface NpcCardProps {
 export function NpcCard({ npc }: NpcCardProps) {
   return (
     <Link href={`/npcs/${npc.id}`}>
-      <Card className="transition-colors hover:border-gold/30 hover:bg-card/80">
-        <CardHeader className="pb-2">
-          <div className="flex items-start gap-3">
-            {/* Portrait thumbnail */}
-            <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md border border-border bg-muted">
-              {npc.mainImage ? (
-                <Image
-                  src={`/api/upload/${npc.mainImage}`}
-                  alt={npc.name}
-                  fill
-                  className="object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center">
-                  <User className="h-6 w-6 text-muted-foreground" />
-                </div>
-              )}
-            </div>
-
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <span className="truncate text-sm font-bold text-foreground">
-                  {npc.name}
-                </span>
-                {npc.partyMember && (
-                  <Star className="h-3.5 w-3.5 shrink-0 fill-gold text-gold" />
-                )}
-              </div>
-              {npc.aliasTitle && (
-                <p className="truncate text-xs text-muted-foreground italic">
-                  {npc.aliasTitle}
-                </p>
-              )}
-              <div className="mt-1 flex items-center gap-2">
-                <Badge
-                  variant="outline"
-                  className="text-xs"
-                  style={{
-                    borderColor: STATUS_COLORS[npc.status],
-                    color: STATUS_COLORS[npc.status],
-                  }}
-                >
-                  {npc.status}
-                </Badge>
-                {npc.classRole && (
-                  <span className="truncate text-xs text-muted-foreground">
-                    {npc.classRole}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-            {npc.organization && (
-              <span className="flex items-center gap-1">
-                <Shield className="h-3 w-3" />
-                {npc.organization.name}
-              </span>
-            )}
-          </div>
-          {npc.tags.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1">
-              {npc.tags.map((t) => (
-                <Badge key={t.tag.id} variant="outline" className="text-xs">
-                  {t.tag.name}
-                </Badge>
-              ))}
+      <Card className="h-full overflow-hidden transition-colors hover:border-gold/30 hover:bg-card/80 hover:shadow-lg hover:shadow-gold/10">
+        {/* Portrait */}
+        <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
+          {npc.mainImage ? (
+            <Image
+              src={`/api/upload/${npc.mainImage}`}
+              alt={npc.name}
+              fill
+              className="object-cover"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center">
+              <User className="h-10 w-10 text-muted-foreground/40" />
             </div>
           )}
-        </CardContent>
+          <Badge
+            variant="outline"
+            className="absolute bottom-2 left-2 text-xs backdrop-blur-sm bg-background/70"
+            style={{
+              borderColor: STATUS_COLORS[npc.status],
+              color: STATUS_COLORS[npc.status],
+            }}
+          >
+            {npc.status}
+          </Badge>
+          {npc.partyMember && (
+            <Star className="absolute top-2 right-2 h-4 w-4 fill-gold text-gold drop-shadow" />
+          )}
+        </div>
+
+        {/* Info — fixed height for consistency */}
+        <div className="flex min-h-[5.5rem] flex-col justify-between p-3">
+          <div className="space-y-0.5">
+            <p className="truncate text-sm font-bold">{npc.name}</p>
+            <p className="truncate text-xs text-muted-foreground italic">
+              {npc.aliasTitle || "\u00A0"}
+            </p>
+            <p className="truncate text-xs text-muted-foreground">
+              {[npc.race, npc.classRole].filter(Boolean).join(" · ") || "\u00A0"}
+            </p>
+          </div>
+
+          <div className="mt-1.5 flex items-center justify-between gap-2">
+            {npc.organization ? (
+              <span className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
+                <Shield className="h-3 w-3 shrink-0" />
+                <span className="truncate">{npc.organization.name}</span>
+              </span>
+            ) : (
+              <span />
+            )}
+            {npc.tags.length > 0 && (
+              <div className="flex shrink-0 gap-1">
+                {npc.tags.slice(0, 2).map((t) => (
+                  <Badge key={t.tag.id} variant="outline" className="text-xs px-1.5 py-0">
+                    {t.tag.name}
+                  </Badge>
+                ))}
+                {npc.tags.length > 2 && (
+                  <span className="text-xs text-muted-foreground">+{npc.tags.length - 2}</span>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
       </Card>
     </Link>
   );

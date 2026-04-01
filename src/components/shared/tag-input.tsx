@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useId } from "react";
 import { X, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -19,6 +19,7 @@ export interface TagOption {
 }
 
 interface TagInputProps {
+  label?: React.ReactNode;
   availableTags: TagOption[];
   selectedTags: TagOption[];
   onChange: (tags: TagOption[]) => void;
@@ -26,11 +27,13 @@ interface TagInputProps {
 }
 
 export function TagInput({
+  label = "Tags",
   availableTags,
   selectedTags,
   onChange,
   onCreateTag,
 }: TagInputProps) {
+  const labelId = useId();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [creating, setCreating] = useState(false);
@@ -79,11 +82,11 @@ export function TagInput({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">Tags</span>
+        <span id={labelId} className="flex items-center gap-2 text-sm font-medium">{label}</span>
         <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger className={cn(buttonVariants({variant: "outline", size: "sm"}), "h-7 gap-1")}>
+          <PopoverTrigger aria-labelledby={labelId} className={cn(buttonVariants({variant: "outline", size: "sm"}), "h-7 gap-1")}>
               <Plus className="h-3 w-3" />
-              Add Tag
+              Add
           </PopoverTrigger>
           <PopoverContent className="w-56 p-2" align="end">
             <Input
@@ -132,6 +135,7 @@ export function TagInput({
               <button
                 onClick={() => remove(tag.id)}
                 className="ml-0.5 rounded-full p-0.5 hover:bg-background/50"
+                aria-label={`Remove ${tag.name}`}
               >
                 <X className="h-3 w-3" />
               </button>

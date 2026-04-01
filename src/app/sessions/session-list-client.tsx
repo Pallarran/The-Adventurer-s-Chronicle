@@ -19,9 +19,10 @@ const sortLabels: Record<SortOption, string> = {
 
 interface SessionListClientProps {
   sessions: SessionListItem[];
+  headerActions?: React.ReactNode;
 }
 
-export function SessionListClient({ sessions }: SessionListClientProps) {
+export function SessionListClient({ sessions, headerActions }: SessionListClientProps) {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<SortOption>("newest");
 
@@ -87,12 +88,10 @@ export function SessionListClient({ sessions }: SessionListClientProps) {
           <ArrowUpDown className="h-3.5 w-3.5" />
           {sortLabels[sort]}
         </Button>
-        <span className="ml-auto text-xs text-muted-foreground">
-          {results.length} session{results.length !== 1 ? "s" : ""}
-        </span>
+        <div className="ml-auto">{headerActions}</div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {results.map((session) => (
           <SessionCard key={session.id} session={session} />
         ))}

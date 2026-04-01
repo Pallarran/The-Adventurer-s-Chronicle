@@ -1,7 +1,7 @@
 import { Swords } from "lucide-react";
 import { getActiveCampaign } from "@/lib/campaign";
 import { getCharacterProfile } from "@/lib/actions/character";
-import { PageHeader } from "@/components/shared/page-header";
+import { PageHeaderSetter } from "@/components/layout/page-header-setter";
 import { EmptyState } from "@/components/shared/empty-state";
 import { CharacterHubClient } from "@/components/character/character-hub-client";
 
@@ -14,10 +14,7 @@ export default async function CharacterPage() {
   if (!profile) {
     return (
       <div>
-        <PageHeader
-          title="Character"
-          description="Your personal character hub."
-        />
+        <PageHeaderSetter title="Character" description="Your personal character hub." />
         <EmptyState
           icon={Swords}
           title="No Character Profile"
@@ -32,6 +29,7 @@ export default async function CharacterPage() {
     id: profile.id,
     name: profile.name,
     classInfo: profile.classInfo,
+    race: profile.race,
     level: profile.level,
     portrait: profile.portrait,
     summary: profile.summary,
@@ -44,10 +42,7 @@ export default async function CharacterPage() {
 
   return (
     <div>
-      <PageHeader
-        title="Character"
-        description="Your personal character hub."
-      />
+      <PageHeaderSetter title="Character" description="Your personal character hub." />
       <CharacterHubClient profile={serializedProfile} />
     </div>
   );

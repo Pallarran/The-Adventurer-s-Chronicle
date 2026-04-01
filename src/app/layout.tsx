@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
 import { AppShell } from "@/components/layout/app-shell";
 import "./globals.css";
 
@@ -25,6 +26,7 @@ export default function RootLayout({
       <body className="min-h-full">
         <TooltipProvider>
           <AppShell>{children}</AppShell>
+          <Toaster />
         </TooltipProvider>
       </body>
     </html>

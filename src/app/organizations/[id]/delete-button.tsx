@@ -3,9 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
-import { deleteOrganization } from "@/lib/actions/organizations";
+import { deleteOrganization, restoreOrganization, purgeOrganization } from "@/lib/actions/organizations";
+
+const UNDO_TIMEOUT = 5000;
 
 export function OrganizationDeleteButton({ id }: { id: string }) {
   const router = useRouter();
@@ -16,6 +19,25 @@ export function OrganizationDeleteButton({ id }: { id: string }) {
     setLoading(true);
     await deleteOrganization(id);
     router.push("/organizations");
+
+    let purged = false;
+    const purgeTimer = setTimeout(async () => {
+      purged = true;
+      await purgeOrganization(id);
+    }, UNDO_TIMEOUT);
+
+    toast("Organization deleted", {
+      action: {
+        label: "Undo",
+        onClick: async () => {
+          if (purged) return;
+          clearTimeout(purgeTimer);
+          await restoreOrganization(id);
+          router.push(`/organizations/${id}`);
+        },
+      },
+      duration: UNDO_TIMEOUT,
+    });
   };
 
   return (
@@ -28,7 +50,7 @@ export function OrganizationDeleteButton({ id }: { id: string }) {
         open={open}
         onOpenChange={setOpen}
         title="Delete Organization"
-        description="This will permanently delete this organization and all its relations. This cannot be undone."
+        description="This organization will be deleted. You'll have a few seconds to undo."
         onConfirm={handleDelete}
         loading={loading}
       />

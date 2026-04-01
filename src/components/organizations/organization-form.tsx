@@ -18,6 +18,8 @@ import { TagInput, type TagOption } from "@/components/shared/tag-input";
 import { ImageUpload } from "@/components/shared/image-upload";
 import { createOrganization, updateOrganization } from "@/lib/actions/organizations";
 import { createTag } from "@/lib/actions/tags";
+import { toast } from "sonner";
+import { MapPin, CalendarDays, Users, Tag } from "lucide-react";
 import type { AlignmentStance } from "@/generated/prisma/client";
 import type { JSONContent } from "@tiptap/react";
 import type { OrganizationDetail } from "@/types";
@@ -30,6 +32,20 @@ const STANCE_OPTIONS: { value: AlignmentStance; label: string }[] = [
   { value: "HOSTILE", label: "Hostile" },
   { value: "UNKNOWN", label: "Unknown" },
 ];
+
+export function OrganizationFormActions({ isEdit }: { isEdit: boolean }) {
+  const router = useRouter();
+  return (
+    <>
+      <Button type="submit" form="organization-form">
+        {isEdit ? "Save Changes" : "Create Organization"}
+      </Button>
+      <Button type="button" variant="outline" onClick={() => router.back()}>
+        Cancel
+      </Button>
+    </>
+  );
+}
 
 interface OrganizationFormProps {
   campaignId: string;
@@ -119,11 +135,15 @@ export function OrganizationForm({
           lastAppearanceSessionId: lastAppearance[0]?.id ?? null,
           mainImage: mainImage,
         });
+        toast.success("Organization updated.");
         router.push(`/organizations/${organization.id}`);
       } else {
         const newOrg = await createOrganization({ ...data, campaignId });
+        toast.success("Organization created.");
         router.push(`/organizations/${newOrg.id}`);
       }
+    } catch {
+      toast.error("Failed to save organization.");
     } finally {
       setSaving(false);
     }
@@ -135,92 +155,110 @@ export function OrganizationForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="name">Name</Label>
-          <Input
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Organization name"
-            required
+    <form id="organization-form" onSubmit={handleSubmit} className="space-y-6">
+      <fieldset disabled={saving} className="space-y-6">
+      {/* Identity — image left, fields right */}
+      <div className="flex flex-col gap-6 sm:flex-row">
+        <div className="w-full space-y-2 sm:w-48 sm:shrink-0">
+          <Label>Image</Label>
+          <ImageUpload value={mainImage} onChange={setMainImage} className="aspect-[4/3]" />
+        </div>
+        <div className="flex-1 space-y-4">
+          {/* Row 1: Name + Type */}
+          <div className="flex flex-wrap items-end gap-4">
+            <div className="min-w-[200px] flex-1 space-y-2">
+              <Label htmlFor="name">Name *</Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Organization name"
+                required
+              />
+            </div>
+            <div className="w-48 space-y-2">
+              <Label htmlFor="type">Type</Label>
+              <Input
+                id="type"
+                value={type}
+                onChange={(e) => setType(e.target.value)}
+                placeholder="e.g. Guild, Cult, Kingdom"
+              />
+            </div>
+          </div>
+
+          {/* Row 2: Alignment/Stance */}
+          <div className="w-44 space-y-2">
+            <Label>Alignment / Stance</Label>
+            <Select value={alignmentStance} onValueChange={(val) => setAlignmentStance(val as AlignmentStance)}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STANCE_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+
+      {/* Relations + Tags — bordered cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="rounded-lg border border-border p-4">
+          <RelationPicker
+            label={<><MapPin className="h-4 w-4" /> Base Location</>}
+            options={allLocations}
+            selected={baseLocation}
+            onChange={setBaseLocation}
+            placeholder="Search locations..."
+            single
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="type">Type</Label>
-          <Input
-            id="type"
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-            placeholder="e.g. Guild, Cult, Kingdom..."
+        <div className="rounded-lg border border-border p-4">
+          <RelationPicker
+            label={<><CalendarDays className="h-4 w-4" /> First Appearance</>}
+            options={allSessions}
+            selected={firstAppearance}
+            onChange={setFirstAppearance}
+            placeholder="Search sessions..."
+            single
+          />
+        </div>
+        <div className="rounded-lg border border-border p-4">
+          <RelationPicker
+            label={<><CalendarDays className="h-4 w-4" /> Last Appearance</>}
+            options={allSessions}
+            selected={lastAppearance}
+            onChange={setLastAppearance}
+            placeholder="Search sessions..."
+            single
+          />
+        </div>
+        <div className="rounded-lg border border-border p-4">
+          <RelationPicker
+            label={<><Users className="h-4 w-4" /> Known Members</>}
+            options={allNpcs}
+            selected={selectedNpcs}
+            onChange={setSelectedNpcs}
+            placeholder="Search NPCs..."
+          />
+        </div>
+        <div className="rounded-lg border border-border p-4">
+          <TagInput
+            label={<><Tag className="h-4 w-4" /> Tags</>}
+            availableTags={allTags}
+            selectedTags={selectedTags}
+            onChange={setSelectedTags}
+            onCreateTag={handleCreateTag}
           />
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label>Alignment / Stance</Label>
-        <Select value={alignmentStance} onValueChange={(val) => setAlignmentStance(val as AlignmentStance)}>
-          <SelectTrigger className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {STANCE_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <Label>Main Image</Label>
-        <ImageUpload value={mainImage} onChange={setMainImage} />
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <RelationPicker
-          label="Base Location"
-          options={allLocations}
-          selected={baseLocation}
-          onChange={setBaseLocation}
-          placeholder="Search locations..."
-          single
-        />
-        <RelationPicker
-          label="First Appearance"
-          options={allSessions}
-          selected={firstAppearance}
-          onChange={setFirstAppearance}
-          placeholder="Search sessions..."
-          single
-        />
-        <RelationPicker
-          label="Last Appearance"
-          options={allSessions}
-          selected={lastAppearance}
-          onChange={setLastAppearance}
-          placeholder="Search sessions..."
-          single
-        />
-      </div>
-
-      <RelationPicker
-        label="Known Members"
-        options={allNpcs}
-        selected={selectedNpcs}
-        onChange={setSelectedNpcs}
-        placeholder="Search NPCs..."
-      />
-
-      <TagInput
-        availableTags={allTags}
-        selectedTags={selectedTags}
-        onChange={setSelectedTags}
-        onCreateTag={handleCreateTag}
-      />
-
+      {/* Notes */}
       <div className="space-y-2">
         <Label>Notes</Label>
         <RichTextEditor
@@ -229,15 +267,7 @@ export function OrganizationForm({
           placeholder="Write notes about this organization..."
         />
       </div>
-
-      <div className="flex gap-3">
-        <Button type="submit" disabled={saving}>
-          {saving ? "Saving..." : isEdit ? "Save Changes" : "Create Organization"}
-        </Button>
-        <Button type="button" variant="outline" onClick={() => router.back()}>
-          Cancel
-        </Button>
-      </div>
+      </fieldset>
     </form>
   );
 }

@@ -4,8 +4,8 @@ import { getActiveCampaign } from "@/lib/campaign";
 import { getSessions } from "@/lib/actions/sessions";
 import { getOrganizations } from "@/lib/actions/organizations";
 import { getTags } from "@/lib/actions/tags";
-import { PageHeader } from "@/components/shared/page-header";
-import { NpcForm } from "@/components/npcs/npc-form";
+import { PageHeaderSetter } from "@/components/layout/page-header-setter";
+import { NpcForm, NpcFormActions } from "@/components/npcs/npc-form";
 
 export const dynamic = "force-dynamic";
 
@@ -29,10 +29,11 @@ export default async function EditNpcPage({
 
   return (
     <div>
-      <PageHeader
-        title={`Edit ${npc.name}`}
-        description="Update NPC details."
-      />
+      <PageHeaderSetter title={`Edit ${npc.name}`} backHref={`/npcs/${id}`} backLabel="NPC detail" />
+
+      <div className="flex items-center gap-2 pb-4">
+        <NpcFormActions isEdit={true} />
+      </div>
       <NpcForm
         campaignId={campaign.id}
         npc={npc}

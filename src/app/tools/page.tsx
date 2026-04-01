@@ -1,4 +1,4 @@
-import { PageHeader } from "@/components/shared/page-header";
+import { PageHeaderSetter } from "@/components/layout/page-header-setter";
 import { ToolsManager } from "@/components/tools/tools-manager";
 import { getActiveCampaign } from "@/lib/campaign";
 import { getToolLinks } from "@/lib/actions/tools";
@@ -20,10 +20,7 @@ export default async function ToolsPage() {
 
   return (
     <div>
-      <PageHeader
-        title="Links & Tools"
-        description="External tools and campaign resources."
-      />
+      <PageHeaderSetter title="Links & Tools" description="External tools and campaign resources." />
       <ToolsManager campaignId={campaign.id} initialTools={initialTools} />
     </div>
   );

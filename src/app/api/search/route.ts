@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
     prisma.session.findMany({
       where: {
         campaignId: campaign.id,
+        deletedAt: null,
         OR: [
           { title: { contains: q, mode: "insensitive" as const } },
           { sessionNumber: isNaN(Number(q)) ? undefined : Number(q) },
@@ -34,17 +35,19 @@ export async function GET(request: NextRequest) {
     prisma.npc.findMany({
       where: {
         campaignId: campaign.id,
+        deletedAt: null,
         OR: [
           { name: { contains: q, mode: "insensitive" as const } },
           { aliasTitle: { contains: q, mode: "insensitive" as const } },
         ],
       },
-      select: { id: true, name: true, classRole: true },
+      select: { id: true, name: true, race: true, classRole: true },
       take: 5,
     }),
     prisma.location.findMany({
       where: {
         campaignId: campaign.id,
+        deletedAt: null,
         name: { contains: q, mode: "insensitive" as const },
       },
       select: { id: true, name: true, type: true },
@@ -53,6 +56,7 @@ export async function GET(request: NextRequest) {
     prisma.organization.findMany({
       where: {
         campaignId: campaign.id,
+        deletedAt: null,
         name: { contains: q, mode: "insensitive" as const },
       },
       select: { id: true, name: true, type: true },
@@ -71,7 +75,7 @@ export async function GET(request: NextRequest) {
       type: "npc" as const,
       id: n.id,
       name: n.name,
-      subtitle: n.classRole ?? undefined,
+      subtitle: [n.race, n.classRole].filter(Boolean).join(" ") || undefined,
     })),
     ...locations.map((l) => ({
       type: "location" as const,

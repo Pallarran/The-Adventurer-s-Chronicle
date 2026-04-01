@@ -4,8 +4,8 @@ import { getActiveCampaign } from "@/lib/campaign";
 import { getSessions } from "@/lib/actions/sessions";
 import { getOrganizations } from "@/lib/actions/organizations";
 import { getTags } from "@/lib/actions/tags";
-import { PageHeader } from "@/components/shared/page-header";
-import { LocationForm } from "@/components/locations/location-form";
+import { PageHeaderSetter } from "@/components/layout/page-header-setter";
+import { LocationForm, LocationFormActions } from "@/components/locations/location-form";
 
 export const dynamic = "force-dynamic";
 
@@ -30,10 +30,11 @@ export default async function EditLocationPage({
 
   return (
     <div>
-      <PageHeader
-        title={`Edit ${location.name}`}
-        description="Update location details."
-      />
+      <PageHeaderSetter title={`Edit ${location.name}`} backHref={`/locations/${id}`} backLabel="Location detail" />
+
+      <div className="flex items-center gap-2 pb-4">
+        <LocationFormActions isEdit={true} />
+      </div>
       <LocationForm
         campaignId={campaign.id}
         location={location}

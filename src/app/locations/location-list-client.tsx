@@ -18,9 +18,10 @@ const sortLabels: Record<SortOption, string> = {
 
 interface LocationListClientProps {
   locations: LocationListItem[];
+  headerActions?: React.ReactNode;
 }
 
-export function LocationListClient({ locations }: LocationListClientProps) {
+export function LocationListClient({ locations, headerActions }: LocationListClientProps) {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<SortOption>("name-asc");
   const [typeFilter, setTypeFilter] = useState<string | null>(null);
@@ -123,9 +124,7 @@ export function LocationListClient({ locations }: LocationListClientProps) {
           <ArrowUpDown className="h-3.5 w-3.5" />
           {sortLabels[sort]}
         </Button>
-        <span className="ml-auto text-xs text-muted-foreground">
-          {results.length} location{results.length !== 1 ? "s" : ""}
-        </span>
+        <div className="ml-auto">{headerActions}</div>
       </div>
 
       {/* Filter chips */}
@@ -177,7 +176,7 @@ export function LocationListClient({ locations }: LocationListClientProps) {
       </div>
 
       {/* Grid */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {results.map((location) => (
           <LocationCard key={location.id} location={location} />
         ))}

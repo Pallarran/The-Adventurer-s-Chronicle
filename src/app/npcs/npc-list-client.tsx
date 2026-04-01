@@ -27,9 +27,10 @@ const STATUS_OPTIONS: { value: NpcStatus; label: string; color: string }[] = [
 
 interface NpcListClientProps {
   npcs: NpcListItem[];
+  headerActions?: React.ReactNode;
 }
 
-export function NpcListClient({ npcs }: NpcListClientProps) {
+export function NpcListClient({ npcs, headerActions }: NpcListClientProps) {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<SortOption>("name-asc");
   const [statusFilter, setStatusFilter] = useState<NpcStatus | null>(null);
@@ -74,6 +75,7 @@ export function NpcListClient({ npcs }: NpcListClientProps) {
         (npc) =>
           npc.name.toLowerCase().includes(q) ||
           npc.aliasTitle?.toLowerCase().includes(q) ||
+          npc.race?.toLowerCase().includes(q) ||
           npc.classRole?.toLowerCase().includes(q)
       );
     }
@@ -132,9 +134,7 @@ export function NpcListClient({ npcs }: NpcListClientProps) {
           <ArrowUpDown className="h-3.5 w-3.5" />
           {sortLabels[sort]}
         </Button>
-        <span className="ml-auto text-xs text-muted-foreground">
-          {results.length} NPC{results.length !== 1 ? "s" : ""}
-        </span>
+        <div className="ml-auto">{headerActions}</div>
       </div>
 
       {/* Filter chips */}
@@ -202,7 +202,7 @@ export function NpcListClient({ npcs }: NpcListClientProps) {
       </div>
 
       {/* Grid */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {results.map((npc) => (
           <NpcCard key={npc.id} npc={npc} />
         ))}

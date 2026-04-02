@@ -33,6 +33,18 @@ enum CharacterSectionType {
   BACKSTORY
 }
 
+enum ProgressionRowType {
+  LEVEL
+  DOWNTIME
+  THEME
+}
+
+enum ProgressionStatus {
+  DONE
+  CURRENT
+  FUTURE
+}
+
 // ============================================================
 // CORE MODELS
 // ============================================================
@@ -185,10 +197,20 @@ model CharacterProfile {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // RP structured fields
+  personality     String?
+  ideals          String?
+  bonds           String?
+  flaws           String?
+  voiceMannerisms String?
+  currentGoals    String?
+  fears           String?
+
   campaignId String   @unique
   campaign   Campaign @relation(fields: [campaignId], references: [id])
 
-  sections CharacterSection[]
+  sections        CharacterSection[]
+  progressionRows CharacterProgression[]
 }
 
 model CharacterSection {
@@ -202,6 +224,26 @@ model CharacterSection {
   characterProfile   CharacterProfile @relation(fields: [characterProfileId], references: [id])
 
   @@unique([characterProfileId, type])
+}
+
+model CharacterProgression {
+  id         String              @id @default(cuid())
+  rowType    ProgressionRowType  @default(LEVEL)
+  level      Int?
+  label      String?
+  classLabel String?
+  features   String?
+  spells     String?
+  notes      String?
+  status     ProgressionStatus   @default(FUTURE)
+  sortOrder  Float
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+
+  characterProfileId String
+  characterProfile   CharacterProfile @relation(fields: [characterProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([characterProfileId, level])
 }
 
 model ToolLink {

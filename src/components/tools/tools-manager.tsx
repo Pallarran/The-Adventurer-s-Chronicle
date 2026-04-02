@@ -10,6 +10,7 @@ import {
   Trash2,
   Pin,
 } from "lucide-react";
+import { ToolIcon } from "@/components/tools/tool-icon";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -248,7 +249,7 @@ export function ToolsManager({ campaignId, initialTools }: ToolsManagerProps) {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <Link2 className="size-4 shrink-0 text-gold" />
+                      <ToolIcon url={tool.url} className="size-4 shrink-0 text-gold" />
                       <h3 className="truncate font-heading text-sm font-medium text-foreground">
                         {tool.name}
                       </h3>

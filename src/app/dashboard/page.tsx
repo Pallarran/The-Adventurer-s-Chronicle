@@ -44,14 +44,14 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Middle row: Party Members (3/5) + Quick Notes (2/5) */}
+        {/* Middle row: Party Members (3/5) + Quick Notes & Pinned Tools (2/5) */}
         <div className="grid gap-6 lg:grid-cols-5">
           <div className="lg:col-span-3">
             <Suspense fallback={<CardSkeleton className="h-full" />}>
               <PartyMembers campaignId={campaign.id} />
             </Suspense>
           </div>
-          <div className="lg:col-span-2">
+          <div className="grid gap-6 xl:grid-cols-2 lg:col-span-2">
             {quickNote ? (
               <QuickNotesCard
                 quickNote={{
@@ -67,14 +67,10 @@ export default async function DashboardPage() {
                 }}
               />
             )}
+            <Suspense fallback={<CardSkeleton className="h-full" />}>
+              <PinnedTools campaignId={campaign.id} />
+            </Suspense>
           </div>
-        </div>
-
-        {/* Bottom row: Pinned Tools (full width) */}
-        <div>
-          <Suspense fallback={<CardSkeleton />}>
-            <PinnedTools campaignId={campaign.id} />
-          </Suspense>
         </div>
       </div>
     </div>

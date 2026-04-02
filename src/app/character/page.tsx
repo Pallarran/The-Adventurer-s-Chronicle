@@ -1,6 +1,9 @@
 import { Swords } from "lucide-react";
 import { getActiveCampaign } from "@/lib/campaign";
-import { getCharacterProfile } from "@/lib/actions/character";
+import {
+  getCharacterProfile,
+  getProgressionRows,
+} from "@/lib/actions/character";
 import { PageHeaderSetter } from "@/components/layout/page-header-setter";
 import { EmptyState } from "@/components/shared/empty-state";
 import { CharacterHubClient } from "@/components/character/character-hub-client";
@@ -14,7 +17,10 @@ export default async function CharacterPage() {
   if (!profile) {
     return (
       <div>
-        <PageHeaderSetter title="Character" description="Your personal character hub." />
+        <PageHeaderSetter
+          title="Character"
+          description="Your personal character hub."
+        />
         <EmptyState
           icon={Swords}
           title="No Character Profile"
@@ -24,7 +30,8 @@ export default async function CharacterPage() {
     );
   }
 
-  // Serialize the profile for the client component
+  const progressionRows = await getProgressionRows(profile.id);
+
   const serializedProfile = {
     id: profile.id,
     name: profile.name,
@@ -33,6 +40,14 @@ export default async function CharacterPage() {
     level: profile.level,
     portrait: profile.portrait,
     summary: profile.summary,
+    // RP fields
+    personality: profile.personality,
+    ideals: profile.ideals,
+    bonds: profile.bonds,
+    flaws: profile.flaws,
+    voiceMannerisms: profile.voiceMannerisms,
+    currentGoals: profile.currentGoals,
+    fears: profile.fears,
     sections: profile.sections.map((s) => ({
       id: s.id,
       type: s.type as "OVERVIEW" | "BUILD" | "BACKSTORY",
@@ -40,10 +55,29 @@ export default async function CharacterPage() {
     })),
   };
 
+  const serializedRows = progressionRows.map((r) => ({
+    id: r.id,
+    rowType: r.rowType as "LEVEL" | "DOWNTIME" | "THEME",
+    level: r.level,
+    label: r.label,
+    classLabel: r.classLabel,
+    features: r.features,
+    spells: r.spells,
+    notes: r.notes,
+    status: r.status as "DONE" | "CURRENT" | "FUTURE",
+    sortOrder: r.sortOrder,
+  }));
+
   return (
     <div>
-      <PageHeaderSetter title="Character" description="Your personal character hub." />
-      <CharacterHubClient profile={serializedProfile} />
+      <PageHeaderSetter
+        title="Character"
+        description="Your personal character hub."
+      />
+      <CharacterHubClient
+        profile={serializedProfile}
+        progressionRows={serializedRows}
+      />
     </div>
   );
 }

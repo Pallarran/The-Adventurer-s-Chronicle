@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Menu, ScrollText } from "lucide-react";
+import Image from "next/image";
+import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -42,9 +43,13 @@ export function MobileSidebar() {
 
           {/* Logo */}
           <div className="flex h-14 items-center gap-2.5 px-4">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gold/10 ring-1 ring-gold/20">
-              <ScrollText className="h-4 w-4 text-gold" />
-            </div>
+            <Image
+              src="/logo-icon.png"
+              alt="The Adventurer's Chronicle"
+              width={32}
+              height={32}
+              className="rounded-md"
+            />
             <div className="flex flex-col">
               <span className="text-sm font-semibold text-foreground tracking-wide">
                 The Adventurer&apos;s

@@ -189,9 +189,8 @@ function SortableRow({
             <span
               className={cn(
                 "h-2.5 w-2.5 rounded-full",
-                row.rowType === "DOWNTIME" && "bg-amber-500",
-                row.rowType === "THEME" && "bg-purple-500",
-                row.status !== "DONE" && "opacity-50"
+                row.rowType === "DOWNTIME" && (row.status === "DONE" ? "bg-amber-500" : "border-2 border-amber-500"),
+                row.rowType === "THEME" && (row.status === "DONE" ? "bg-purple-500" : "border-2 border-purple-500"),
               )}
             />
           )}
@@ -584,13 +583,13 @@ export function ProgressionTable({ rows: initialRows, profileId, characterLevel 
               <Circle className="h-2.5 w-2.5 fill-blue-500 text-blue-500" /> Current
             </span>
             <span className="border-l border-border/50 pl-3 flex items-center gap-1">
-              <span className="h-2.5 w-2.5 rounded-full bg-amber-500 opacity-50" /> Downtime (planned)
+              <span className="h-2.5 w-2.5 rounded-full border-2 border-amber-500" /> Downtime (planned)
             </span>
             <span className="flex items-center gap-1">
               <span className="h-2.5 w-2.5 rounded-full bg-amber-500" /> Downtime (done)
             </span>
             <span className="border-l border-border/50 pl-3 flex items-center gap-1">
-              <span className="h-2.5 w-2.5 rounded-full bg-purple-500 opacity-50" /> Theme Feat (planned)
+              <span className="h-2.5 w-2.5 rounded-full border-2 border-purple-500" /> Theme Feat (planned)
             </span>
             <span className="flex items-center gap-1">
               <span className="h-2.5 w-2.5 rounded-full bg-purple-500" /> Theme Feat (done)

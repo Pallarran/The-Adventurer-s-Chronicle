@@ -101,11 +101,11 @@ export async function saveProfileTab(
           type: "BACKSTORY",
         },
       },
-      update: { content: backstoryContent ?? Prisma.DbNull },
+      update: { content: backstoryContent ? JSON.parse(JSON.stringify(backstoryContent)) : Prisma.DbNull },
       create: {
         characterProfileId: id,
         type: "BACKSTORY",
-        content: backstoryContent ?? Prisma.DbNull,
+        content: backstoryContent ? JSON.parse(JSON.stringify(backstoryContent)) : Prisma.DbNull,
       },
     });
   }
@@ -165,11 +165,11 @@ export async function saveRoleplayTab(
           type: "OVERVIEW",
         },
       },
-      update: { content: overviewContent ?? Prisma.DbNull },
+      update: { content: overviewContent ? JSON.parse(JSON.stringify(overviewContent)) : Prisma.DbNull },
       create: {
         characterProfileId: id,
         type: "OVERVIEW",
-        content: overviewContent ?? Prisma.DbNull,
+        content: overviewContent ? JSON.parse(JSON.stringify(overviewContent)) : Prisma.DbNull,
       },
     });
   }
@@ -281,7 +281,7 @@ export async function updateCharacterSection(
 ) {
   const section = await prisma.characterSection.update({
     where: { id },
-    data: { content: content ?? Prisma.DbNull },
+    data: { content: content ? JSON.parse(JSON.stringify(content)) : Prisma.DbNull },
   });
   revalidatePath("/character");
   return section;

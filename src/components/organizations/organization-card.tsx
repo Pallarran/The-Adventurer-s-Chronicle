@@ -1,28 +1,11 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { ImageWithCrop } from "@/components/shared/image-crop-button";
+import { updateOrganizationImagePosition } from "@/lib/actions/organizations";
 import { Shield, Users } from "lucide-react";
-import type { AlignmentStance } from "@/generated/prisma/client";
+import { STANCE_COLORS, STANCE_LABELS } from "@/lib/colors";
 import type { OrganizationListItem } from "@/types";
-
-const STANCE_COLORS: Record<AlignmentStance, string> = {
-  ALLIED: "#4a9a5a",
-  FRIENDLY: "#5a9a8a",
-  NEUTRAL: "#6a6a7a",
-  SUSPICIOUS: "#9a8a4a",
-  HOSTILE: "#9a4a4a",
-  UNKNOWN: "#5a5a6a",
-};
-
-const STANCE_LABELS: Record<AlignmentStance, string> = {
-  ALLIED: "Allied",
-  FRIENDLY: "Friendly",
-  NEUTRAL: "Neutral",
-  SUSPICIOUS: "Suspicious",
-  HOSTILE: "Hostile",
-  UNKNOWN: "Unknown",
-};
 
 interface OrganizationCardProps {
   organization: OrganizationListItem;
@@ -33,15 +16,16 @@ export function OrganizationCard({ organization }: OrganizationCardProps) {
 
   return (
     <Link href={`/organizations/${organization.id}`}>
-      <Card className="h-full overflow-hidden transition-colors hover:border-gold/30 hover:bg-card/80 hover:shadow-lg hover:shadow-gold/10">
+      <Card className="h-full overflow-hidden transition-colors hover:border-gem-jade/30 hover:bg-card/80 hover:shadow-lg hover:shadow-gem-jade/10">
         {/* Image */}
-        <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
+        <div className="group/image relative aspect-square w-full overflow-hidden bg-muted">
           {organization.mainImage ? (
-            <Image
+            <ImageWithCrop
               src={`/api/upload/${organization.mainImage}`}
               alt={organization.name}
-              fill
-              className="object-cover"
+              entityId={organization.id}
+              positionY={organization.imagePositionY}
+              onSave={updateOrganizationImagePosition}
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center">
@@ -61,8 +45,8 @@ export function OrganizationCard({ organization }: OrganizationCardProps) {
         </div>
 
         {/* Info — fixed height for consistency */}
-        <div className="flex min-h-[5.5rem] flex-col justify-between p-3">
-          <div className="space-y-0.5">
+        <div className="flex flex-col justify-between px-2 py-1">
+          <div>
             <p className="truncate text-sm font-bold">{organization.name}</p>
             <p className="truncate text-xs text-muted-foreground">
               {organization.type || "\u00A0"}
@@ -80,7 +64,7 @@ export function OrganizationCard({ organization }: OrganizationCardProps) {
           </div>
 
           {organization.tags.length > 0 && (
-            <div className="mt-1.5 flex flex-wrap gap-1">
+            <div className="mt-1 flex flex-wrap gap-1">
               {organization.tags.slice(0, 2).map((t) => (
                 <Badge key={t.tag.id} variant="outline" className="text-xs px-1.5 py-0">
                   {t.tag.name}

@@ -40,13 +40,13 @@ import tippy, { type Instance as TippyInstance } from "tippy.js";
 interface MentionSuggestion {
   id: string;
   name: string;
-  type: "npc" | "location" | "organization";
+  type: "npc" | "location" | "organization" | "item";
 }
 
 // ---------- Mention suggestion list component ----------
 interface MentionListProps {
   items: MentionSuggestion[];
-  command: (item: { id: string; label: string; type: string }) => void;
+  command: (item: { id: string; label: string; mentionType: string }) => void;
 }
 
 interface MentionListRef {
@@ -65,7 +65,7 @@ const MentionList = forwardRef<MentionListRef, MentionListProps>(
       (index: number) => {
         const item = items[index];
         if (item) {
-          command({ id: item.id, label: item.name, type: item.type });
+          command({ id: item.id, label: item.name, mentionType: item.type });
         }
       },
       [items, command]
@@ -97,7 +97,7 @@ const MentionList = forwardRef<MentionListRef, MentionListProps>(
       );
     }
 
-    const typeLabel = { npc: "NPC", location: "Location", organization: "Org" };
+    const typeLabel = { npc: "NPC", location: "Location", organization: "Org", item: "Item" };
 
     return (
       <div className="rounded-lg border border-border bg-popover p-1 shadow-md">
@@ -188,6 +188,7 @@ interface RichTextEditorProps {
   onChange?: (content: JSONContent) => void;
   placeholder?: string;
   className?: string;
+  minimal?: boolean;
 }
 
 export function RichTextEditor({
@@ -195,6 +196,7 @@ export function RichTextEditor({
   onChange,
   placeholder = "Start writing...",
   className,
+  minimal = false,
 }: RichTextEditorProps) {
   const editor = useEditor({
     immediatelyRender: false,
@@ -212,7 +214,21 @@ export function RichTextEditor({
       TaskList,
       TaskItem.configure({ nested: true }),
       Placeholder.configure({ placeholder }),
-      Mention.configure({
+      Mention.extend({
+        addAttributes() {
+          return {
+            ...this.parent?.(),
+            mentionType: {
+              default: null,
+              parseHTML: (element: HTMLElement) => element.getAttribute("data-mention-type"),
+              renderHTML: (attributes: Record<string, unknown>) => {
+                if (!attributes.mentionType) return {};
+                return { "data-mention-type": attributes.mentionType };
+              },
+            },
+          };
+        },
+      }).configure({
         HTMLAttributes: {
           class: "mention",
         },
@@ -221,7 +237,10 @@ export function RichTextEditor({
     ],
     content: content ?? undefined,
     onUpdate: ({ editor }) => {
-      onChange?.(editor.getJSON());
+      // Deep-clone to strip ProseMirror internal references/prototypes that
+      // the React flight protocol can't serialize correctly (causes attrs to
+      // be dropped from mention nodes).
+      onChange?.(JSON.parse(JSON.stringify(editor.getJSON())));
     },
     editorProps: {
       attributes: {
@@ -275,28 +294,32 @@ export function RichTextEditor({
           <Italic className="h-4 w-4" />
         </Toggle>
 
-        <div className="mx-1 h-5 w-px bg-border" />
+        {!minimal && (
+          <>
+            <div className="mx-1 h-5 w-px bg-border" />
 
-        <Toggle
-          size="sm"
-          pressed={editor.isActive("heading", { level: 2 })}
-          onPressedChange={() =>
-            editor.chain().focus().toggleHeading({ level: 2 }).run()
-          }
-          aria-label="Heading 2"
-        >
-          <Heading2 className="h-4 w-4" />
-        </Toggle>
-        <Toggle
-          size="sm"
-          pressed={editor.isActive("heading", { level: 3 })}
-          onPressedChange={() =>
-            editor.chain().focus().toggleHeading({ level: 3 }).run()
-          }
-          aria-label="Heading 3"
-        >
-          <Heading3 className="h-4 w-4" />
-        </Toggle>
+            <Toggle
+              size="sm"
+              pressed={editor.isActive("heading", { level: 2 })}
+              onPressedChange={() =>
+                editor.chain().focus().toggleHeading({ level: 2 }).run()
+              }
+              aria-label="Heading 2"
+            >
+              <Heading2 className="h-4 w-4" />
+            </Toggle>
+            <Toggle
+              size="sm"
+              pressed={editor.isActive("heading", { level: 3 })}
+              onPressedChange={() =>
+                editor.chain().focus().toggleHeading({ level: 3 }).run()
+              }
+              aria-label="Heading 3"
+            >
+              <Heading3 className="h-4 w-4" />
+            </Toggle>
+          </>
+        )}
 
         <div className="mx-1 h-5 w-px bg-border" />
 
@@ -310,16 +333,18 @@ export function RichTextEditor({
         >
           <List className="h-4 w-4" />
         </Toggle>
-        <Toggle
-          size="sm"
-          pressed={editor.isActive("orderedList")}
-          onPressedChange={() =>
-            editor.chain().focus().toggleOrderedList().run()
-          }
-          aria-label="Ordered List"
-        >
-          <ListOrdered className="h-4 w-4" />
-        </Toggle>
+        {!minimal && (
+          <Toggle
+            size="sm"
+            pressed={editor.isActive("orderedList")}
+            onPressedChange={() =>
+              editor.chain().focus().toggleOrderedList().run()
+            }
+            aria-label="Ordered List"
+          >
+            <ListOrdered className="h-4 w-4" />
+          </Toggle>
+        )}
         <Toggle
           size="sm"
           pressed={editor.isActive("taskList")}
@@ -329,47 +354,51 @@ export function RichTextEditor({
           <ListChecks className="h-4 w-4" />
         </Toggle>
 
-        <div className="mx-1 h-5 w-px bg-border" />
+        {!minimal && (
+          <>
+            <div className="mx-1 h-5 w-px bg-border" />
 
-        <Toggle
-          size="sm"
-          pressed={editor.isActive("blockquote")}
-          onPressedChange={() =>
-            editor.chain().focus().toggleBlockquote().run()
-          }
-          aria-label="Blockquote"
-        >
-          <Quote className="h-4 w-4" />
-        </Toggle>
-        <Toggle
-          size="sm"
-          pressed={false}
-          onPressedChange={() =>
-            editor.chain().focus().setHorizontalRule().run()
-          }
-          aria-label="Horizontal Rule"
-        >
-          <Minus className="h-4 w-4" />
-        </Toggle>
+            <Toggle
+              size="sm"
+              pressed={editor.isActive("blockquote")}
+              onPressedChange={() =>
+                editor.chain().focus().toggleBlockquote().run()
+              }
+              aria-label="Blockquote"
+            >
+              <Quote className="h-4 w-4" />
+            </Toggle>
+            <Toggle
+              size="sm"
+              pressed={false}
+              onPressedChange={() =>
+                editor.chain().focus().setHorizontalRule().run()
+              }
+              aria-label="Horizontal Rule"
+            >
+              <Minus className="h-4 w-4" />
+            </Toggle>
 
-        <div className="mx-1 h-5 w-px bg-border" />
+            <div className="mx-1 h-5 w-px bg-border" />
 
-        <Toggle
-          size="sm"
-          pressed={editor.isActive("link")}
-          onPressedChange={addLink}
-          aria-label="Link"
-        >
-          <LinkIcon className="h-4 w-4" />
-        </Toggle>
-        <Toggle
-          size="sm"
-          pressed={false}
-          onPressedChange={addImage}
-          aria-label="Image"
-        >
-          <ImageIcon className="h-4 w-4" />
-        </Toggle>
+            <Toggle
+              size="sm"
+              pressed={editor.isActive("link")}
+              onPressedChange={addLink}
+              aria-label="Link"
+            >
+              <LinkIcon className="h-4 w-4" />
+            </Toggle>
+            <Toggle
+              size="sm"
+              pressed={false}
+              onPressedChange={addImage}
+              aria-label="Image"
+            >
+              <ImageIcon className="h-4 w-4" />
+            </Toggle>
+          </>
+        )}
 
         <div className="ml-auto flex items-center gap-0.5">
           <Toggle

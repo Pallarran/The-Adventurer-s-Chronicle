@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import type { Prisma } from "@/generated/prisma/client";
 import type { SessionListItem, SessionDetail } from "@/types";
+import { plainJson } from "@/lib/plain-json";
 
 type JsonValue = Prisma.JsonValue;
 
@@ -11,6 +12,7 @@ const sessionInclude = {
   npcs: { include: { npc: { select: { id: true, name: true } } } },
   locations: { include: { location: { select: { id: true, name: true } } } },
   organizations: { include: { organization: { select: { id: true, name: true } } } },
+  quests: { include: { quest: { select: { id: true, name: true, status: true, description: true } } } },
   tags: { include: { tag: true } },
 } as const;
 
@@ -55,10 +57,10 @@ interface CreateSessionData {
   realDatePlayed: Date;
   inGameDate?: string;
   notesBody?: JsonValue;
-  followUpActions?: JsonValue;
   npcIds?: string[];
   locationIds?: string[];
   organizationIds?: string[];
+  questIds?: string[];
   tagIds?: string[];
 }
 
@@ -70,8 +72,7 @@ export async function createSession(data: CreateSessionData) {
       title: data.title,
       realDatePlayed: data.realDatePlayed,
       inGameDate: data.inGameDate,
-      notesBody: data.notesBody ?? undefined,
-      followUpActions: data.followUpActions ?? undefined,
+      notesBody: plainJson(data.notesBody),
       npcs: data.npcIds?.length
         ? { create: data.npcIds.map((npcId) => ({ npcId })) }
         : undefined,
@@ -80,6 +81,9 @@ export async function createSession(data: CreateSessionData) {
         : undefined,
       organizations: data.organizationIds?.length
         ? { create: data.organizationIds.map((organizationId) => ({ organizationId })) }
+        : undefined,
+      quests: data.questIds?.length
+        ? { create: data.questIds.map((questId) => ({ questId })) }
         : undefined,
       tags: data.tagIds?.length
         ? { create: data.tagIds.map((tagId) => ({ tagId })) }
@@ -97,10 +101,10 @@ interface UpdateSessionData {
   realDatePlayed?: Date;
   inGameDate?: string;
   notesBody?: JsonValue;
-  followUpActions?: JsonValue;
   npcIds?: string[];
   locationIds?: string[];
   organizationIds?: string[];
+  questIds?: string[];
   tagIds?: string[];
 }
 
@@ -110,18 +114,18 @@ export async function updateSession(id: string, data: UpdateSessionData) {
     prisma.sessionNpc.deleteMany({ where: { sessionId: id } }),
     prisma.sessionLocation.deleteMany({ where: { sessionId: id } }),
     prisma.sessionOrganization.deleteMany({ where: { sessionId: id } }),
+    prisma.sessionQuest.deleteMany({ where: { sessionId: id } }),
     prisma.sessionTag.deleteMany({ where: { sessionId: id } }),
   ]);
 
   const session = await prisma.session.update({
-    where: { id },
+    where: { id, deletedAt: null },
     data: {
       sessionNumber: data.sessionNumber,
       title: data.title,
       realDatePlayed: data.realDatePlayed,
       inGameDate: data.inGameDate,
-      notesBody: data.notesBody ?? undefined,
-      followUpActions: data.followUpActions ?? undefined,
+      notesBody: plainJson(data.notesBody),
       npcs: data.npcIds?.length
         ? { create: data.npcIds.map((npcId) => ({ npcId })) }
         : undefined,
@@ -130,6 +134,9 @@ export async function updateSession(id: string, data: UpdateSessionData) {
         : undefined,
       organizations: data.organizationIds?.length
         ? { create: data.organizationIds.map((organizationId) => ({ organizationId })) }
+        : undefined,
+      quests: data.questIds?.length
+        ? { create: data.questIds.map((questId) => ({ questId })) }
         : undefined,
       tags: data.tagIds?.length
         ? { create: data.tagIds.map((tagId) => ({ tagId })) }
@@ -152,7 +159,6 @@ export async function getRecentSessions(campaignId: string, limit: number = 5) {
       realDatePlayed: true,
       inGameDate: true,
       notesBody: true,
-      followUpActions: true,
     },
     orderBy: { sessionNumber: "desc" },
     take: limit,

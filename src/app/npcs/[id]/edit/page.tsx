@@ -40,7 +40,7 @@ export default async function EditNpcPage({
         allOrganizations={organizations.map((o) => ({ id: o.id, name: o.name }))}
         allSessions={sessions.map((s) => ({
           id: s.id,
-          name: `Session #${s.sessionNumber}`,
+          name: `#${s.sessionNumber}${s.title ? ` — ${s.title}` : ""}`,
         }))}
         allTags={tags.map((t) => ({ id: t.id, name: t.name }))}
       />

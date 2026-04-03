@@ -7,6 +7,7 @@ export type SessionListItem = Prisma.SessionGetPayload<{
     npcs: { include: { npc: { select: { id: true; name: true } } } };
     locations: { include: { location: { select: { id: true; name: true } } } };
     organizations: { include: { organization: { select: { id: true; name: true } } } };
+    quests: { include: { quest: { select: { id: true; name: true; status: true; description: true } } } };
     tags: { include: { tag: true } };
   };
 }>;
@@ -16,6 +17,7 @@ export type SessionDetail = Prisma.SessionGetPayload<{
     npcs: { include: { npc: { select: { id: true; name: true } } } };
     locations: { include: { location: { select: { id: true; name: true } } } };
     organizations: { include: { organization: { select: { id: true; name: true } } } };
+    quests: { include: { quest: { select: { id: true; name: true; status: true; description: true } } } };
     tags: { include: { tag: true } };
   };
 }>;
@@ -78,6 +80,38 @@ export type OrganizationListItem = Prisma.OrganizationGetPayload<{
     lastAppearanceSession: { select: { id: true; sessionNumber: true } };
   };
 }>;
+
+// ── Item types ────────────────────────────────────────────────
+
+export type ItemListItem = Prisma.ItemGetPayload<{
+  include: {
+    tags: { include: { tag: true } };
+  };
+}>;
+
+export type ItemDetail = Prisma.ItemGetPayload<{
+  include: {
+    tags: { include: { tag: true } };
+  };
+}>;
+
+// ── Organization types ─────────────────────────────────────────
+
+// ── Quest types ──────────────────────────────────────────────
+
+export type QuestListItem = Prisma.QuestGetPayload<{
+  include: {
+    sessions: { include: { session: { select: { id: true; sessionNumber: true } } } };
+  };
+}>;
+
+export type QuestDetail = Prisma.QuestGetPayload<{
+  include: {
+    sessions: { include: { session: { select: { id: true; sessionNumber: true; title: true } } } };
+  };
+}>;
+
+// ── Organization types ─────────────────────────────────────────
 
 export type OrganizationDetail = Prisma.OrganizationGetPayload<{
   include: {

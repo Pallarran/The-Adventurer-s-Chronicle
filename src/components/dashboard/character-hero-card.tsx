@@ -42,7 +42,7 @@ export async function CharacterHeroCard({ campaignId }: CharacterHeroCardProps) 
     (overviewSection.content as JSONContent).content?.length;
 
   return (
-    <Card className="relative h-full overflow-hidden border-gold/20 bg-gradient-to-br from-card via-card to-gold/5 shadow-[0_0_15px_rgba(201,170,85,0.06)]">
+    <Card className="relative flex h-full flex-col overflow-hidden border-gold/20 bg-gradient-to-br from-card via-card to-gold/5 shadow-[0_0_15px_rgba(201,170,85,0.06)]">
       {/* Decorative corner accent */}
       <div className="absolute top-0 right-0 h-32 w-32 bg-gradient-to-bl from-gold/8 to-transparent" />
       <div className="absolute bottom-0 left-0 h-20 w-20 bg-gradient-to-tr from-gold/4 to-transparent" />
@@ -63,23 +63,25 @@ export async function CharacterHeroCard({ campaignId }: CharacterHeroCardProps) 
         </div>
       </CardHeader>
 
-      <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-start">
+      <CardContent className="flex flex-1 flex-col gap-4 sm:flex-row sm:items-stretch">
         {/* Portrait — larger with gold glow ring */}
         {profile.portrait ? (
-          <ImageLightbox
-            src={profile.portrait.startsWith("/") || profile.portrait.startsWith("http") ? profile.portrait : `/api/upload/${profile.portrait}`}
-            alt={profile.name}
-          >
-            <div className="relative flex w-60 aspect-[2/3] shrink-0 items-center justify-center self-center overflow-hidden rounded-lg border-2 border-gold/30 bg-gold/5 shadow-[0_0_24px_rgba(201,170,85,0.12)] transition-shadow hover:shadow-[0_0_32px_rgba(201,170,85,0.2)] sm:self-start">
-              <Image
-                src={profile.portrait.startsWith("/") || profile.portrait.startsWith("http") ? profile.portrait : `/api/upload/${profile.portrait}`}
-                alt={profile.name}
-                fill
-                className="object-contain"
-                sizes="240px"
-              />
-            </div>
-          </ImageLightbox>
+          <div className="shrink-0 self-center sm:self-start">
+            <ImageLightbox
+              src={profile.portrait.startsWith("/") || profile.portrait.startsWith("http") ? profile.portrait : `/api/upload/${profile.portrait}`}
+              alt={profile.name}
+            >
+              <div className="relative flex w-60 aspect-[2/3] items-center justify-center overflow-hidden rounded-lg border-2 border-gold/30 bg-gold/5 shadow-[0_0_24px_rgba(201,170,85,0.12)] transition-shadow hover:shadow-[0_0_32px_rgba(201,170,85,0.2)]">
+                <Image
+                  src={profile.portrait.startsWith("/") || profile.portrait.startsWith("http") ? profile.portrait : `/api/upload/${profile.portrait}`}
+                  alt={profile.name}
+                  fill
+                  className="object-contain"
+                  sizes="240px"
+                />
+              </div>
+            </ImageLightbox>
+          </div>
         ) : (
           <Link
             href="/character"
@@ -95,7 +97,7 @@ export async function CharacterHeroCard({ campaignId }: CharacterHeroCardProps) 
             <h3 className="text-xl font-bold tracking-tight text-gold">
               {profile.name}
             </h3>
-            <div className="mt-1.5 flex flex-wrap items-center gap-2">
+            <div className="mt-2.5 flex flex-wrap items-center gap-2">
               {profile.race && (
                 <Badge variant="outline" className="border-gold/30 text-gold">{profile.race}</Badge>
               )}
@@ -110,20 +112,21 @@ export async function CharacterHeroCard({ campaignId }: CharacterHeroCardProps) 
 
           {/* RP Anchors (Overview section) or Summary fallback */}
           {hasOverviewContent ? (
-            <div className="mt-1">
-              <div className="max-h-44 overflow-hidden text-muted-foreground">
+            <div className="relative mt-2 min-h-0 flex-1 overflow-hidden">
+              <div className="h-full overflow-hidden text-muted-foreground">
                 <RichTextDisplay
                   content={overviewSection!.content as JSONContent}
                   className="text-sm"
                 />
               </div>
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-card to-transparent" />
             </div>
           ) : profile.summary ? (
-            <p className="mt-1 line-clamp-4 text-sm leading-relaxed text-muted-foreground">
+            <p className="mt-2 line-clamp-4 text-sm leading-relaxed text-muted-foreground">
               {profile.summary}
             </p>
           ) : (
-            <p className="mt-1 text-sm italic text-muted-foreground/60">
+            <p className="mt-2 text-sm italic text-muted-foreground/60">
               Add RP anchors in your{" "}
               <Link href="/character" className="text-gold/70 underline hover:text-gold">
                 character profile

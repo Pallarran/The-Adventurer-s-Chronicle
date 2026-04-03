@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import type { Prisma } from "@/generated/prisma/client";
 import type { LocationListItem, LocationDetail } from "@/types";
+import { plainJson } from "@/lib/plain-json";
 
 type JsonValue = Prisma.JsonValue;
 
@@ -79,7 +80,7 @@ export async function createLocation(data: CreateLocationData) {
       parentLocationId: data.parentLocationId || null,
       firstAppearanceSessionId: data.firstAppearanceSessionId || null,
       lastAppearanceSessionId: data.lastAppearanceSessionId || null,
-      notesBody: data.notesBody ?? undefined,
+      notesBody: plainJson(data.notesBody),
       mainImage: data.mainImage,
       organizations: data.organizationIds?.length
         ? { create: data.organizationIds.map((organizationId) => ({ organizationId })) }
@@ -117,14 +118,14 @@ export async function updateLocation(id: string, data: UpdateLocationData) {
   if (deletes.length) await prisma.$transaction(deletes);
 
   const location = await prisma.location.update({
-    where: { id },
+    where: { id, deletedAt: null },
     data: {
       name: data.name,
       type: data.type,
       parentLocationId: data.parentLocationId,
       firstAppearanceSessionId: data.firstAppearanceSessionId,
       lastAppearanceSessionId: data.lastAppearanceSessionId,
-      notesBody: data.notesBody ?? undefined,
+      notesBody: plainJson(data.notesBody),
       mainImage: data.mainImage,
       organizations: data.organizationIds?.length
         ? { create: data.organizationIds.map((organizationId) => ({ organizationId })) }
@@ -159,4 +160,13 @@ export async function restoreLocation(id: string) {
 
 export async function purgeLocation(id: string) {
   await prisma.location.delete({ where: { id } });
+}
+
+export async function updateLocationImagePosition(id: string, positionY: number) {
+  await prisma.location.update({
+    where: { id },
+    data: { imagePositionY: positionY },
+  });
+  revalidatePath("/locations");
+  revalidatePath(`/locations/${id}`);
 }

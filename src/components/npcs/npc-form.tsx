@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useFormGuard } from "@/hooks/use-form-guard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -22,10 +23,19 @@ import { createTag } from "@/lib/actions/tags";
 import { toast } from "sonner";
 import { Shield, CalendarDays, Tag } from "lucide-react";
 import type { JSONContent } from "@tiptap/react";
-import type { NpcStatus } from "@/generated/prisma/client";
+import type { NpcStatus, AlignmentStance } from "@/generated/prisma/client";
 import type { NpcDetail } from "@/types";
 
 const NPC_STATUSES: NpcStatus[] = ["ALIVE", "DEAD", "MISSING", "UNKNOWN"];
+
+const STANCE_OPTIONS: { value: AlignmentStance; label: string }[] = [
+  { value: "ALLIED", label: "Allied" },
+  { value: "FRIENDLY", label: "Friendly" },
+  { value: "NEUTRAL", label: "Neutral" },
+  { value: "SUSPICIOUS", label: "Suspicious" },
+  { value: "HOSTILE", label: "Hostile" },
+  { value: "UNKNOWN", label: "Unknown" },
+];
 
 export function NpcFormActions({ isEdit }: { isEdit: boolean }) {
   const router = useRouter();
@@ -65,6 +75,7 @@ export function NpcForm({
   const [classRole, setClassRole] = useState(npc?.classRole ?? "");
   const [race, setRace] = useState(npc?.race ?? "");
   const [status, setStatus] = useState<NpcStatus>(npc?.status ?? "ALIVE");
+  const [alignmentStance, setAlignmentStance] = useState<AlignmentStance>(npc?.alignmentStance ?? "UNKNOWN");
   const [partyMember, setPartyMember] = useState(npc?.partyMember ?? false);
   const [mainImage, setMainImage] = useState<string | null>(npc?.mainImage ?? null);
   const [notesBody, setNotesBody] = useState<JSONContent | null>(
@@ -78,7 +89,7 @@ export function NpcForm({
       ? [
           {
             id: npc.firstAppearanceSession.id,
-            name: `Session #${npc.firstAppearanceSession.sessionNumber}`,
+            name: `#${npc.firstAppearanceSession.sessionNumber}${npc.firstAppearanceSession.title ? ` — ${npc.firstAppearanceSession.title}` : ""}`,
           },
         ]
       : []
@@ -88,7 +99,7 @@ export function NpcForm({
       ? [
           {
             id: npc.lastAppearanceSession.id,
-            name: `Session #${npc.lastAppearanceSession.sessionNumber}`,
+            name: `#${npc.lastAppearanceSession.sessionNumber}${npc.lastAppearanceSession.title ? ` — ${npc.lastAppearanceSession.title}` : ""}`,
           },
         ]
       : []
@@ -97,6 +108,8 @@ export function NpcForm({
     npc?.tags.map((t) => t.tag) ?? []
   );
   const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  useFormGuard(dirty);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,6 +123,7 @@ export function NpcForm({
         classRole: classRole || undefined,
         race: race || undefined,
         status,
+        alignmentStance: partyMember ? undefined : alignmentStance,
         partyMember,
         organizationId: selectedOrg[0]?.id || undefined,
         firstAppearanceSessionId: selectedFirstSession[0]?.id || undefined,
@@ -147,7 +161,7 @@ export function NpcForm({
   };
 
   return (
-    <form id="npc-form" onSubmit={handleSubmit} className="space-y-6">
+    <form id="npc-form" onSubmit={handleSubmit} onChange={() => setDirty(true)} className="space-y-6">
       <fieldset disabled={saving} className="space-y-6">
       {/* Identity — portrait left, fields right */}
       <div className="flex flex-col gap-6 sm:flex-row">
@@ -226,6 +240,23 @@ export function NpcForm({
                 </SelectContent>
               </Select>
             </div>
+            {!partyMember && (
+              <div className="w-40 space-y-2">
+                <Label>Stance</Label>
+                <Select value={alignmentStance} onValueChange={(val) => setAlignmentStance(val as AlignmentStance)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STANCE_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
 
           {/* Row 3: Party Member toggle */}
@@ -288,7 +319,7 @@ export function NpcForm({
         <Label>Notes</Label>
         <RichTextEditor
           content={notesBody}
-          onChange={setNotesBody}
+          onChange={(c) => { setNotesBody(c); setDirty(true); }}
           placeholder="Write notes about this NPC..."
         />
       </div>

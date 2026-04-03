@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { CalendarDays, ScrollText, Users, MapPin, Shield } from "lucide-react";
+import { CalendarDays } from "lucide-react";
+import { QUEST_STATUS_COLORS } from "@/lib/colors";
+import { extractTextFromJson } from "@/lib/extract-text";
 import type { SessionListItem } from "@/types";
 
 interface SessionCardProps {
@@ -9,83 +11,87 @@ interface SessionCardProps {
 }
 
 export function SessionCard({ session }: SessionCardProps) {
+  const excerpt = extractTextFromJson(session.notesBody, 150);
+
   return (
     <Link href={`/sessions/${session.id}`}>
-      <Card className="h-full overflow-hidden transition-colors hover:border-gold/30 hover:bg-card/80 hover:shadow-lg hover:shadow-gold/10">
-        {/* Top area — same height as image in other cards */}
-        <div className="flex aspect-[4/3] w-full flex-col">
-          {/* Compact header */}
-          <div className="flex items-baseline gap-2 bg-muted/50 px-3 py-2">
-            <span className="text-lg font-bold text-gold">
-              #{session.sessionNumber}
+      <Card className="flex h-full flex-col overflow-hidden transition-colors hover:border-gem-jade/30 hover:bg-card/80 hover:shadow-lg hover:shadow-gem-jade/10">
+        {/* Header — gold left accent */}
+        <div className="flex items-baseline gap-2 border-l-2 border-gold bg-muted/50 px-3 py-2">
+          <span className="text-lg font-bold text-gold">
+            #{session.sessionNumber}
+          </span>
+          {session.title && (
+            <span className="truncate text-sm font-medium text-foreground">
+              {session.title}
             </span>
-            {session.title && (
-              <span className="truncate text-sm font-medium text-foreground">
-                {session.title}
+          )}
+        </div>
+
+        {/* Notes excerpt */}
+        <div className="flex-1 px-3 py-2">
+          {excerpt ? (
+            <p className="line-clamp-3 text-xs leading-relaxed text-muted-foreground">
+              {excerpt}
+            </p>
+          ) : (
+            <p className="text-xs italic text-muted-foreground/50">
+              No notes yet
+            </p>
+          )}
+        </div>
+
+        {/* Quest status dots */}
+        {session.quests.length > 0 && (
+          <div className="space-y-0.5 px-3 pb-1">
+            {session.quests.slice(0, 2).map((q) => (
+              <div
+                key={q.quest.id}
+                className="flex items-center gap-1.5 text-xs"
+              >
+                <span
+                  className="h-1.5 w-1.5 shrink-0 rounded-full"
+                  style={{ backgroundColor: QUEST_STATUS_COLORS[q.quest.status] }}
+                />
+                <span className="truncate" style={{ color: QUEST_STATUS_COLORS[q.quest.status] }}>
+                  {q.quest.name}
+                </span>
+              </div>
+            ))}
+            {session.quests.length > 2 && (
+              <span className="text-xs text-muted-foreground/60">
+                +{session.quests.length - 2} more
               </span>
             )}
           </div>
+        )}
 
-          {/* Body — dates + space for future recap */}
-          <div className="flex flex-1 flex-col px-3 py-2">
-            <div className="space-y-0.5">
-              <p className="truncate text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <CalendarDays className="h-3 w-3 shrink-0" />
-                  Played {new Date(session.realDatePlayed).toLocaleDateString()}
-                </span>
-              </p>
-              <p className="truncate text-xs text-muted-foreground">
-                {session.inGameDate ? (
-                  <span className="flex items-center gap-1">
-                    <ScrollText className="h-3 w-3 shrink-0" />
-                    In-game: {session.inGameDate}
-                  </span>
-                ) : (
-                  "\u00A0"
-                )}
-              </p>
-            </div>
-            {/* Future: session recap / summary will go here */}
-          </div>
-        </div>
-
-        {/* Footer — relation counts + tags */}
-        <div className="flex min-h-[5.5rem] flex-col justify-end p-3">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex gap-3 text-xs text-muted-foreground">
-              {session.npcs.length > 0 && (
-                <span className="flex items-center gap-1">
-                  <Users className="h-3 w-3" />
-                  {session.npcs.length}
-                </span>
-              )}
-              {session.locations.length > 0 && (
-                <span className="flex items-center gap-1">
-                  <MapPin className="h-3 w-3" />
-                  {session.locations.length}
-                </span>
-              )}
-              {session.organizations.length > 0 && (
-                <span className="flex items-center gap-1">
-                  <Shield className="h-3 w-3" />
-                  {session.organizations.length}
-                </span>
-              )}
-            </div>
-            {session.tags.length > 0 && (
-              <div className="flex shrink-0 gap-1">
-                {session.tags.slice(0, 2).map((t) => (
-                  <Badge key={t.tag.id} variant="outline" className="text-xs px-1.5 py-0">
-                    {t.tag.name}
-                  </Badge>
-                ))}
-                {session.tags.length > 2 && (
-                  <span className="text-xs text-muted-foreground">+{session.tags.length - 2}</span>
-                )}
-              </div>
+        {/* Footer — dates & tags */}
+        <div className="space-y-1 border-t border-border/50 px-3 py-1.5">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <CalendarDays className="h-3 w-3 shrink-0" />
+            {new Date(session.realDatePlayed).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+            })}
+            {session.inGameDate && (
+              <span className="text-muted-foreground/60">
+                · {session.inGameDate}
+              </span>
             )}
           </div>
+          {session.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {session.tags.slice(0, 2).map((t) => (
+                <Badge key={t.tag.id} variant="outline" className="px-1.5 py-0 text-xs">
+                  {t.tag.name}
+                </Badge>
+              ))}
+              {session.tags.length > 2 && (
+                <span className="text-xs text-muted-foreground">+{session.tags.length - 2}</span>
+              )}
+            </div>
+          )}
         </div>
       </Card>
     </Link>

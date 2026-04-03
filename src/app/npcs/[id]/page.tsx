@@ -18,17 +18,11 @@ import {
 } from "lucide-react";
 import { NpcDeleteButton } from "./delete-button";
 import { ImageLightbox } from "@/components/shared/image-lightbox";
+import { NPC_STATUS_COLORS, STANCE_COLORS, STANCE_LABELS } from "@/lib/colors";
 import type { JSONContent } from "@tiptap/react";
-import type { NpcStatus } from "@/generated/prisma/client";
+import type { NpcStatus, AlignmentStance } from "@/generated/prisma/client";
 
 export const dynamic = "force-dynamic";
-
-const STATUS_COLORS: Record<NpcStatus, string> = {
-  ALIVE: "#4a9a5a",
-  DEAD: "#9a4a4a",
-  MISSING: "#9a8a4a",
-  UNKNOWN: "#6a6a7a",
-};
 
 export default async function NpcDetailPage({
   params,
@@ -75,12 +69,24 @@ export default async function NpcDetailPage({
         <Badge
           variant="outline"
           style={{
-            borderColor: STATUS_COLORS[npc.status as NpcStatus],
-            color: STATUS_COLORS[npc.status as NpcStatus],
+            borderColor: NPC_STATUS_COLORS[npc.status as NpcStatus],
+            color: NPC_STATUS_COLORS[npc.status as NpcStatus],
           }}
         >
           {npc.status}
         </Badge>
+        {!npc.partyMember && npc.alignmentStance !== "UNKNOWN" && (
+          <Badge
+            variant="outline"
+            className="border-transparent"
+            style={{
+              backgroundColor: STANCE_COLORS[npc.alignmentStance as AlignmentStance] + "40",
+              color: STANCE_COLORS[npc.alignmentStance as AlignmentStance],
+            }}
+          >
+            {STANCE_LABELS[npc.alignmentStance as AlignmentStance]}
+          </Badge>
+        )}
         {npc.partyMember && (
           <span className="flex items-center gap-1 text-gold">
             <Star className="h-4 w-4 fill-gold" />

@@ -6,9 +6,12 @@ import {
   Users,
   MapPin,
   Shield,
+  Package,
+  Compass,
   Swords,
   Link2,
 } from "lucide-react";
+import Image from "next/image";
 import { NavLink } from "./nav-link";
 import { Separator } from "@/components/ui/separator";
 import { useSidebarStats } from "./use-sidebar-stats";
@@ -19,6 +22,8 @@ export const mainNavItems = [
   { href: "/npcs", label: "NPCs", icon: Users },
   { href: "/locations", label: "Locations", icon: MapPin },
   { href: "/organizations", label: "Organizations", icon: Shield },
+  { href: "/items", label: "Items", icon: Package },
+  { href: "/quests", label: "Quests & Goals", icon: Compass },
   { href: "/character", label: "Character", icon: Swords },
 ];
 
@@ -33,9 +38,13 @@ export function Sidebar() {
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-sidebar-border bg-sidebar md:flex">
       {/* Logo / App Title */}
       <div className="flex h-14 items-center gap-2.5 px-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gold/10 ring-1 ring-gold/20">
-          <ScrollText className="h-4 w-4 text-gold" />
-        </div>
+        <Image
+          src="/logo-icon.png"
+          alt="The Adventurer's Chronicle"
+          width={32}
+          height={32}
+          className="rounded-md"
+        />
         <div className="flex flex-col">
           <span className="text-sm font-semibold text-foreground tracking-wide">
             The Adventurer&apos;s
@@ -45,8 +54,6 @@ export function Sidebar() {
           </span>
         </div>
       </div>
-
-      <Separator className="bg-sidebar-border" />
 
       {/* Main Navigation */}
       <nav className="flex-1 space-y-0.5 px-3 py-3">

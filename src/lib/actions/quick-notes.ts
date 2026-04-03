@@ -15,7 +15,7 @@ export async function getQuickNote(campaignId: string) {
 export async function updateQuickNote(id: string, content: JsonValue) {
   const note = await prisma.quickNote.update({
     where: { id },
-    data: { content: content ?? Prisma.DbNull },
+    data: { content: content ? JSON.parse(JSON.stringify(content)) : Prisma.DbNull },
   });
 
   revalidatePath("/dashboard");

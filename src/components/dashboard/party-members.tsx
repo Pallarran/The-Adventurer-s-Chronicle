@@ -68,13 +68,14 @@ export async function PartyMembers({ campaignId }: PartyMembersProps) {
                 href={`/npcs/${npc.id}`}
                 className={`group flex items-start gap-3 rounded-lg border border-border bg-card/50 p-3 transition-colors hover:border-gold/30 hover:bg-gold/5 ${isDead ? "opacity-60" : ""}`}
               >
-                <div className="relative flex w-20 aspect-[3/4] shrink-0 items-center justify-center overflow-hidden rounded-lg border-2 border-gold/30 bg-gold/5 shadow-[0_0_12px_rgba(201,170,85,0.1)] transition-shadow group-hover:shadow-[0_0_18px_rgba(201,170,85,0.18)]">
+                <div className="relative flex w-24 aspect-[3/4] shrink-0 items-center justify-center overflow-hidden rounded-lg border-2 border-gold/30 bg-gold/5 shadow-[0_0_12px_rgba(201,170,85,0.1)] transition-shadow group-hover:shadow-[0_0_18px_rgba(201,170,85,0.18)]">
                   {npc.mainImage ? (
                     <Image
                       src={npc.mainImage.startsWith("/") || npc.mainImage.startsWith("http") ? npc.mainImage : `/api/upload/${npc.mainImage}`}
                       alt={npc.name}
                       fill
                       className="object-cover"
+                      style={{ objectPosition: `center ${npc.imagePositionY}%` }}
                       sizes="64px"
                     />
                   ) : (

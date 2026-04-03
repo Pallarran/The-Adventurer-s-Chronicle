@@ -2,8 +2,9 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import type { NpcStatus, Prisma } from "@/generated/prisma/client";
+import type { NpcStatus, AlignmentStance, Prisma } from "@/generated/prisma/client";
 import type { NpcListItem, NpcDetail } from "@/types";
+import { plainJson } from "@/lib/plain-json";
 
 type JsonValue = Prisma.JsonValue;
 
@@ -26,6 +27,7 @@ const npcDetailInclude = {
 interface NpcFilters {
   search?: string;
   status?: NpcStatus;
+  alignmentStance?: AlignmentStance;
   organizationId?: string;
   partyMember?: boolean;
   tagId?: string;
@@ -81,6 +83,7 @@ interface CreateNpcData {
   classRole?: string;
   race?: string;
   status?: NpcStatus;
+  alignmentStance?: AlignmentStance;
   partyMember?: boolean;
   organizationId?: string;
   firstAppearanceSessionId?: string;
@@ -100,11 +103,12 @@ export async function createNpc(data: CreateNpcData) {
       classRole: data.classRole,
       race: data.race,
       status: data.status ?? "ALIVE",
+      alignmentStance: data.alignmentStance ?? "UNKNOWN",
       partyMember: data.partyMember ?? false,
       organizationId: data.organizationId || null,
       firstAppearanceSessionId: data.firstAppearanceSessionId || null,
       lastAppearanceSessionId: data.lastAppearanceSessionId || null,
-      notesBody: data.notesBody ?? undefined,
+      notesBody: plainJson(data.notesBody),
       mainImage: data.mainImage,
       tags: data.tagIds?.length
         ? { create: data.tagIds.map((tagId) => ({ tagId })) }
@@ -123,6 +127,7 @@ interface UpdateNpcData {
   classRole?: string;
   race?: string;
   status?: NpcStatus;
+  alignmentStance?: AlignmentStance;
   partyMember?: boolean;
   organizationId?: string | null;
   firstAppearanceSessionId?: string | null;
@@ -138,7 +143,7 @@ export async function updateNpc(id: string, data: UpdateNpcData) {
   }
 
   const npc = await prisma.npc.update({
-    where: { id },
+    where: { id, deletedAt: null },
     data: {
       name: data.name,
       aliasTitle: data.aliasTitle,
@@ -146,11 +151,12 @@ export async function updateNpc(id: string, data: UpdateNpcData) {
       classRole: data.classRole,
       race: data.race,
       status: data.status,
+      alignmentStance: data.alignmentStance,
       partyMember: data.partyMember,
       organizationId: data.organizationId,
       firstAppearanceSessionId: data.firstAppearanceSessionId,
       lastAppearanceSessionId: data.lastAppearanceSessionId,
-      notesBody: data.notesBody ?? undefined,
+      notesBody: plainJson(data.notesBody),
       mainImage: data.mainImage,
       tags: data.tagIds?.length
         ? { create: data.tagIds.map((tagId) => ({ tagId })) }
@@ -182,4 +188,13 @@ export async function restoreNpc(id: string) {
 
 export async function purgeNpc(id: string) {
   await prisma.npc.delete({ where: { id } });
+}
+
+export async function updateNpcImagePosition(id: string, positionY: number) {
+  await prisma.npc.update({
+    where: { id },
+    data: { imagePositionY: positionY },
+  });
+  revalidatePath("/npcs");
+  revalidatePath(`/npcs/${id}`);
 }

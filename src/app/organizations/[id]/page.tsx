@@ -10,28 +10,11 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { Pencil, Users, MapPin, CalendarDays, ScrollText, Shield, Tag } from "lucide-react";
 import { OrganizationDeleteButton } from "./delete-button";
 import { ImageLightbox } from "@/components/shared/image-lightbox";
+import { STANCE_COLORS, STANCE_LABELS } from "@/lib/colors";
 import type { JSONContent } from "@tiptap/react";
 import type { AlignmentStance } from "@/generated/prisma/client";
 
 export const dynamic = "force-dynamic";
-
-const STANCE_COLORS: Record<AlignmentStance, string> = {
-  ALLIED: "#4a9a5a",
-  FRIENDLY: "#5a9a8a",
-  NEUTRAL: "#6a6a7a",
-  SUSPICIOUS: "#9a8a4a",
-  HOSTILE: "#9a4a4a",
-  UNKNOWN: "#5a5a6a",
-};
-
-const STANCE_LABELS: Record<AlignmentStance, string> = {
-  ALLIED: "Allied",
-  FRIENDLY: "Friendly",
-  NEUTRAL: "Neutral",
-  SUSPICIOUS: "Suspicious",
-  HOSTILE: "Hostile",
-  UNKNOWN: "Unknown",
-};
 
 export default async function OrganizationDetailPage({
   params,

@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { LocationCard } from "@/components/locations/location-card";
 import { SearchInput } from "@/components/shared/search-input";
+import { MultiSelectFilter } from "@/components/shared/multi-select-filter";
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown, X } from "lucide-react";
 import type { LocationListItem } from "@/types";
@@ -16,6 +17,9 @@ const sortLabels: Record<SortOption, string> = {
   "oldest": "Oldest First",
 };
 
+const selectClass =
+  "rounded-full border border-border bg-background px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground focus:outline-none";
+
 interface LocationListClientProps {
   locations: LocationListItem[];
   headerActions?: React.ReactNode;
@@ -24,16 +28,16 @@ interface LocationListClientProps {
 export function LocationListClient({ locations, headerActions }: LocationListClientProps) {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<SortOption>("name-asc");
-  const [typeFilter, setTypeFilter] = useState<string | null>(null);
+  const [typeFilters, setTypeFilters] = useState<Set<string>>(new Set());
   const [tagFilter, setTagFilter] = useState<string | null>(null);
 
   // Extract unique types and tags
-  const allTypes = useMemo(() => {
+  const typeOptions = useMemo(() => {
     const types = new Set<string>();
     locations.forEach((l) => {
       if (l.type) types.add(l.type);
     });
-    return Array.from(types).sort();
+    return Array.from(types).sort().map((t) => ({ value: t, label: t }));
   }, [locations]);
 
   const allTags = useMemo(() => {
@@ -56,11 +60,11 @@ export function LocationListClient({ locations, headerActions }: LocationListCli
   }, []);
 
   const clearFilters = useCallback(() => {
-    setTypeFilter(null);
+    setTypeFilters(new Set());
     setTagFilter(null);
   }, []);
 
-  const hasFilters = typeFilter !== null || tagFilter !== null;
+  const hasFilters = typeFilters.size > 0 || tagFilter !== null;
 
   const results = useMemo(() => {
     let items = [...locations];
@@ -76,8 +80,8 @@ export function LocationListClient({ locations, headerActions }: LocationListCli
     }
 
     // Type filter
-    if (typeFilter) {
-      items = items.filter((l) => l.type === typeFilter);
+    if (typeFilters.size > 0) {
+      items = items.filter((l) => l.type !== null && typeFilters.has(l.type));
     }
 
     // Tag filter
@@ -104,7 +108,7 @@ export function LocationListClient({ locations, headerActions }: LocationListCli
     });
 
     return items;
-  }, [locations, search, sort, typeFilter, tagFilter]);
+  }, [locations, search, sort, typeFilters, tagFilter]);
 
   return (
     <div className="space-y-4">
@@ -112,7 +116,7 @@ export function LocationListClient({ locations, headerActions }: LocationListCli
       <div className="flex flex-wrap items-center gap-3">
         <SearchInput
           onChange={handleSearch}
-          placeholder="Search locations..."
+          placeholder="Search by name or type..."
           className="max-w-sm"
         />
         <Button
@@ -127,32 +131,22 @@ export function LocationListClient({ locations, headerActions }: LocationListCli
         <div className="ml-auto">{headerActions}</div>
       </div>
 
-      {/* Filter chips */}
+      {/* Filter dropdowns */}
       <div className="flex flex-wrap items-center gap-2">
-        {/* Type filter */}
-        {allTypes.length > 0 &&
-          allTypes.map((type) => (
-            <button
-              key={type}
-              onClick={() =>
-                setTypeFilter(typeFilter === type ? null : type)
-              }
-              className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors ${
-                typeFilter === type
-                  ? "border-gold/40 bg-gold/10 text-gold"
-                  : "border-border text-muted-foreground hover:border-gold/30 hover:text-foreground"
-              }`}
-            >
-              {type}
-            </button>
-          ))}
+        {typeOptions.length > 0 && (
+          <MultiSelectFilter
+            label="Types"
+            options={typeOptions}
+            selected={typeFilters}
+            onChange={setTypeFilters}
+          />
+        )}
 
-        {/* Tag filter */}
         {allTags.length > 0 && (
           <select
             value={tagFilter ?? ""}
             onChange={(e) => setTagFilter(e.target.value || null)}
-            className="rounded-full border border-border bg-background px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground focus:outline-none"
+            className={selectClass}
           >
             <option value="">All Tags</option>
             {allTags.map((tag) => (
@@ -163,7 +157,6 @@ export function LocationListClient({ locations, headerActions }: LocationListCli
           </select>
         )}
 
-        {/* Clear all */}
         {hasFilters && (
           <button
             onClick={clearFilters}
@@ -176,14 +169,14 @@ export function LocationListClient({ locations, headerActions }: LocationListCli
       </div>
 
       {/* Grid */}
-      <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
         {results.map((location) => (
           <LocationCard key={location.id} location={location} />
         ))}
       </div>
       {results.length === 0 && (
         <p className="py-8 text-center text-sm text-muted-foreground">
-          No locations match your filters.
+          No locations match your search or filters.
         </p>
       )}
     </div>

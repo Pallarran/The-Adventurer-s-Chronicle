@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import Link from "next/link";
 import { Search, ArrowLeft } from "lucide-react";
+import { FormGuardContext } from "./form-guard-provider";
 import { Button } from "@/components/ui/button";
 import { GlobalSearch } from "@/components/search/global-search";
 import { QuickCreate } from "@/components/search/quick-create";
@@ -12,6 +13,7 @@ import { usePageHeader } from "./page-header-context";
 export function Topbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const { header } = usePageHeader();
+  const { requestNavigation } = useContext(FormGuardContext);
 
   // Ctrl+K shortcut
   useEffect(() => {
@@ -36,6 +38,9 @@ export function Topbar() {
         {header?.backHref && (
           <Link
             href={header.backHref}
+            onClick={(e) => {
+              if (!requestNavigation(header.backHref!)) e.preventDefault();
+            }}
             className="flex shrink-0 items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
             title={header.backLabel ?? "Back"}
           >

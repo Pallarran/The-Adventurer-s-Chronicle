@@ -45,6 +45,13 @@ enum ProgressionStatus {
   FUTURE
 }
 
+enum QuestStatus {
+  LEAD
+  ACTIVE
+  COMPLETED
+  FAILED
+}
+
 // ============================================================
 // CORE MODELS
 // ============================================================
@@ -64,6 +71,8 @@ model Campaign {
   toolLinks        ToolLink[]
   tags             Tag[]
   quickNotes       QuickNote[]
+  items            Item[]
+  quests           Quest[]
 }
 
 model Session {
@@ -73,7 +82,6 @@ model Session {
   realDatePlayed  DateTime
   inGameDate      String?
   notesBody       Json?
-  followUpActions Json?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   deletedAt       DateTime?
@@ -86,6 +94,7 @@ model Session {
   locations     SessionLocation[]
   organizations SessionOrganization[]
   tags          SessionTag[]
+  quests        SessionQuest[]
 
   // Reverse relations for first/last appearance
   npcFirstAppearances      Npc[]          @relation("NpcFirstAppearance")
@@ -105,13 +114,15 @@ model Npc {
   gender      String?
   classRole   String?
   race        String?
-  status      NpcStatus @default(ALIVE)
-  partyMember Boolean   @default(false)
+  status          NpcStatus       @default(ALIVE)
+  alignmentStance AlignmentStance @default(UNKNOWN)
+  partyMember     Boolean         @default(false)
   notesBody   Json?
-  mainImage   String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
+  mainImage      String?
+  imagePositionY Int       @default(50)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
 
   campaignId String
   campaign   Campaign @relation(fields: [campaignId], references: [id])
@@ -134,10 +145,11 @@ model Location {
   name      String
   type      String?
   notesBody Json?
-  mainImage String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  mainImage      String?
+  imagePositionY Int       @default(50)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
 
   campaignId String
   campaign   Campaign @relation(fields: [campaignId], references: [id])
@@ -164,6 +176,7 @@ model Organization {
   alignmentStance AlignmentStance @default(UNKNOWN)
   notesBody       Json?
   mainImage       String?
+  imagePositionY  Int             @default(50)
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   deletedAt       DateTime?
@@ -272,6 +285,7 @@ model Tag {
   locations     LocationTag[]
   organizations OrganizationTag[]
   sessions      SessionTag[]
+  items         ItemTag[]
 
   @@unique([campaignId, name])
 }
@@ -284,6 +298,41 @@ model QuickNote {
 
   campaignId String
   campaign   Campaign @relation(fields: [campaignId], references: [id])
+}
+
+model Item {
+  id         String    @id @default(cuid())
+  name       String
+  type       String?
+  rarity     String?
+  aura       String?
+  attunement Boolean   @default(false)
+  notesBody  Json?
+  mainImage      String?
+  imagePositionY Int       @default(50)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id])
+
+  tags ItemTag[]
+}
+
+model Quest {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  status      QuestStatus @default(LEAD)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  deletedAt   DateTime?
+
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id])
+
+  sessions SessionQuest[]
 }
 
 // ============================================================
@@ -315,6 +364,15 @@ model SessionOrganization {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@id([sessionId, organizationId])
+}
+
+model SessionQuest {
+  sessionId String
+  session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  questId   String
+  quest     Quest   @relation(fields: [questId], references: [id], onDelete: Cascade)
+
+  @@id([sessionId, questId])
 }
 
 model OrganizationNpc {
@@ -369,4 +427,13 @@ model SessionTag {
   tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@id([sessionId, tagId])
+}
+
+model ItemTag {
+  itemId String
+  item   Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  tagId  String
+  tag    Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([itemId, tagId])
 }

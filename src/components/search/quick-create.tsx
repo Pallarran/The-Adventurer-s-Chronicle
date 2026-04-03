@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Plus, ScrollText, Users, MapPin, Shield, Link2 } from "lucide-react";
+import { Plus, ScrollText, Users, MapPin, Shield, Package, Compass, Link2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -16,6 +16,8 @@ const createItems = [
   { label: "New NPC", icon: Users, href: "/npcs/new" },
   { label: "New Location", icon: MapPin, href: "/locations/new" },
   { label: "New Organization", icon: Shield, href: "/organizations/new" },
+  { label: "New Item", icon: Package, href: "/items/new" },
+  { label: "New Quest", icon: Compass, href: "/quests/new" },
   { label: "New Tool Link", icon: Link2, href: "/tools" },
 ];
 

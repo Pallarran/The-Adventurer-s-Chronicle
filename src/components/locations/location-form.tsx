@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useFormGuard } from "@/hooks/use-form-guard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -86,6 +87,8 @@ export function LocationForm({
     location?.tags.map((t) => t.tag) ?? []
   );
   const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  useFormGuard(dirty);
 
   const parentOptions = allLocations.filter((l) => l.id !== location?.id);
 
@@ -134,7 +137,7 @@ export function LocationForm({
   };
 
   return (
-    <form id="location-form" onSubmit={handleSubmit} className="space-y-6">
+    <form id="location-form" onSubmit={handleSubmit} onChange={() => setDirty(true)} className="space-y-6">
       <fieldset disabled={saving} className="space-y-6">
       {/* Identity — image left, fields right */}
       <div className="flex flex-col gap-6 sm:flex-row">
@@ -224,7 +227,7 @@ export function LocationForm({
         <Label>Notes</Label>
         <RichTextEditor
           content={notesBody}
-          onChange={setNotesBody}
+          onChange={(c) => { setNotesBody(c); setDirty(true); }}
           placeholder="Write notes about this location..."
         />
       </div>

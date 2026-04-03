@@ -5,7 +5,7 @@ import { getActiveCampaign } from "@/lib/campaign";
 export const dynamic = "force-dynamic";
 
 export type SearchResult = {
-  type: "session" | "npc" | "location" | "organization";
+  type: "session" | "npc" | "location" | "organization" | "item" | "quest";
   id: string;
   name: string;
   subtitle?: string;
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
 
   const campaign = await getActiveCampaign();
 
-  const [sessions, npcs, locations, organizations] = await Promise.all([
+  const [sessions, npcs, locations, organizations, items, quests] = await Promise.all([
     prisma.session.findMany({
       where: {
         campaignId: campaign.id,
@@ -62,6 +62,24 @@ export async function GET(request: NextRequest) {
       select: { id: true, name: true, type: true },
       take: 5,
     }),
+    prisma.item.findMany({
+      where: {
+        campaignId: campaign.id,
+        deletedAt: null,
+        name: { contains: q, mode: "insensitive" as const },
+      },
+      select: { id: true, name: true, type: true, rarity: true },
+      take: 5,
+    }),
+    prisma.quest.findMany({
+      where: {
+        campaignId: campaign.id,
+        deletedAt: null,
+        name: { contains: q, mode: "insensitive" as const },
+      },
+      select: { id: true, name: true, status: true },
+      take: 5,
+    }),
   ]);
 
   const results: SearchResult[] = [
@@ -88,6 +106,18 @@ export async function GET(request: NextRequest) {
       id: o.id,
       name: o.name,
       subtitle: o.type ?? undefined,
+    })),
+    ...items.map((i) => ({
+      type: "item" as const,
+      id: i.id,
+      name: i.name,
+      subtitle: [i.type, i.rarity].filter(Boolean).join(" \u00B7 ") || undefined,
+    })),
+    ...quests.map((q) => ({
+      type: "quest" as const,
+      id: q.id,
+      name: q.name,
+      subtitle: q.status,
     })),
   ];
 

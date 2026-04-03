@@ -1,6 +1,8 @@
 import Link from "next/link";
-import { BookOpen, CalendarDays, ArrowRight, ListChecks } from "lucide-react";
+import { BookOpen, CalendarDays, ArrowRight } from "lucide-react";
 import { getRecentSessions } from "@/lib/actions/sessions";
+import { getQuestStatusCounts } from "@/lib/actions/quests";
+import { extractTextFromJson } from "@/lib/extract-text";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -9,36 +11,12 @@ interface RecentSessionsProps {
   campaignId: string;
 }
 
-function extractTextFromJson(json: unknown, maxLength: number = 120): string {
-  if (!json || typeof json !== "object") return "";
-  const node = json as { text?: string; content?: unknown[] };
-  if (node.text) return node.text;
-  if (Array.isArray(node.content)) {
-    let result = "";
-    for (const child of node.content) {
-      result += extractTextFromJson(child, maxLength);
-      if (result.length >= maxLength) break;
-    }
-    return result;
-  }
-  return "";
-}
-
-function countTaskItems(json: unknown): number {
-  if (!json || typeof json !== "object") return 0;
-  const node = json as { type?: string; content?: unknown[] };
-  let count = 0;
-  if (node.type === "taskItem") count++;
-  if (Array.isArray(node.content)) {
-    for (const child of node.content) {
-      count += countTaskItems(child);
-    }
-  }
-  return count;
-}
-
 export async function RecentSessions({ campaignId }: RecentSessionsProps) {
-  const sessions = await getRecentSessions(campaignId, 5);
+  const [sessions, questCounts] = await Promise.all([
+    getRecentSessions(campaignId, 5),
+    getQuestStatusCounts(campaignId),
+  ]);
+  const hasQuests = questCounts.active > 0 || questCounts.leads > 0;
 
   if (sessions.length === 0) {
     return (
@@ -67,13 +45,31 @@ export async function RecentSessions({ campaignId }: RecentSessionsProps) {
             <BookOpen className="h-5 w-5" />
             Recent Sessions
           </CardTitle>
-          <Link
-            href="/sessions"
-            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-          >
-            View all
-            <ArrowRight className="h-3 w-3" />
-          </Link>
+          <div className="flex items-center gap-2">
+            {hasQuests && (
+              <Link href="/quests" className="flex items-center gap-1.5">
+                {questCounts.active > 0 && (
+                  <Badge variant="outline" className="border-blue-500/30 text-blue-400">
+                    <span className="mr-1 h-1.5 w-1.5 rounded-full bg-blue-500" />
+                    {questCounts.active} active
+                  </Badge>
+                )}
+                {questCounts.leads > 0 && (
+                  <Badge variant="outline" className="border-amber-500/30 text-amber-400">
+                    <span className="mr-1 h-1.5 w-1.5 rounded-full bg-amber-500" />
+                    {questCounts.leads} {questCounts.leads === 1 ? "lead" : "leads"}
+                  </Badge>
+                )}
+              </Link>
+            )}
+            <Link
+              href="/sessions"
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+            >
+              View all
+              <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
         </div>
       </CardHeader>
 
@@ -82,8 +78,6 @@ export async function RecentSessions({ campaignId }: RecentSessionsProps) {
           {sessions.map((session, index) => {
             const excerpt = extractTextFromJson(session.notesBody, 120);
             const isLast = index === sessions.length - 1;
-            const isFirst = index === 0;
-            const followUpCount = isFirst ? countTaskItems(session.followUpActions) : 0;
 
             return (
               <Link
@@ -109,12 +103,6 @@ export async function RecentSessions({ campaignId }: RecentSessionsProps) {
                       <span className="truncate text-sm font-medium text-foreground group-hover:text-gold/80">
                         {session.title}
                       </span>
-                    )}
-                    {followUpCount > 0 && (
-                      <Badge variant="secondary" className="ml-auto shrink-0 gap-1 text-[10px] px-1.5 py-0">
-                        <ListChecks className="h-3 w-3" />
-                        {followUpCount}
-                      </Badge>
                     )}
                   </div>
                   <div className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">

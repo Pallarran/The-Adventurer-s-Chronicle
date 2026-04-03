@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useFormGuard } from "@/hooks/use-form-guard";
+import { extractMentionsFromContent } from "@/lib/extract-mentions";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { RichTextEditor } from "@/components/shared/rich-text-editor";
 import { RelationPicker, type RelationOption } from "@/components/shared/relation-picker";
 import { TagInput, type TagOption } from "@/components/shared/tag-input";
+import { SessionQuestList } from "@/components/sessions/session-quest-list";
 import { createSession, updateSession } from "@/lib/actions/sessions";
 import { createTag } from "@/lib/actions/tags";
 import { toast } from "sonner";
@@ -60,9 +63,6 @@ export function SessionForm({
   const [notesBody, setNotesBody] = useState<JSONContent | null>(
     (session?.notesBody as JSONContent) ?? null
   );
-  const [followUpActions, setFollowUpActions] = useState<JSONContent | null>(
-    (session?.followUpActions as JSONContent) ?? null
-  );
   const [selectedNpcs, setSelectedNpcs] = useState<RelationOption[]>(
     session?.npcs.map((n) => n.npc) ?? []
   );
@@ -72,10 +72,87 @@ export function SessionForm({
   const [selectedOrgs, setSelectedOrgs] = useState<RelationOption[]>(
     session?.organizations.map((o) => o.organization) ?? []
   );
+  const [questIds, setQuestIds] = useState<string[]>(
+    session?.quests.map((q) => q.quest.id) ?? []
+  );
   const [selectedTags, setSelectedTags] = useState<TagOption[]>(
     session?.tags.map((t) => t.tag) ?? []
   );
   const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  useFormGuard(dirty);
+
+  // ── Mention → picker auto-sync ──
+  const suppressedNpcs = useRef(new Set<string>());
+  const suppressedLocations = useRef(new Set<string>());
+  const suppressedOrgs = useRef(new Set<string>());
+
+  // Seed suppressed sets in edit mode: mentions already in notes but NOT in
+  // the featured list were intentionally excluded by the user previously.
+  const initializedRef = useRef(false);
+  useEffect(() => {
+    if (initializedRef.current || !session?.notesBody) return;
+    initializedRef.current = true;
+    const mentions = extractMentionsFromContent(session.notesBody as JSONContent);
+    const npcIds = new Set(selectedNpcs.map((n) => n.id));
+    const locIds = new Set(selectedLocations.map((l) => l.id));
+    const orgIds = new Set(selectedOrgs.map((o) => o.id));
+    for (const m of mentions.npc) if (!npcIds.has(m.id)) suppressedNpcs.current.add(m.id);
+    for (const m of mentions.location) if (!locIds.has(m.id)) suppressedLocations.current.add(m.id);
+    for (const m of mentions.organization) if (!orgIds.has(m.id)) suppressedOrgs.current.add(m.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Wrap picker onChange to track manual removals in suppressed sets
+  const handleNpcsChange = useCallback((next: RelationOption[]) => {
+    const nextIds = new Set(next.map((n) => n.id));
+    setSelectedNpcs((prev) => {
+      for (const p of prev) if (!nextIds.has(p.id)) suppressedNpcs.current.add(p.id);
+      return next;
+    });
+  }, []);
+
+  const handleLocationsChange = useCallback((next: RelationOption[]) => {
+    const nextIds = new Set(next.map((l) => l.id));
+    setSelectedLocations((prev) => {
+      for (const p of prev) if (!nextIds.has(p.id)) suppressedLocations.current.add(p.id);
+      return next;
+    });
+  }, []);
+
+  const handleOrgsChange = useCallback((next: RelationOption[]) => {
+    const nextIds = new Set(next.map((o) => o.id));
+    setSelectedOrgs((prev) => {
+      for (const p of prev) if (!nextIds.has(p.id)) suppressedOrgs.current.add(p.id);
+      return next;
+    });
+  }, []);
+
+  // Sync mentions from editor content into relation pickers
+  const handleNotesChange = useCallback((content: JSONContent) => {
+    setNotesBody(content);
+    setDirty(true);
+
+    const mentions = extractMentionsFromContent(content);
+
+    setSelectedNpcs((prev) => {
+      const ids = new Set(prev.map((n) => n.id));
+      const toAdd = mentions.npc.filter((m) => !ids.has(m.id) && !suppressedNpcs.current.has(m.id));
+      return toAdd.length ? [...prev, ...toAdd.map((m) => ({ id: m.id, name: m.label }))] : prev;
+    });
+
+    setSelectedLocations((prev) => {
+      const ids = new Set(prev.map((l) => l.id));
+      const toAdd = mentions.location.filter((m) => !ids.has(m.id) && !suppressedLocations.current.has(m.id));
+      return toAdd.length ? [...prev, ...toAdd.map((m) => ({ id: m.id, name: m.label }))] : prev;
+    });
+
+    setSelectedOrgs((prev) => {
+      const ids = new Set(prev.map((o) => o.id));
+      const toAdd = mentions.organization.filter((m) => !ids.has(m.id) && !suppressedOrgs.current.has(m.id));
+      return toAdd.length ? [...prev, ...toAdd.map((m) => ({ id: m.id, name: m.label }))] : prev;
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,10 +165,10 @@ export function SessionForm({
         realDatePlayed: new Date(realDatePlayed),
         inGameDate: inGameDate || undefined,
         notesBody: notesBody ?? undefined,
-        followUpActions: followUpActions ?? undefined,
         npcIds: selectedNpcs.map((n) => n.id),
         locationIds: selectedLocations.map((l) => l.id),
         organizationIds: selectedOrgs.map((o) => o.id),
+        questIds,
         tagIds: selectedTags.map((t) => t.id),
       };
 
@@ -117,7 +194,7 @@ export function SessionForm({
   };
 
   return (
-    <form id="session-form" onSubmit={handleSubmit} className="space-y-6">
+    <form id="session-form" onSubmit={handleSubmit} onChange={() => setDirty(true)} className="space-y-6">
       <fieldset disabled={saving} className="space-y-6">
       {/* Title + compact metadata row */}
       <div className="flex flex-wrap items-end gap-4">
@@ -131,7 +208,7 @@ export function SessionForm({
           />
         </div>
         <div className="w-24 space-y-2">
-          <Label htmlFor="sessionNumber">Session #</Label>
+          <Label htmlFor="sessionNumber">Session # *</Label>
           <Input
             id="sessionNumber"
             type="number"
@@ -141,7 +218,7 @@ export function SessionForm({
           />
         </div>
         <div className="w-44 space-y-2">
-          <Label htmlFor="realDatePlayed">Date Played</Label>
+          <Label htmlFor="realDatePlayed">Date Played *</Label>
           <Input
             id="realDatePlayed"
             type="date"
@@ -168,7 +245,7 @@ export function SessionForm({
             label={<><Users className="h-4 w-4" /> Featured NPCs</>}
             options={allNpcs}
             selected={selectedNpcs}
-            onChange={setSelectedNpcs}
+            onChange={handleNpcsChange}
             placeholder="Search NPCs..."
           />
         </div>
@@ -177,7 +254,7 @@ export function SessionForm({
             label={<><MapPin className="h-4 w-4" /> Featured Locations</>}
             options={allLocations}
             selected={selectedLocations}
-            onChange={setSelectedLocations}
+            onChange={handleLocationsChange}
             placeholder="Search locations..."
           />
         </div>
@@ -186,7 +263,7 @@ export function SessionForm({
             label={<><Shield className="h-4 w-4" /> Featured Organizations</>}
             options={allOrganizations}
             selected={selectedOrgs}
-            onChange={setSelectedOrgs}
+            onChange={handleOrgsChange}
             placeholder="Search organizations..."
           />
         </div>
@@ -206,20 +283,27 @@ export function SessionForm({
         <Label>Session Notes</Label>
         <RichTextEditor
           content={notesBody}
-          onChange={setNotesBody}
+          onChange={handleNotesChange}
           placeholder="Write your session notes..."
         />
       </div>
 
-      {/* Follow-Up Actions */}
-      <div className="space-y-2">
-        <Label>Follow-Up Actions</Label>
-        <RichTextEditor
-          content={followUpActions}
-          onChange={setFollowUpActions}
-          placeholder="Things to remember for next session..."
-        />
-      </div>
+      {/* Quests & Goals — inline creation list */}
+      <SessionQuestList
+        initialQuests={
+          session?.quests.map((q) => ({
+            id: q.quest.id,
+            name: q.quest.name,
+            status: q.quest.status,
+            description: q.quest.description,
+            persisted: true,
+          })) ?? []
+        }
+        campaignId={campaignId}
+        onQuestsChange={setQuestIds}
+        disabled={saving}
+      />
+
       </fieldset>
     </form>
   );

@@ -3,11 +3,10 @@
 import { useState, useCallback, useMemo } from "react";
 import { NpcCard } from "@/components/npcs/npc-card";
 import { SearchInput } from "@/components/shared/search-input";
+import { MultiSelectFilter } from "@/components/shared/multi-select-filter";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { ArrowUpDown, X } from "lucide-react";
 import type { NpcListItem } from "@/types";
-import type { NpcStatus } from "@/generated/prisma/client";
 
 type SortOption = "name-asc" | "name-desc" | "recent" | "oldest";
 
@@ -18,12 +17,28 @@ const sortLabels: Record<SortOption, string> = {
   "oldest": "Oldest First",
 };
 
-const STATUS_OPTIONS: { value: NpcStatus; label: string; color: string }[] = [
-  { value: "ALIVE", label: "Alive", color: "#4a9a5a" },
-  { value: "DEAD", label: "Dead", color: "#9a4a4a" },
-  { value: "MISSING", label: "Missing", color: "#9a8a4a" },
-  { value: "UNKNOWN", label: "Unknown", color: "#6a6a7a" },
+const STATUS_OPTIONS = [
+  { value: "ALIVE", label: "Alive" },
+  { value: "DEAD", label: "Dead" },
+  { value: "MISSING", label: "Missing" },
+  { value: "UNKNOWN", label: "Unknown" },
 ];
+
+const STANCE_OPTIONS = [
+  { value: "ALLIED", label: "Allied" },
+  { value: "FRIENDLY", label: "Friendly" },
+  { value: "NEUTRAL", label: "Neutral" },
+  { value: "SUSPICIOUS", label: "Suspicious" },
+  { value: "HOSTILE", label: "Hostile" },
+];
+
+const PARTY_OPTIONS = [
+  { value: "party", label: "Party Only" },
+  { value: "non-party", label: "Non-Party" },
+];
+
+const selectClass =
+  "rounded-full border border-border bg-background px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground focus:outline-none";
 
 interface NpcListClientProps {
   npcs: NpcListItem[];
@@ -33,8 +48,9 @@ interface NpcListClientProps {
 export function NpcListClient({ npcs, headerActions }: NpcListClientProps) {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<SortOption>("name-asc");
-  const [statusFilter, setStatusFilter] = useState<NpcStatus | null>(null);
-  const [partyOnly, setPartyOnly] = useState(false);
+  const [statusFilters, setStatusFilters] = useState<Set<string>>(new Set());
+  const [stanceFilters, setStanceFilters] = useState<Set<string>>(new Set());
+  const [partyFilters, setPartyFilters] = useState<Set<string>>(new Set());
   const [tagFilter, setTagFilter] = useState<string | null>(null);
 
   // Extract unique tags from all NPCs
@@ -58,12 +74,13 @@ export function NpcListClient({ npcs, headerActions }: NpcListClientProps) {
   }, []);
 
   const clearFilters = useCallback(() => {
-    setStatusFilter(null);
-    setPartyOnly(false);
+    setStatusFilters(new Set());
+    setStanceFilters(new Set());
+    setPartyFilters(new Set());
     setTagFilter(null);
   }, []);
 
-  const hasFilters = statusFilter !== null || partyOnly || tagFilter !== null;
+  const hasFilters = statusFilters.size > 0 || stanceFilters.size > 0 || partyFilters.size > 0 || tagFilter !== null;
 
   const results = useMemo(() => {
     let items = [...npcs];
@@ -81,13 +98,22 @@ export function NpcListClient({ npcs, headerActions }: NpcListClientProps) {
     }
 
     // Status filter
-    if (statusFilter) {
-      items = items.filter((npc) => npc.status === statusFilter);
+    if (statusFilters.size > 0) {
+      items = items.filter((npc) => statusFilters.has(npc.status));
+    }
+
+    // Stance filter
+    if (stanceFilters.size > 0) {
+      items = items.filter((npc) => stanceFilters.has(npc.alignmentStance));
     }
 
     // Party member filter
-    if (partyOnly) {
-      items = items.filter((npc) => npc.partyMember);
+    if (partyFilters.size > 0) {
+      items = items.filter((npc) => {
+        if (partyFilters.has("party") && partyFilters.has("non-party")) return true;
+        if (partyFilters.has("party")) return npc.partyMember;
+        return !npc.partyMember;
+      });
     }
 
     // Tag filter
@@ -114,7 +140,7 @@ export function NpcListClient({ npcs, headerActions }: NpcListClientProps) {
     });
 
     return items;
-  }, [npcs, search, sort, statusFilter, partyOnly, tagFilter]);
+  }, [npcs, search, sort, statusFilters, stanceFilters, partyFilters, tagFilter]);
 
   return (
     <div className="space-y-4">
@@ -137,48 +163,32 @@ export function NpcListClient({ npcs, headerActions }: NpcListClientProps) {
         <div className="ml-auto">{headerActions}</div>
       </div>
 
-      {/* Filter chips */}
+      {/* Filter dropdowns */}
       <div className="flex flex-wrap items-center gap-2">
-        {/* Party member toggle */}
-        <button
-          onClick={() => setPartyOnly(!partyOnly)}
-          className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors ${
-            partyOnly
-              ? "border-gold/40 bg-gold/10 text-gold"
-              : "border-border text-muted-foreground hover:border-gold/30 hover:text-foreground"
-          }`}
-        >
-          Party Members
-        </button>
+        <MultiSelectFilter
+          label="Statuses"
+          options={STATUS_OPTIONS}
+          selected={statusFilters}
+          onChange={setStatusFilters}
+        />
+        <MultiSelectFilter
+          label="Stances"
+          options={STANCE_OPTIONS}
+          selected={stanceFilters}
+          onChange={setStanceFilters}
+        />
+        <MultiSelectFilter
+          label="NPCs"
+          options={PARTY_OPTIONS}
+          selected={partyFilters}
+          onChange={setPartyFilters}
+        />
 
-        {/* Status filters */}
-        {STATUS_OPTIONS.map((opt) => (
-          <button
-            key={opt.value}
-            onClick={() =>
-              setStatusFilter(statusFilter === opt.value ? null : opt.value)
-            }
-            className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors ${
-              statusFilter === opt.value
-                ? "border-transparent"
-                : "border-border text-muted-foreground hover:text-foreground"
-            }`}
-            style={
-              statusFilter === opt.value
-                ? { backgroundColor: `${opt.color}20`, color: opt.color, borderColor: `${opt.color}40` }
-                : undefined
-            }
-          >
-            {opt.label}
-          </button>
-        ))}
-
-        {/* Tag filter */}
         {allTags.length > 0 && (
           <select
             value={tagFilter ?? ""}
             onChange={(e) => setTagFilter(e.target.value || null)}
-            className="rounded-full border border-border bg-background px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground focus:outline-none"
+            className={selectClass}
           >
             <option value="">All Tags</option>
             {allTags.map((tag) => (
@@ -189,7 +199,6 @@ export function NpcListClient({ npcs, headerActions }: NpcListClientProps) {
           </select>
         )}
 
-        {/* Clear all */}
         {hasFilters && (
           <button
             onClick={clearFilters}
@@ -202,14 +211,14 @@ export function NpcListClient({ npcs, headerActions }: NpcListClientProps) {
       </div>
 
       {/* Grid */}
-      <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
         {results.map((npc) => (
           <NpcCard key={npc.id} npc={npc} />
         ))}
       </div>
       {results.length === 0 && (
         <p className="py-8 text-center text-sm text-muted-foreground">
-          No NPCs match your filters.
+          No NPCs match your search or filters.
         </p>
       )}
     </div>

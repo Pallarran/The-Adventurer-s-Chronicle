@@ -3,10 +3,10 @@
 import { useState, useCallback, useMemo } from "react";
 import { OrganizationCard } from "@/components/organizations/organization-card";
 import { SearchInput } from "@/components/shared/search-input";
+import { MultiSelectFilter } from "@/components/shared/multi-select-filter";
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown, X } from "lucide-react";
 import type { OrganizationListItem } from "@/types";
-import type { AlignmentStance } from "@/generated/prisma/client";
 
 type SortOption = "name-asc" | "name-desc" | "recent" | "oldest";
 
@@ -17,14 +17,17 @@ const sortLabels: Record<SortOption, string> = {
   "oldest": "Oldest First",
 };
 
-const STANCE_OPTIONS: { value: AlignmentStance; label: string; color: string }[] = [
-  { value: "ALLIED", label: "Allied", color: "#4a9a5a" },
-  { value: "FRIENDLY", label: "Friendly", color: "#5a9a8a" },
-  { value: "NEUTRAL", label: "Neutral", color: "#6a6a7a" },
-  { value: "SUSPICIOUS", label: "Suspicious", color: "#9a8a4a" },
-  { value: "HOSTILE", label: "Hostile", color: "#9a4a4a" },
-  { value: "UNKNOWN", label: "Unknown", color: "#5a5a6a" },
+const STANCE_OPTIONS = [
+  { value: "ALLIED", label: "Allied" },
+  { value: "FRIENDLY", label: "Friendly" },
+  { value: "NEUTRAL", label: "Neutral" },
+  { value: "SUSPICIOUS", label: "Suspicious" },
+  { value: "HOSTILE", label: "Hostile" },
+  { value: "UNKNOWN", label: "Unknown" },
 ];
+
+const selectClass =
+  "rounded-full border border-border bg-background px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground focus:outline-none";
 
 interface OrgListClientProps {
   organizations: OrganizationListItem[];
@@ -34,17 +37,17 @@ interface OrgListClientProps {
 export function OrgListClient({ organizations, headerActions }: OrgListClientProps) {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<SortOption>("name-asc");
-  const [stanceFilter, setStanceFilter] = useState<AlignmentStance | null>(null);
-  const [typeFilter, setTypeFilter] = useState<string | null>(null);
+  const [stanceFilters, setStanceFilters] = useState<Set<string>>(new Set());
+  const [typeFilters, setTypeFilters] = useState<Set<string>>(new Set());
   const [tagFilter, setTagFilter] = useState<string | null>(null);
 
   // Extract unique types and tags
-  const allTypes = useMemo(() => {
+  const typeOptions = useMemo(() => {
     const types = new Set<string>();
     organizations.forEach((o) => {
       if (o.type) types.add(o.type);
     });
-    return Array.from(types).sort();
+    return Array.from(types).sort().map((t) => ({ value: t, label: t }));
   }, [organizations]);
 
   const allTags = useMemo(() => {
@@ -67,12 +70,12 @@ export function OrgListClient({ organizations, headerActions }: OrgListClientPro
   }, []);
 
   const clearFilters = useCallback(() => {
-    setStanceFilter(null);
-    setTypeFilter(null);
+    setStanceFilters(new Set());
+    setTypeFilters(new Set());
     setTagFilter(null);
   }, []);
 
-  const hasFilters = stanceFilter !== null || typeFilter !== null || tagFilter !== null;
+  const hasFilters = stanceFilters.size > 0 || typeFilters.size > 0 || tagFilter !== null;
 
   const results = useMemo(() => {
     let items = [...organizations];
@@ -88,13 +91,13 @@ export function OrgListClient({ organizations, headerActions }: OrgListClientPro
     }
 
     // Stance filter
-    if (stanceFilter) {
-      items = items.filter((org) => org.alignmentStance === stanceFilter);
+    if (stanceFilters.size > 0) {
+      items = items.filter((org) => stanceFilters.has(org.alignmentStance));
     }
 
     // Type filter
-    if (typeFilter) {
-      items = items.filter((org) => org.type === typeFilter);
+    if (typeFilters.size > 0) {
+      items = items.filter((org) => org.type !== null && typeFilters.has(org.type));
     }
 
     // Tag filter
@@ -121,7 +124,7 @@ export function OrgListClient({ organizations, headerActions }: OrgListClientPro
     });
 
     return items;
-  }, [organizations, search, sort, stanceFilter, typeFilter, tagFilter]);
+  }, [organizations, search, sort, stanceFilters, typeFilters, tagFilter]);
 
   return (
     <div className="space-y-4">
@@ -129,7 +132,7 @@ export function OrgListClient({ organizations, headerActions }: OrgListClientPro
       <div className="flex flex-wrap items-center gap-3">
         <SearchInput
           onChange={handleSearch}
-          placeholder="Search organizations..."
+          placeholder="Search by name or type..."
           className="max-w-sm"
         />
         <Button
@@ -144,52 +147,29 @@ export function OrgListClient({ organizations, headerActions }: OrgListClientPro
         <div className="ml-auto">{headerActions}</div>
       </div>
 
-      {/* Filter chips */}
+      {/* Filter dropdowns */}
       <div className="flex flex-wrap items-center gap-2">
-        {/* Stance filters */}
-        {STANCE_OPTIONS.map((opt) => (
-          <button
-            key={opt.value}
-            onClick={() =>
-              setStanceFilter(stanceFilter === opt.value ? null : opt.value)
-            }
-            className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors ${
-              stanceFilter === opt.value
-                ? "border-transparent"
-                : "border-border text-muted-foreground hover:text-foreground"
-            }`}
-            style={
-              stanceFilter === opt.value
-                ? { backgroundColor: `${opt.color}20`, color: opt.color, borderColor: `${opt.color}40` }
-                : undefined
-            }
-          >
-            {opt.label}
-          </button>
-        ))}
+        <MultiSelectFilter
+          label="Stances"
+          options={STANCE_OPTIONS}
+          selected={stanceFilters}
+          onChange={setStanceFilters}
+        />
 
-        {/* Type filter */}
-        {allTypes.length > 0 && (
-          <select
-            value={typeFilter ?? ""}
-            onChange={(e) => setTypeFilter(e.target.value || null)}
-            className="rounded-full border border-border bg-background px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground focus:outline-none"
-          >
-            <option value="">All Types</option>
-            {allTypes.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
+        {typeOptions.length > 0 && (
+          <MultiSelectFilter
+            label="Types"
+            options={typeOptions}
+            selected={typeFilters}
+            onChange={setTypeFilters}
+          />
         )}
 
-        {/* Tag filter */}
         {allTags.length > 0 && (
           <select
             value={tagFilter ?? ""}
             onChange={(e) => setTagFilter(e.target.value || null)}
-            className="rounded-full border border-border bg-background px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground focus:outline-none"
+            className={selectClass}
           >
             <option value="">All Tags</option>
             {allTags.map((tag) => (
@@ -200,7 +180,6 @@ export function OrgListClient({ organizations, headerActions }: OrgListClientPro
           </select>
         )}
 
-        {/* Clear all */}
         {hasFilters && (
           <button
             onClick={clearFilters}
@@ -213,14 +192,14 @@ export function OrgListClient({ organizations, headerActions }: OrgListClientPro
       </div>
 
       {/* Grid */}
-      <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
         {results.map((org) => (
           <OrganizationCard key={org.id} organization={org} />
         ))}
       </div>
       {results.length === 0 && (
         <p className="py-8 text-center text-sm text-muted-foreground">
-          No organizations match your filters.
+          No organizations match your search or filters.
         </p>
       )}
     </div>

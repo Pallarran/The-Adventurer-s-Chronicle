@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import type { AlignmentStance, Prisma } from "@/generated/prisma/client";
 import type { OrganizationListItem, OrganizationDetail } from "@/types";
+import { plainJson } from "@/lib/plain-json";
 
 type JsonValue = Prisma.JsonValue;
 
@@ -84,7 +85,7 @@ export async function createOrganization(data: CreateOrganizationData) {
       baseLocationId: data.baseLocationId || null,
       firstAppearanceSessionId: data.firstAppearanceSessionId || null,
       lastAppearanceSessionId: data.lastAppearanceSessionId || null,
-      notesBody: data.notesBody ?? undefined,
+      notesBody: plainJson(data.notesBody),
       mainImage: data.mainImage,
       npcs: data.npcIds?.length
         ? { create: data.npcIds.map((npcId) => ({ npcId })) }
@@ -123,7 +124,7 @@ export async function updateOrganization(id: string, data: UpdateOrganizationDat
   if (deletes.length) await prisma.$transaction(deletes);
 
   const org = await prisma.organization.update({
-    where: { id },
+    where: { id, deletedAt: null },
     data: {
       name: data.name,
       type: data.type,
@@ -131,7 +132,7 @@ export async function updateOrganization(id: string, data: UpdateOrganizationDat
       baseLocationId: data.baseLocationId,
       firstAppearanceSessionId: data.firstAppearanceSessionId,
       lastAppearanceSessionId: data.lastAppearanceSessionId,
-      notesBody: data.notesBody ?? undefined,
+      notesBody: plainJson(data.notesBody),
       mainImage: data.mainImage,
       npcs: data.npcIds?.length
         ? { create: data.npcIds.map((npcId) => ({ npcId })) }
@@ -166,4 +167,13 @@ export async function restoreOrganization(id: string) {
 
 export async function purgeOrganization(id: string) {
   await prisma.organization.delete({ where: { id } });
+}
+
+export async function updateOrganizationImagePosition(id: string, positionY: number) {
+  await prisma.organization.update({
+    where: { id },
+    data: { imagePositionY: positionY },
+  });
+  revalidatePath("/organizations");
+  revalidatePath(`/organizations/${id}`);
 }

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ScrollText, Users, MapPin, Shield } from "lucide-react";
+import { ScrollText, Users, MapPin, Shield, Package, Compass } from "lucide-react";
 import {
   CommandDialog,
   Command,
@@ -19,6 +19,8 @@ const typeConfig = {
   npc: { icon: Users, label: "NPCs", href: (id: string) => `/npcs/${id}` },
   location: { icon: MapPin, label: "Locations", href: (id: string) => `/locations/${id}` },
   organization: { icon: Shield, label: "Organizations", href: (id: string) => `/organizations/${id}` },
+  item: { icon: Package, label: "Items", href: (id: string) => `/items/${id}` },
+  quest: { icon: Compass, label: "Quests & Goals", href: (id: string) => `/quests/${id}` },
 } as const;
 
 interface GlobalSearchProps {

@@ -73,6 +73,7 @@ export function QuickNotesCard({ quickNote }: QuickNotesCardProps) {
           onChange={handleChange}
           placeholder="Jot down quick notes, reminders, or ideas..."
           className="flex-1"
+          minimal
         />
       </CardContent>
     </Card>

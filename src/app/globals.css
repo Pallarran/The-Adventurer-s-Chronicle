@@ -55,19 +55,15 @@
   --color-arcane-purple: var(--arcane-purple);
   --color-surface-elevated: var(--surface-elevated);
 
-  /* Status colors */
-  --color-status-alive: #4a9a5a;
-  --color-status-dead: #9a4a4a;
-  --color-status-missing: #9a8a4a;
-  --color-status-unknown: #6a6a7a;
-
-  /* Stance colors */
-  --color-stance-allied: #4a9a5a;
-  --color-stance-friendly: #5a9a8a;
-  --color-stance-neutral: #6a6a7a;
-  --color-stance-suspicious: #9a8a4a;
-  --color-stance-hostile: #9a4a4a;
-  --color-stance-unknown: #5a5a6a;
+  /* Gem palette */
+  --color-gem-emerald: var(--gem-emerald);
+  --color-gem-ruby: var(--gem-ruby);
+  --color-gem-jade: var(--gem-jade);
+  --color-gem-sapphire: var(--gem-sapphire);
+  --color-gem-amethyst: var(--gem-amethyst);
+  --color-gem-citrine: var(--gem-citrine);
+  --color-gem-amber: var(--gem-amber);
+  --color-gem-moonstone: var(--gem-moonstone);
 }
 
 /* Dark mode is the default and only mode for MVP */
@@ -116,6 +112,16 @@
   --deep-blue: #4a6a9a;
   --arcane-purple: #7a5a9a;
   --surface-elevated: #1a1a25;
+
+  /* Gem palette */
+  --gem-emerald: #4a9a5a;
+  --gem-ruby: #9a4a4a;
+  --gem-jade: #4a9a8a;
+  --gem-sapphire: #4a8ad4;
+  --gem-amethyst: #7a5a9a;
+  --gem-citrine: #d4a843;
+  --gem-amber: #9a8a4a;
+  --gem-moonstone: #6a6a7a;
 }
 
 @layer base {

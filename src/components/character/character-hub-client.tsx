@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef } from "react";
 import Image from "next/image";
 import type { JSONContent } from "@tiptap/react";
+import { useFormGuard } from "@/hooks/use-form-guard";
 import {
   Save,
   User,
@@ -96,6 +97,11 @@ export function CharacterHubClient({
   profile,
   progressionRows,
 }: CharacterHubClientProps) {
+  // ── Dirty tracking ──
+  const [profileDirty, setProfileDirty] = useState(false);
+  const [rpDirty, setRpDirty] = useState(false);
+  useFormGuard(profileDirty || rpDirty);
+
   // ── Profile tab state ──
   const [name, setName] = useState(profile.name);
   const [classInfo, setClassInfo] = useState(profile.classInfo ?? "");
@@ -150,6 +156,7 @@ export function CharacterHubClient({
         backstoryContent: backstoryContentRef.current,
       });
       showSaved(setProfileSaveStatus, "profile");
+      setProfileDirty(false);
     } catch (err) {
       console.error("Failed to save profile:", err);
       setProfileSaveStatus("idle");
@@ -171,6 +178,7 @@ export function CharacterHubClient({
         overviewContent: overviewContentRef.current,
       });
       showSaved(setRpSaveStatus, "roleplay");
+      setRpDirty(false);
     } catch (err) {
       console.error("Failed to save roleplay:", err);
       setRpSaveStatus("idle");
@@ -241,7 +249,7 @@ export function CharacterHubClient({
       {/* ═══ PROFILE TAB ═══ */}
       <TabsContent value={0}>
         <Card>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-6" onChange={() => setProfileDirty(true)}>
             {/* Identity: portrait left, fields right */}
             <div className="flex flex-col gap-6 sm:flex-row">
               {/* Portrait */}
@@ -342,6 +350,7 @@ export function CharacterHubClient({
                 content={backstoryContentRef.current}
                 onChange={(content) => {
                   backstoryContentRef.current = content;
+                  setProfileDirty(true);
                 }}
                 placeholder="Character backstory, origin story, key life events..."
               />
@@ -354,7 +363,7 @@ export function CharacterHubClient({
       {/* ═══ ROLEPLAY TAB ═══ */}
       <TabsContent value={1}>
         <Card>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-6" onChange={() => setRpDirty(true)}>
             {/* Quick Summary */}
             <div className="space-y-2">
               <div>
@@ -367,6 +376,7 @@ export function CharacterHubClient({
                 content={overviewContentRef.current}
                 onChange={(content) => {
                   overviewContentRef.current = content;
+                  setRpDirty(true);
                 }}
                 placeholder="A quick RP reference — personality snapshot, current mindset, tone notes..."
               />

@@ -22,7 +22,7 @@ export function ImageLightbox({ src, alt, children }: ImageLightboxProps) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="cursor-zoom-in"
+        className="block w-full cursor-zoom-in text-left"
       >
         {children}
       </button>

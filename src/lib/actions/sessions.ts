@@ -5,6 +5,11 @@ import { revalidatePath } from "next/cache";
 import type { Prisma } from "@/generated/prisma/client";
 import type { SessionListItem, SessionDetail } from "@/types";
 import { plainJson } from "@/lib/plain-json";
+import {
+  recomputeNpcAppearances,
+  recomputeLocationAppearances,
+  recomputeOrgAppearances,
+} from "@/lib/actions/recompute-appearances";
 
 type JsonValue = Prisma.JsonValue;
 
@@ -91,6 +96,13 @@ export async function createSession(data: CreateSessionData) {
     },
   });
 
+  // Recompute first/last appearance for linked entities
+  await Promise.all([
+    recomputeNpcAppearances(data.npcIds ?? []),
+    recomputeLocationAppearances(data.locationIds ?? []),
+    recomputeOrgAppearances(data.organizationIds ?? []),
+  ]);
+
   revalidatePath("/sessions");
   return session;
 }
@@ -109,6 +121,13 @@ interface UpdateSessionData {
 }
 
 export async function updateSession(id: string, data: UpdateSessionData) {
+  // Fetch OLD linked entity IDs before deleting junction records
+  const [oldNpcs, oldLocations, oldOrgs] = await Promise.all([
+    prisma.sessionNpc.findMany({ where: { sessionId: id }, select: { npcId: true } }),
+    prisma.sessionLocation.findMany({ where: { sessionId: id }, select: { locationId: true } }),
+    prisma.sessionOrganization.findMany({ where: { sessionId: id }, select: { organizationId: true } }),
+  ]);
+
   // Update relations by deleting and recreating
   await prisma.$transaction([
     prisma.sessionNpc.deleteMany({ where: { sessionId: id } }),
@@ -144,6 +163,16 @@ export async function updateSession(id: string, data: UpdateSessionData) {
     },
   });
 
+  // Recompute first/last appearance for old + new entity IDs (union)
+  const allNpcIds = [...new Set([...oldNpcs.map((n) => n.npcId), ...(data.npcIds ?? [])])];
+  const allLocationIds = [...new Set([...oldLocations.map((l) => l.locationId), ...(data.locationIds ?? [])])];
+  const allOrgIds = [...new Set([...oldOrgs.map((o) => o.organizationId), ...(data.organizationIds ?? [])])];
+  await Promise.all([
+    recomputeNpcAppearances(allNpcIds),
+    recomputeLocationAppearances(allLocationIds),
+    recomputeOrgAppearances(allOrgIds),
+  ]);
+
   revalidatePath("/sessions");
   revalidatePath(`/sessions/${id}`);
   return session;
@@ -174,10 +203,30 @@ export async function getNextSessionNumber(campaignId: string): Promise<number> 
 }
 
 export async function deleteSession(id: string) {
+  // Fetch linked entity IDs before soft-delete
+  const linked = await prisma.session.findUnique({
+    where: { id },
+    select: {
+      npcs: { select: { npcId: true } },
+      locations: { select: { locationId: true } },
+      organizations: { select: { organizationId: true } },
+    },
+  });
+
   await prisma.session.update({
     where: { id },
     data: { deletedAt: new Date() },
   });
+
+  // Recompute appearances (this session is now excluded as soft-deleted)
+  if (linked) {
+    await Promise.all([
+      recomputeNpcAppearances(linked.npcs.map((n) => n.npcId)),
+      recomputeLocationAppearances(linked.locations.map((l) => l.locationId)),
+      recomputeOrgAppearances(linked.organizations.map((o) => o.organizationId)),
+    ]);
+  }
+
   revalidatePath("/sessions");
   revalidatePath(`/sessions/${id}`);
 }
@@ -187,6 +236,25 @@ export async function restoreSession(id: string) {
     where: { id },
     data: { deletedAt: null },
   });
+
+  // Fetch linked entity IDs and recompute (this session is now included again)
+  const linked = await prisma.session.findUnique({
+    where: { id },
+    select: {
+      npcs: { select: { npcId: true } },
+      locations: { select: { locationId: true } },
+      organizations: { select: { organizationId: true } },
+    },
+  });
+
+  if (linked) {
+    await Promise.all([
+      recomputeNpcAppearances(linked.npcs.map((n) => n.npcId)),
+      recomputeLocationAppearances(linked.locations.map((l) => l.locationId)),
+      recomputeOrgAppearances(linked.organizations.map((o) => o.organizationId)),
+    ]);
+  }
+
   revalidatePath("/sessions");
 }
 

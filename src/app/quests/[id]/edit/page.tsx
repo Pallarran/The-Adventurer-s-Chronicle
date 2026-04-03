@@ -1,7 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { getQuest } from "@/lib/actions/quests";
 import { getActiveCampaign } from "@/lib/campaign";
-import { getSessions } from "@/lib/actions/sessions";
 import { PageHeaderSetter } from "@/components/layout/page-header-setter";
 import { QuestForm, QuestFormActions } from "@/components/quests/quest-form";
 
@@ -20,8 +19,6 @@ export default async function EditQuestPage({
   if (!campaign) redirect("/");
   if (!quest) notFound();
 
-  const sessions = await getSessions(campaign.id);
-
   return (
     <div>
       <PageHeaderSetter title={`Edit ${quest.name}`} backHref={`/quests/${id}`} backLabel="Quests & Goals" />
@@ -32,10 +29,6 @@ export default async function EditQuestPage({
       <QuestForm
         campaignId={campaign.id}
         quest={quest}
-        allSessions={sessions.map((s) => ({
-          id: s.id,
-          name: `#${s.sessionNumber}${s.title ? ` — ${s.title}` : ""}`,
-        }))}
       />
     </div>
   );

@@ -47,7 +47,6 @@ interface CreateQuestData {
   name: string;
   description?: string;
   status?: QuestStatus;
-  sessionIds?: string[];
 }
 
 export async function createQuest(data: CreateQuestData) {
@@ -57,9 +56,6 @@ export async function createQuest(data: CreateQuestData) {
       name: data.name,
       description: data.description,
       status: data.status ?? "LEAD",
-      sessions: data.sessionIds?.length
-        ? { create: data.sessionIds.map((sessionId) => ({ sessionId })) }
-        : undefined,
     },
   });
 
@@ -71,23 +67,15 @@ interface UpdateQuestData {
   name?: string;
   description?: string | null;
   status?: QuestStatus;
-  sessionIds?: string[];
 }
 
 export async function updateQuest(id: string, data: UpdateQuestData) {
-  if (data.sessionIds !== undefined) {
-    await prisma.sessionQuest.deleteMany({ where: { questId: id } });
-  }
-
   const quest = await prisma.quest.update({
     where: { id, deletedAt: null },
     data: {
       name: data.name,
       description: data.description,
       status: data.status,
-      sessions: data.sessionIds?.length
-        ? { create: data.sessionIds.map((sessionId) => ({ sessionId })) }
-        : undefined,
     },
   });
 

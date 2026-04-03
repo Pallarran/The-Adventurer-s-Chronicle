@@ -6,10 +6,8 @@ import { useFormGuard } from "@/hooks/use-form-guard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { RelationPicker, type RelationOption } from "@/components/shared/relation-picker";
 import { createQuest, updateQuest } from "@/lib/actions/quests";
 import { toast } from "sonner";
-import { ScrollText } from "lucide-react";
 import type { QuestStatus } from "@/generated/prisma/client";
 import type { QuestDetail } from "@/types";
 
@@ -37,22 +35,15 @@ export function QuestFormActions({ isEdit }: { isEdit: boolean }) {
 interface QuestFormProps {
   campaignId: string;
   quest?: QuestDetail;
-  allSessions: RelationOption[];
 }
 
-export function QuestForm({ campaignId, quest, allSessions }: QuestFormProps) {
+export function QuestForm({ campaignId, quest }: QuestFormProps) {
   const router = useRouter();
   const isEdit = !!quest;
 
   const [name, setName] = useState(quest?.name ?? "");
   const [status, setStatus] = useState<QuestStatus>(quest?.status ?? "LEAD");
   const [description, setDescription] = useState(quest?.description ?? "");
-  const [selectedSessions, setSelectedSessions] = useState<RelationOption[]>(
-    quest?.sessions.map((s) => ({
-      id: s.session.id,
-      name: `#${s.session.sessionNumber}${s.session.title ? ` — ${s.session.title}` : ""}`,
-    })) ?? []
-  );
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   useFormGuard(dirty);
@@ -66,7 +57,6 @@ export function QuestForm({ campaignId, quest, allSessions }: QuestFormProps) {
         name,
         status,
         description: description || undefined,
-        sessionIds: selectedSessions.map((s) => s.id),
       };
 
       if (isEdit) {
@@ -131,19 +121,6 @@ export function QuestForm({ campaignId, quest, allSessions }: QuestFormProps) {
             rows={3}
             className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           />
-        </div>
-
-        {/* Linked Sessions */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-lg border border-border p-4">
-            <RelationPicker
-              label={<><ScrollText className="h-4 w-4" /> Linked Sessions</>}
-              options={allSessions}
-              selected={selectedSessions}
-              onChange={setSelectedSessions}
-              placeholder="Search sessions..."
-            />
-          </div>
         </div>
       </fieldset>
     </form>

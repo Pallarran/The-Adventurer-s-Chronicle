@@ -67,8 +67,6 @@ interface CreateOrganizationData {
   type?: string;
   alignmentStance?: AlignmentStance;
   baseLocationId?: string;
-  firstAppearanceSessionId?: string;
-  lastAppearanceSessionId?: string;
   notesBody?: JsonValue;
   mainImage?: string;
   npcIds?: string[];
@@ -83,8 +81,6 @@ export async function createOrganization(data: CreateOrganizationData) {
       type: data.type,
       alignmentStance: data.alignmentStance ?? "UNKNOWN",
       baseLocationId: data.baseLocationId || null,
-      firstAppearanceSessionId: data.firstAppearanceSessionId || null,
-      lastAppearanceSessionId: data.lastAppearanceSessionId || null,
       notesBody: plainJson(data.notesBody),
       mainImage: data.mainImage,
       npcs: data.npcIds?.length
@@ -105,8 +101,6 @@ interface UpdateOrganizationData {
   type?: string;
   alignmentStance?: AlignmentStance;
   baseLocationId?: string | null;
-  firstAppearanceSessionId?: string | null;
-  lastAppearanceSessionId?: string | null;
   notesBody?: JsonValue;
   mainImage?: string | null;
   npcIds?: string[];
@@ -130,8 +124,6 @@ export async function updateOrganization(id: string, data: UpdateOrganizationDat
       type: data.type,
       alignmentStance: data.alignmentStance,
       baseLocationId: data.baseLocationId,
-      firstAppearanceSessionId: data.firstAppearanceSessionId,
-      lastAppearanceSessionId: data.lastAppearanceSessionId,
       notesBody: plainJson(data.notesBody),
       mainImage: data.mainImage,
       npcs: data.npcIds?.length

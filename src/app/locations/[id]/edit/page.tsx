@@ -1,7 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { getLocation, getLocations } from "@/lib/actions/locations";
 import { getActiveCampaign } from "@/lib/campaign";
-import { getSessions } from "@/lib/actions/sessions";
 import { getOrganizations } from "@/lib/actions/organizations";
 import { getTags } from "@/lib/actions/tags";
 import { PageHeaderSetter } from "@/components/layout/page-header-setter";
@@ -22,9 +21,8 @@ export default async function EditLocationPage({
   if (!campaign) redirect("/");
   if (!location) notFound();
 
-  const [locations, sessions, organizations, tags] = await Promise.all([
+  const [locations, organizations, tags] = await Promise.all([
     getLocations(campaign.id),
-    getSessions(campaign.id),
     getOrganizations(campaign.id),
     getTags(campaign.id),
   ]);
@@ -40,10 +38,6 @@ export default async function EditLocationPage({
         campaignId={campaign.id}
         location={location}
         allLocations={locations.map((l) => ({ id: l.id, name: l.name }))}
-        allSessions={sessions.map((s) => ({
-          id: s.id,
-          name: `#${s.sessionNumber}${s.title ? ` — ${s.title}` : ""}`,
-        }))}
         allOrganizations={organizations.map((o) => ({ id: o.id, name: o.name }))}
         allTags={tags.map((t) => ({ id: t.id, name: t.name }))}
       />

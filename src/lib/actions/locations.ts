@@ -63,8 +63,6 @@ interface CreateLocationData {
   name: string;
   type?: string;
   parentLocationId?: string;
-  firstAppearanceSessionId?: string;
-  lastAppearanceSessionId?: string;
   notesBody?: JsonValue;
   mainImage?: string;
   organizationIds?: string[];
@@ -78,8 +76,6 @@ export async function createLocation(data: CreateLocationData) {
       name: data.name,
       type: data.type,
       parentLocationId: data.parentLocationId || null,
-      firstAppearanceSessionId: data.firstAppearanceSessionId || null,
-      lastAppearanceSessionId: data.lastAppearanceSessionId || null,
       notesBody: plainJson(data.notesBody),
       mainImage: data.mainImage,
       organizations: data.organizationIds?.length
@@ -99,8 +95,6 @@ interface UpdateLocationData {
   name?: string;
   type?: string;
   parentLocationId?: string | null;
-  firstAppearanceSessionId?: string | null;
-  lastAppearanceSessionId?: string | null;
   notesBody?: JsonValue;
   mainImage?: string | null;
   organizationIds?: string[];
@@ -123,8 +117,6 @@ export async function updateLocation(id: string, data: UpdateLocationData) {
       name: data.name,
       type: data.type,
       parentLocationId: data.parentLocationId,
-      firstAppearanceSessionId: data.firstAppearanceSessionId,
-      lastAppearanceSessionId: data.lastAppearanceSessionId,
       notesBody: plainJson(data.notesBody),
       mainImage: data.mainImage,
       organizations: data.organizationIds?.length

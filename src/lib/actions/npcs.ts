@@ -86,8 +86,6 @@ interface CreateNpcData {
   alignmentStance?: AlignmentStance;
   partyMember?: boolean;
   organizationId?: string;
-  firstAppearanceSessionId?: string;
-  lastAppearanceSessionId?: string;
   notesBody?: JsonValue;
   mainImage?: string;
   tagIds?: string[];
@@ -106,8 +104,6 @@ export async function createNpc(data: CreateNpcData) {
       alignmentStance: data.alignmentStance ?? "UNKNOWN",
       partyMember: data.partyMember ?? false,
       organizationId: data.organizationId || null,
-      firstAppearanceSessionId: data.firstAppearanceSessionId || null,
-      lastAppearanceSessionId: data.lastAppearanceSessionId || null,
       notesBody: plainJson(data.notesBody),
       mainImage: data.mainImage,
       tags: data.tagIds?.length
@@ -130,8 +126,6 @@ interface UpdateNpcData {
   alignmentStance?: AlignmentStance;
   partyMember?: boolean;
   organizationId?: string | null;
-  firstAppearanceSessionId?: string | null;
-  lastAppearanceSessionId?: string | null;
   notesBody?: JsonValue;
   mainImage?: string | null;
   tagIds?: string[];
@@ -154,8 +148,6 @@ export async function updateNpc(id: string, data: UpdateNpcData) {
       alignmentStance: data.alignmentStance,
       partyMember: data.partyMember,
       organizationId: data.organizationId,
-      firstAppearanceSessionId: data.firstAppearanceSessionId,
-      lastAppearanceSessionId: data.lastAppearanceSessionId,
       notesBody: plainJson(data.notesBody),
       mainImage: data.mainImage,
       tags: data.tagIds?.length

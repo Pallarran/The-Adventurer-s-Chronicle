@@ -25,7 +25,7 @@ import { ImageUpload } from "@/components/shared/image-upload";
 import { createNpc, updateNpc } from "@/lib/actions/npcs";
 import { createTag } from "@/lib/actions/tags";
 import { toast } from "sonner";
-import { Shield, CalendarDays, Tag } from "lucide-react";
+import { Shield, Tag } from "lucide-react";
 import type { JSONContent } from "@tiptap/react";
 import type { NpcStatus, AlignmentStance } from "@/generated/prisma/client";
 import type { NpcDetail } from "@/types";
@@ -59,7 +59,6 @@ interface NpcFormProps {
   campaignId: string;
   npc?: NpcDetail;
   allOrganizations: RelationOption[];
-  allSessions: RelationOption[];
   allTags: TagOption[];
 }
 
@@ -67,7 +66,6 @@ export function NpcForm({
   campaignId,
   npc,
   allOrganizations,
-  allSessions,
   allTags,
 }: NpcFormProps) {
   const router = useRouter();
@@ -87,26 +85,6 @@ export function NpcForm({
   );
   const [selectedOrg, setSelectedOrg] = useState<RelationOption[]>(
     npc?.organization ? [npc.organization] : []
-  );
-  const [selectedFirstSession, setSelectedFirstSession] = useState<RelationOption[]>(
-    npc?.firstAppearanceSession
-      ? [
-          {
-            id: npc.firstAppearanceSession.id,
-            name: `#${npc.firstAppearanceSession.sessionNumber}${npc.firstAppearanceSession.title ? ` — ${npc.firstAppearanceSession.title}` : ""}`,
-          },
-        ]
-      : []
-  );
-  const [selectedLastSession, setSelectedLastSession] = useState<RelationOption[]>(
-    npc?.lastAppearanceSession
-      ? [
-          {
-            id: npc.lastAppearanceSession.id,
-            name: `#${npc.lastAppearanceSession.sessionNumber}${npc.lastAppearanceSession.title ? ` — ${npc.lastAppearanceSession.title}` : ""}`,
-          },
-        ]
-      : []
   );
   const [selectedTags, setSelectedTags] = useState<TagOption[]>(
     npc?.tags.map((t) => t.tag) ?? []
@@ -200,8 +178,6 @@ export function NpcForm({
         alignmentStance: partyMember ? undefined : alignmentStance,
         partyMember,
         organizationId: selectedOrg[0]?.id || undefined,
-        firstAppearanceSessionId: selectedFirstSession[0]?.id || undefined,
-        lastAppearanceSessionId: selectedLastSession[0]?.id || undefined,
         notesBody: notesBody ?? undefined,
         mainImage: mainImage ?? undefined,
         tagIds: selectedTags.map((t) => t.id),
@@ -211,8 +187,6 @@ export function NpcForm({
         await updateNpc(npc.id, {
           ...data,
           organizationId: data.organizationId ?? null,
-          firstAppearanceSessionId: data.firstAppearanceSessionId ?? null,
-          lastAppearanceSessionId: data.lastAppearanceSessionId ?? null,
           mainImage: mainImage,
         });
         toast.success("NPC updated.");
@@ -350,7 +324,7 @@ export function NpcForm({
       </div>
 
       {/* Relations + Tags — bordered cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="rounded-lg border border-border p-4">
           <RelationPicker
             label={<><Shield className="h-4 w-4" /> Organization</>}
@@ -358,26 +332,6 @@ export function NpcForm({
             selected={selectedOrg}
             onChange={handleOrgChange}
             placeholder="Search organizations..."
-            single
-          />
-        </div>
-        <div className="rounded-lg border border-border p-4">
-          <RelationPicker
-            label={<><CalendarDays className="h-4 w-4" /> First Appearance</>}
-            options={allSessions}
-            selected={selectedFirstSession}
-            onChange={setSelectedFirstSession}
-            placeholder="Search sessions..."
-            single
-          />
-        </div>
-        <div className="rounded-lg border border-border p-4">
-          <RelationPicker
-            label={<><CalendarDays className="h-4 w-4" /> Last Appearance</>}
-            options={allSessions}
-            selected={selectedLastSession}
-            onChange={setSelectedLastSession}
-            placeholder="Search sessions..."
             single
           />
         </div>

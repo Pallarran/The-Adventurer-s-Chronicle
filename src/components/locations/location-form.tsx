@@ -16,7 +16,7 @@ import { ImageUpload } from "@/components/shared/image-upload";
 import { createLocation, updateLocation } from "@/lib/actions/locations";
 import { createTag } from "@/lib/actions/tags";
 import { toast } from "sonner";
-import { MapPin, CalendarDays, Shield, Tag } from "lucide-react";
+import { MapPin, Shield, Tag } from "lucide-react";
 import type { JSONContent } from "@tiptap/react";
 import type { LocationDetail } from "@/types";
 
@@ -38,7 +38,6 @@ interface LocationFormProps {
   campaignId: string;
   location?: LocationDetail;
   allLocations: RelationOption[];
-  allSessions: RelationOption[];
   allOrganizations: RelationOption[];
   allTags: TagOption[];
 }
@@ -47,7 +46,6 @@ export function LocationForm({
   campaignId,
   location,
   allLocations,
-  allSessions,
   allOrganizations,
   allTags,
 }: LocationFormProps) {
@@ -62,26 +60,6 @@ export function LocationForm({
   );
   const [selectedParent, setSelectedParent] = useState<RelationOption[]>(
     location?.parentLocation ? [location.parentLocation] : []
-  );
-  const [selectedFirstAppearance, setSelectedFirstAppearance] = useState<RelationOption[]>(
-    location?.firstAppearanceSession
-      ? [
-          {
-            id: location.firstAppearanceSession.id,
-            name: `#${location.firstAppearanceSession.sessionNumber}${location.firstAppearanceSession.title ? ` — ${location.firstAppearanceSession.title}` : ""}`,
-          },
-        ]
-      : []
-  );
-  const [selectedLastAppearance, setSelectedLastAppearance] = useState<RelationOption[]>(
-    location?.lastAppearanceSession
-      ? [
-          {
-            id: location.lastAppearanceSession.id,
-            name: `#${location.lastAppearanceSession.sessionNumber}${location.lastAppearanceSession.title ? ` — ${location.lastAppearanceSession.title}` : ""}`,
-          },
-        ]
-      : []
   );
   const [selectedOrgs, setSelectedOrgs] = useState<RelationOption[]>(
     location?.organizations.map((o) => o.organization) ?? []
@@ -163,8 +141,6 @@ export function LocationForm({
         mainImage: mainImage ?? undefined,
         notesBody: notesBody ?? undefined,
         parentLocationId: selectedParent[0]?.id || undefined,
-        firstAppearanceSessionId: selectedFirstAppearance[0]?.id || undefined,
-        lastAppearanceSessionId: selectedLastAppearance[0]?.id || undefined,
         organizationIds: selectedOrgs.map((o) => o.id),
         tagIds: selectedTags.map((t) => t.id),
       };
@@ -173,8 +149,6 @@ export function LocationForm({
         await updateLocation(location.id, {
           ...data,
           parentLocationId: selectedParent[0]?.id ?? null,
-          firstAppearanceSessionId: selectedFirstAppearance[0]?.id ?? null,
-          lastAppearanceSessionId: selectedLastAppearance[0]?.id ?? null,
           mainImage: mainImage,
         });
         toast.success("Location updated.");
@@ -233,7 +207,7 @@ export function LocationForm({
       </div>
 
       {/* Relations + Tags — bordered cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="rounded-lg border border-border p-4">
           <RelationPicker
             label={<><MapPin className="h-4 w-4" /> Parent Location</>}
@@ -241,26 +215,6 @@ export function LocationForm({
             selected={selectedParent}
             onChange={setSelectedParent}
             placeholder="Search locations..."
-            single
-          />
-        </div>
-        <div className="rounded-lg border border-border p-4">
-          <RelationPicker
-            label={<><CalendarDays className="h-4 w-4" /> First Appearance</>}
-            options={allSessions}
-            selected={selectedFirstAppearance}
-            onChange={setSelectedFirstAppearance}
-            placeholder="Search sessions..."
-            single
-          />
-        </div>
-        <div className="rounded-lg border border-border p-4">
-          <RelationPicker
-            label={<><CalendarDays className="h-4 w-4" /> Last Appearance</>}
-            options={allSessions}
-            selected={selectedLastAppearance}
-            onChange={setSelectedLastAppearance}
-            placeholder="Search sessions..."
             single
           />
         </div>

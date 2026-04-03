@@ -23,7 +23,7 @@ import { ImageUpload } from "@/components/shared/image-upload";
 import { createOrganization, updateOrganization } from "@/lib/actions/organizations";
 import { createTag } from "@/lib/actions/tags";
 import { toast } from "sonner";
-import { MapPin, CalendarDays, Users, Tag } from "lucide-react";
+import { MapPin, Users, Tag } from "lucide-react";
 import type { AlignmentStance } from "@/generated/prisma/client";
 import type { JSONContent } from "@tiptap/react";
 import type { OrganizationDetail } from "@/types";
@@ -55,7 +55,6 @@ interface OrganizationFormProps {
   campaignId: string;
   organization?: OrganizationDetail;
   allLocations: RelationOption[];
-  allSessions: RelationOption[];
   allNpcs: RelationOption[];
   allTags: TagOption[];
 }
@@ -64,7 +63,6 @@ export function OrganizationForm({
   campaignId,
   organization,
   allLocations,
-  allSessions,
   allNpcs,
   allTags,
 }: OrganizationFormProps) {
@@ -78,26 +76,6 @@ export function OrganizationForm({
   );
   const [baseLocation, setBaseLocation] = useState<RelationOption[]>(
     organization?.baseLocation ? [organization.baseLocation] : []
-  );
-  const [firstAppearance, setFirstAppearance] = useState<RelationOption[]>(
-    organization?.firstAppearanceSession
-      ? [
-          {
-            id: organization.firstAppearanceSession.id,
-            name: `#${organization.firstAppearanceSession.sessionNumber}${organization.firstAppearanceSession.title ? ` — ${organization.firstAppearanceSession.title}` : ""}`,
-          },
-        ]
-      : []
-  );
-  const [lastAppearance, setLastAppearance] = useState<RelationOption[]>(
-    organization?.lastAppearanceSession
-      ? [
-          {
-            id: organization.lastAppearanceSession.id,
-            name: `#${organization.lastAppearanceSession.sessionNumber}${organization.lastAppearanceSession.title ? ` — ${organization.lastAppearanceSession.title}` : ""}`,
-          },
-        ]
-      : []
   );
   const [selectedNpcs, setSelectedNpcs] = useState<RelationOption[]>(
     organization?.npcs.map((n) => n.npc) ?? []
@@ -182,8 +160,6 @@ export function OrganizationForm({
         type: type || undefined,
         alignmentStance,
         baseLocationId: baseLocation[0]?.id || undefined,
-        firstAppearanceSessionId: firstAppearance[0]?.id || undefined,
-        lastAppearanceSessionId: lastAppearance[0]?.id || undefined,
         notesBody: notesBody ?? undefined,
         mainImage: mainImage ?? undefined,
         npcIds: selectedNpcs.map((n) => n.id),
@@ -194,8 +170,6 @@ export function OrganizationForm({
         await updateOrganization(organization.id, {
           ...data,
           baseLocationId: baseLocation[0]?.id ?? null,
-          firstAppearanceSessionId: firstAppearance[0]?.id ?? null,
-          lastAppearanceSessionId: lastAppearance[0]?.id ?? null,
           mainImage: mainImage,
         });
         toast.success("Organization updated.");
@@ -272,7 +246,7 @@ export function OrganizationForm({
       </div>
 
       {/* Relations + Tags — bordered cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="rounded-lg border border-border p-4">
           <RelationPicker
             label={<><MapPin className="h-4 w-4" /> Base Location</>}
@@ -280,26 +254,6 @@ export function OrganizationForm({
             selected={baseLocation}
             onChange={setBaseLocation}
             placeholder="Search locations..."
-            single
-          />
-        </div>
-        <div className="rounded-lg border border-border p-4">
-          <RelationPicker
-            label={<><CalendarDays className="h-4 w-4" /> First Appearance</>}
-            options={allSessions}
-            selected={firstAppearance}
-            onChange={setFirstAppearance}
-            placeholder="Search sessions..."
-            single
-          />
-        </div>
-        <div className="rounded-lg border border-border p-4">
-          <RelationPicker
-            label={<><CalendarDays className="h-4 w-4" /> Last Appearance</>}
-            options={allSessions}
-            selected={lastAppearance}
-            onChange={setLastAppearance}
-            placeholder="Search sessions..."
             single
           />
         </div>

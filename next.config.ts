@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  experimental: {
+    // Limit build worker count to prevent OOM in Docker
+    cpus: 2,
+  },
 };
 
 export default nextConfig;

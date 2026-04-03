@@ -1,8 +1,9 @@
-import { redirect } from "next/navigation";
 import Image from "next/image";
 import { ScrollText, Users, MapPin, Swords } from "lucide-react";
 import { getActiveCampaign } from "@/lib/campaign";
+import { getCampaigns } from "@/lib/actions/campaigns";
 import { CreateCampaignForm } from "./create-campaign-form";
+import { CampaignList } from "./campaign-list";
 
 export const dynamic = "force-dynamic";
 
@@ -30,8 +31,12 @@ const features = [
 ];
 
 export default async function WelcomePage() {
-  const campaign = await getActiveCampaign();
-  if (campaign) redirect("/dashboard");
+  const [activeCampaign, campaigns] = await Promise.all([
+    getActiveCampaign(),
+    getCampaigns(),
+  ]);
+
+  const hasCampaigns = campaigns.length > 0;
 
   return (
     <div className="flex flex-col items-center px-4 py-12 md:py-20">
@@ -48,6 +53,19 @@ export default async function WelcomePage() {
         Your personal companion for tabletop RPG campaigns.
         Track sessions, NPCs, locations, quests, and your character — all in one place.
       </p>
+
+      {/* Existing Campaigns */}
+      {hasCampaigns && (
+        <div className="w-full max-w-2xl mb-10">
+          <h2 className="text-lg font-semibold text-foreground mb-3">
+            Your Campaigns
+          </h2>
+          <CampaignList
+            campaigns={campaigns}
+            activeCampaignId={activeCampaign?.id ?? null}
+          />
+        </div>
+      )}
 
       {/* Feature Highlights */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl w-full mb-12">
@@ -70,10 +88,12 @@ export default async function WelcomePage() {
       {/* Create Campaign */}
       <div className="w-full max-w-md rounded-lg border border-gold/20 bg-card p-6">
         <h2 className="text-lg font-semibold text-foreground mb-1">
-          Create Your First Campaign
+          {hasCampaigns ? "Create New Campaign" : "Create Your First Campaign"}
         </h2>
         <p className="text-sm text-muted-foreground mb-4">
-          Give your campaign a name to get started.
+          {hasCampaigns
+            ? "Start a new adventure alongside your existing campaigns."
+            : "Give your campaign a name to get started."}
         </p>
         <CreateCampaignForm />
       </div>

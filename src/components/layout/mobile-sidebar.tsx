@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,7 +44,7 @@ export function MobileSidebar({ activeCampaignId }: { activeCampaignId: string |
           <SheetTitle className="sr-only">Navigation</SheetTitle>
 
           {/* Logo */}
-          <div className="flex h-14 items-center gap-2.5 px-4">
+          <Link href="/" className="flex h-14 items-center gap-2.5 px-4 hover:bg-accent/50 transition-colors">
             <Image
               src="/logo-icon.png"
               alt="The Adventurer's Chronicle"
@@ -59,7 +60,7 @@ export function MobileSidebar({ activeCampaignId }: { activeCampaignId: string |
                 Chronicle
               </span>
             </div>
-          </div>
+          </Link>
 
           <Separator className="bg-sidebar-border" />
 

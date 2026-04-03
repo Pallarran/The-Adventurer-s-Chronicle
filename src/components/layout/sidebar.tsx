@@ -12,6 +12,7 @@ import {
   Link2,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { NavLink } from "./nav-link";
 import { useSidebarStats } from "./use-sidebar-stats";
 import { CampaignSwitcher } from "./campaign-switcher";
@@ -34,7 +35,7 @@ export function Sidebar({ activeCampaignId }: { activeCampaignId: string | null 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-sidebar-border bg-sidebar md:flex">
       {/* Logo / App Title */}
-      <div className="flex h-14 items-center gap-2.5 px-4">
+      <Link href="/" className="flex h-14 items-center gap-2.5 px-4 hover:bg-accent/50 transition-colors">
         <Image
           src="/logo-icon.png"
           alt="The Adventurer's Chronicle"
@@ -50,7 +51,7 @@ export function Sidebar({ activeCampaignId }: { activeCampaignId: string | null 
             Chronicle
           </span>
         </div>
-      </div>
+      </Link>
 
       {/* Campaign Switcher */}
       <CampaignSwitcher activeCampaignId={activeCampaignId} />

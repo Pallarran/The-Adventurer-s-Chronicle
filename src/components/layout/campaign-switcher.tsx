@@ -71,6 +71,8 @@ export function CampaignSwitcher({
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
     await createCampaign(name, description || undefined);
+    const fresh = await getCampaigns();
+    setCampaigns(fresh);
     setCreateOpen(false);
     setSaving(false);
     router.refresh();
@@ -84,6 +86,8 @@ export function CampaignSwitcher({
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
     await updateCampaign(editingCampaign.id, name, description || undefined);
+    const fresh = await getCampaigns();
+    setCampaigns(fresh);
     setEditOpen(false);
     setEditingCampaign(null);
     setSaving(false);
@@ -94,6 +98,8 @@ export function CampaignSwitcher({
     if (!editingCampaign) return;
     setSaving(true);
     await softDeleteCampaign(editingCampaign.id);
+    const fresh = await getCampaigns();
+    setCampaigns(fresh);
     setEditOpen(false);
     setEditingCampaign(null);
     setSaving(false);
@@ -114,7 +120,7 @@ export function CampaignSwitcher({
         <PopoverTrigger
           className="mx-3 mb-1 flex w-[calc(100%-1.5rem)] items-center gap-2 rounded-md border border-sidebar-border bg-sidebar-accent/50 px-3 py-1.5 text-left text-sm hover:bg-accent transition-colors cursor-pointer"
         >
-          <span className="flex-1 truncate font-medium text-foreground">
+          <span className="flex-1 truncate text-xs font-medium text-muted-foreground">
             {activeCampaign?.name ?? "Select campaign"}
           </span>
           <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -233,17 +239,15 @@ export function CampaignSwitcher({
               <Button type="submit" disabled={saving}>
                 {saving ? "Saving..." : "Save Changes"}
               </Button>
-              {campaigns.length > 1 && (
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  disabled={saving}
-                  className="flex items-center justify-center gap-2 text-sm text-destructive hover:text-destructive/80 transition-colors cursor-pointer disabled:opacity-50"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  <span>Delete this campaign</span>
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={saving}
+                className="flex items-center justify-center gap-2 text-sm text-destructive hover:text-destructive/80 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                <span>Delete this campaign</span>
+              </button>
             </DialogFooter>
           </form>
         </DialogContent>

@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { getActiveCampaign } from "@/lib/campaign";
 import { getNpcs } from "@/lib/actions/npcs";
 import { getLocations } from "@/lib/actions/locations";
@@ -11,6 +12,7 @@ export const dynamic = "force-dynamic";
 
 export default async function NewSessionPage() {
   const campaign = await getActiveCampaign();
+  if (!campaign) redirect("/");
   const [npcs, locations, organizations, tags, nextSessionNumber] = await Promise.all([
     getNpcs(campaign.id),
     getLocations(campaign.id),

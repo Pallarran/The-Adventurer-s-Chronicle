@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
   }
 
   const campaign = await getActiveCampaign();
+  if (!campaign) return NextResponse.json([]);
 
   const [sessions, npcs, locations, organizations, items, quests] = await Promise.all([
     prisma.session.findMany({

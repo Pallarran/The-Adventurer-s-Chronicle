@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { getActiveCampaign } from "@/lib/campaign";
 import { getSessions } from "@/lib/actions/sessions";
 import { getOrganizations } from "@/lib/actions/organizations";
@@ -9,6 +10,7 @@ export const dynamic = "force-dynamic";
 
 export default async function NewNpcPage() {
   const campaign = await getActiveCampaign();
+  if (!campaign) redirect("/");
   const [sessions, organizations, tags] = await Promise.all([
     getSessions(campaign.id),
     getOrganizations(campaign.id),

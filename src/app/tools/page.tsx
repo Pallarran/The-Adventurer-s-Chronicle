@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { PageHeaderSetter } from "@/components/layout/page-header-setter";
 import { ToolsManager } from "@/components/tools/tools-manager";
 import { getActiveCampaign } from "@/lib/campaign";
@@ -7,6 +8,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ToolsPage() {
   const campaign = await getActiveCampaign();
+  if (!campaign) redirect("/");
   const tools = await getToolLinks(campaign.id);
 
   const initialTools = tools.map((tool) => ({

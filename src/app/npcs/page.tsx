@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { getNpcs } from "@/lib/actions/npcs";
 import { getActiveCampaign } from "@/lib/campaign";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -10,6 +11,7 @@ export const dynamic = "force-dynamic";
 
 export default async function NpcsPage() {
   const campaign = await getActiveCampaign();
+  if (!campaign) redirect("/");
   const npcs = await getNpcs(campaign.id);
 
   return (

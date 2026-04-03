@@ -1,4 +1,5 @@
 import { Swords } from "lucide-react";
+import { redirect } from "next/navigation";
 import { getActiveCampaign } from "@/lib/campaign";
 import {
   getCharacterProfile,
@@ -12,6 +13,7 @@ export const dynamic = "force-dynamic";
 
 export default async function CharacterPage() {
   const campaign = await getActiveCampaign();
+  if (!campaign) redirect("/");
   const profile = await getCharacterProfile(campaign.id);
 
   if (!profile) {

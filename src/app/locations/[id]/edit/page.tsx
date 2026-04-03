@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getLocation, getLocations } from "@/lib/actions/locations";
 import { getActiveCampaign } from "@/lib/campaign";
 import { getSessions } from "@/lib/actions/sessions";
@@ -19,6 +19,7 @@ export default async function EditLocationPage({
     getLocation(id),
     getActiveCampaign(),
   ]);
+  if (!campaign) redirect("/");
   if (!location) notFound();
 
   const [locations, sessions, organizations, tags] = await Promise.all([

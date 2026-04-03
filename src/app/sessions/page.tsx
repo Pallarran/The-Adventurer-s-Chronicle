@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { getSessions } from "@/lib/actions/sessions";
 import { getActiveCampaign } from "@/lib/campaign";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -10,6 +11,7 @@ export const dynamic = "force-dynamic";
 
 export default async function SessionsPage() {
   const campaign = await getActiveCampaign();
+  if (!campaign) redirect("/");
   const sessions = await getSessions(campaign.id);
 
   return (

@@ -14,8 +14,9 @@ import { Separator } from "@/components/ui/separator";
 import { NavLink } from "./nav-link";
 import { mainNavItems, utilityNavItems } from "./sidebar";
 import { useSidebarStats } from "./use-sidebar-stats";
+import { CampaignSwitcher } from "./campaign-switcher";
 
-export function MobileSidebar() {
+export function MobileSidebar({ activeCampaignId }: { activeCampaignId: string | null }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const { getCount } = useSidebarStats();
@@ -61,6 +62,11 @@ export function MobileSidebar() {
           </div>
 
           <Separator className="bg-sidebar-border" />
+
+          {/* Campaign Switcher */}
+          <div className="pt-2">
+            <CampaignSwitcher activeCampaignId={activeCampaignId} />
+          </div>
 
           <nav className="flex-1 space-y-0.5 px-3 py-3">
             <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">

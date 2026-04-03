@@ -32,7 +32,7 @@ export function QuickCreate() {
         <Plus className="h-4 w-4" />
         <span className="sr-only">Quick create</span>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" sideOffset={8}>
+      <DropdownMenuContent align="end" sideOffset={8} className="w-48">
         <DropdownMenuGroup>
           <DropdownMenuLabel>Create New</DropdownMenuLabel>
           {createItems.map((item) => {

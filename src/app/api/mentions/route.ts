@@ -13,6 +13,7 @@ export type MentionResult = {
 export async function GET(request: NextRequest) {
   const q = request.nextUrl.searchParams.get("q")?.trim() ?? "";
   const campaign = await getActiveCampaign();
+  if (!campaign) return NextResponse.json([]);
 
   const [npcs, locations, organizations, items, quests] = await Promise.all([
     prisma.npc.findMany({

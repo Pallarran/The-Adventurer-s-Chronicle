@@ -5,8 +5,10 @@
  * Usage: node prisma/seed-docker.mjs
  */
 import pg from "pg";
+import crypto from "node:crypto";
 
 const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
+const genId = () => crypto.randomUUID();
 
 async function main() {
   await client.connect();
@@ -30,20 +32,20 @@ async function main() {
   console.log("Created default campaign");
 
   // Create character profile
-  const profileResult = await client.query(
-    `INSERT INTO "CharacterProfile" (name, "campaignId", "createdAt", "updatedAt")
-     VALUES ('Your Character', 'default-campaign', NOW(), NOW())
-     RETURNING id`
+  const profileId = genId();
+  await client.query(
+    `INSERT INTO "CharacterProfile" (id, name, "campaignId", "createdAt", "updatedAt")
+     VALUES ($1, 'Your Character', 'default-campaign', NOW(), NOW())`,
+    [profileId]
   );
-  const profileId = profileResult.rows[0].id;
   console.log("Created character profile");
 
   // Create 3 character sections
   for (const type of ["OVERVIEW", "BUILD", "BACKSTORY"]) {
     await client.query(
-      `INSERT INTO "CharacterSection" (type, "characterProfileId", "createdAt", "updatedAt")
-       VALUES ($1, $2, NOW(), NOW())`,
-      [type, profileId]
+      `INSERT INTO "CharacterSection" (id, type, "characterProfileId", "createdAt", "updatedAt")
+       VALUES ($1, $2, $3, NOW(), NOW())`,
+      [genId(), type, profileId]
     );
   }
   console.log("Created character sections: OVERVIEW, BUILD, BACKSTORY");
@@ -51,7 +53,8 @@ async function main() {
   // Create default quick note
   await client.query(
     `INSERT INTO "QuickNote" (id, "campaignId", "createdAt", "updatedAt")
-     VALUES ('default-quicknote', 'default-campaign', NOW(), NOW())`
+     VALUES ($1, 'default-campaign', NOW(), NOW())`,
+    [genId()]
   );
   console.log("Created default quick note");
 

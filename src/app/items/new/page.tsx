@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { getActiveCampaign } from "@/lib/campaign";
 import { getTags } from "@/lib/actions/tags";
 import { PageHeaderSetter } from "@/components/layout/page-header-setter";
@@ -7,6 +8,7 @@ export const dynamic = "force-dynamic";
 
 export default async function NewItemPage() {
   const campaign = await getActiveCampaign();
+  if (!campaign) redirect("/");
   const tags = await getTags(campaign.id);
 
   return (

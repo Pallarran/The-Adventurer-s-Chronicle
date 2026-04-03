@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { getOrganizations } from "@/lib/actions/organizations";
 import { getActiveCampaign } from "@/lib/campaign";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -10,6 +11,7 @@ export const dynamic = "force-dynamic";
 
 export default async function OrganizationsPage() {
   const campaign = await getActiveCampaign();
+  if (!campaign) redirect("/");
   const organizations = await getOrganizations(campaign.id);
 
   return (

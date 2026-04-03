@@ -57,11 +57,12 @@ enum QuestStatus {
 // ============================================================
 
 model Campaign {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   name        String
   description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   sessions         Session[]
   npcs             Npc[]

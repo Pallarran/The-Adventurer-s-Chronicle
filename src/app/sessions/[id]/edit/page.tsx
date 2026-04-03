@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/actions/sessions";
 import { getActiveCampaign } from "@/lib/campaign";
 import { getNpcs } from "@/lib/actions/npcs";
@@ -20,6 +20,7 @@ export default async function EditSessionPage({
     getSession(id),
     getActiveCampaign(),
   ]);
+  if (!campaign) redirect("/");
   if (!session) notFound();
 
   const [npcs, locations, organizations, tags] = await Promise.all([

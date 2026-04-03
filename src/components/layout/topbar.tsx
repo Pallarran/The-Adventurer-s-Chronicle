@@ -10,7 +10,7 @@ import { QuickCreate } from "@/components/search/quick-create";
 import { MobileSidebar } from "./mobile-sidebar";
 import { usePageHeader } from "./page-header-context";
 
-export function Topbar() {
+export function Topbar({ activeCampaignId }: { activeCampaignId: string | null }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const { header } = usePageHeader();
   const { requestNavigation } = useContext(FormGuardContext);
@@ -33,7 +33,7 @@ export function Topbar() {
     <header className="sticky top-0 z-20 flex h-14 items-center justify-between bg-background/80 px-4 sm:px-6 backdrop-blur-sm">
       {/* Left: hamburger + back + title + description */}
       <div className="flex min-w-0 items-center gap-2">
-        <MobileSidebar />
+        <MobileSidebar activeCampaignId={activeCampaignId} />
 
         {header?.backHref && (
           <Link

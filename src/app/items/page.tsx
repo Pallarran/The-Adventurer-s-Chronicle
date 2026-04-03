@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { getItems } from "@/lib/actions/items";
 import { getActiveCampaign } from "@/lib/campaign";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -10,6 +11,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ItemsPage() {
   const campaign = await getActiveCampaign();
+  if (!campaign) redirect("/");
   const items = await getItems(campaign.id);
 
   return (

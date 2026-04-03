@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getQuest } from "@/lib/actions/quests";
 import { getActiveCampaign } from "@/lib/campaign";
 import { getSessions } from "@/lib/actions/sessions";
@@ -17,6 +17,7 @@ export default async function EditQuestPage({
     getQuest(id),
     getActiveCampaign(),
   ]);
+  if (!campaign) redirect("/");
   if (!quest) notFound();
 
   const sessions = await getSessions(campaign.id);

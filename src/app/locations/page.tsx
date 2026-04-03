@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { getLocations } from "@/lib/actions/locations";
 import { getActiveCampaign } from "@/lib/campaign";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -10,6 +11,7 @@ export const dynamic = "force-dynamic";
 
 export default async function LocationsPage() {
   const campaign = await getActiveCampaign();
+  if (!campaign) redirect("/");
   const locations = await getLocations(campaign.id);
 
   return (

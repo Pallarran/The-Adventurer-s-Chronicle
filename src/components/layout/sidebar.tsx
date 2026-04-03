@@ -15,6 +15,7 @@ import Image from "next/image";
 import { NavLink } from "./nav-link";
 import { Separator } from "@/components/ui/separator";
 import { useSidebarStats } from "./use-sidebar-stats";
+import { CampaignSwitcher } from "./campaign-switcher";
 
 export const mainNavItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -31,7 +32,7 @@ export const utilityNavItems = [
   { href: "/tools", label: "Links & Tools", icon: Link2 },
 ];
 
-export function Sidebar() {
+export function Sidebar({ activeCampaignId }: { activeCampaignId: string | null }) {
   const { getCount } = useSidebarStats();
 
   return (
@@ -54,6 +55,9 @@ export function Sidebar() {
           </span>
         </div>
       </div>
+
+      {/* Campaign Switcher */}
+      <CampaignSwitcher activeCampaignId={activeCampaignId} />
 
       {/* Main Navigation */}
       <nav className="flex-1 space-y-0.5 px-3 py-3">

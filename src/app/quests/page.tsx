@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { getQuests } from "@/lib/actions/quests";
 import { getActiveCampaign } from "@/lib/campaign";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -10,6 +11,7 @@ export const dynamic = "force-dynamic";
 
 export default async function QuestsPage() {
   const campaign = await getActiveCampaign();
+  if (!campaign) redirect("/");
   const quests = await getQuests(campaign.id);
 
   return (

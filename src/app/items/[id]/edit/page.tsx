@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getItem } from "@/lib/actions/items";
 import { getActiveCampaign } from "@/lib/campaign";
 import { getTags } from "@/lib/actions/tags";
@@ -17,6 +17,7 @@ export default async function EditItemPage({
     getItem(id),
     getActiveCampaign(),
   ]);
+  if (!campaign) redirect("/");
   if (!item) notFound();
 
   const tags = await getTags(campaign.id);

@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getNpc } from "@/lib/actions/npcs";
 import { getActiveCampaign } from "@/lib/campaign";
 import { getSessions } from "@/lib/actions/sessions";
@@ -19,6 +19,7 @@ export default async function EditNpcPage({
     getNpc(id),
     getActiveCampaign(),
   ]);
+  if (!campaign) redirect("/");
   if (!npc) notFound();
 
   const [sessions, organizations, tags] = await Promise.all([

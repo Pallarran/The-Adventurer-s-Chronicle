@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import { getActiveCampaign } from "@/lib/campaign";
 import { getQuickNote } from "@/lib/actions/quick-notes";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,6 +24,7 @@ function CardSkeleton({ className }: { className?: string }) {
 
 export default async function DashboardPage() {
   const campaign = await getActiveCampaign();
+  if (!campaign) redirect("/");
   const quickNote = await getQuickNote(campaign.id);
 
   return (

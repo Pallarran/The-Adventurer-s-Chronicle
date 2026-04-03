@@ -18,5 +18,6 @@ export async function getCampaignStats(campaignId: string) {
 
 export async function getSidebarStats() {
   const campaign = await getActiveCampaign();
+  if (!campaign) return { sessions: 0, npcs: 0, locations: 0, organizations: 0, items: 0, quests: 0 };
   return getCampaignStats(campaign.id);
 }

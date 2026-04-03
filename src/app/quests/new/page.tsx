@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { getActiveCampaign } from "@/lib/campaign";
 import { getSessions } from "@/lib/actions/sessions";
 import { PageHeaderSetter } from "@/components/layout/page-header-setter";
@@ -7,6 +8,7 @@ export const dynamic = "force-dynamic";
 
 export default async function NewQuestPage() {
   const campaign = await getActiveCampaign();
+  if (!campaign) redirect("/");
   const sessions = await getSessions(campaign.id);
 
   return (

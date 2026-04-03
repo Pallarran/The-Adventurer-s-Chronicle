@@ -2,7 +2,7 @@
 set -e
 
 echo "Running database migrations..."
-npx prisma migrate deploy
+node node_modules/prisma/build/index.js migrate deploy
 
 echo "Seeding database (skips if already seeded)..."
 node prisma/seed-docker.mjs

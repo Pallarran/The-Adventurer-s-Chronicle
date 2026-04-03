@@ -2,7 +2,6 @@ import Image from "next/image";
 import { ScrollText, Users, MapPin, Swords } from "lucide-react";
 import { getActiveCampaign } from "@/lib/campaign";
 import { getCampaigns } from "@/lib/actions/campaigns";
-import { CreateCampaignForm } from "./create-campaign-form";
 import { CampaignList } from "./campaign-list";
 
 export const dynamic = "force-dynamic";
@@ -36,39 +35,37 @@ export default async function WelcomePage() {
     getCampaigns(),
   ]);
 
-  const hasCampaigns = campaigns.length > 0;
-
   return (
-    <div className="flex flex-col items-center px-4 py-12 md:py-20">
-      {/* Logo + Tagline */}
-      <Image
-        src="/logo-full.png"
-        alt="The Adventurer's Chronicle"
-        width={400}
-        height={200}
-        className="mb-6"
-        priority
-      />
-      <p className="text-muted-foreground text-center max-w-md mb-12">
+    <div className="flex flex-col items-center px-4 pt-4 pb-12 md:pt-6 md:pb-20 max-w-5xl mx-auto">
+      {/* Logo + Tagline — use bottom half of sprite (book + text) */}
+      <div className="-mb-10 w-[340px] h-[250px] overflow-hidden relative">
+        <Image
+          src="/logo-full-alt.png"
+          alt="The Adventurer's Chronicle"
+          width={340}
+          height={510}
+          className="absolute bottom-0 left-0"
+          priority
+        />
+      </div>
+      <p className="text-muted-foreground text-center max-w-lg mb-12">
         Your personal companion for tabletop RPG campaigns.
         Track sessions, NPCs, locations, quests, and your character — all in one place.
       </p>
 
-      {/* Existing Campaigns */}
-      {hasCampaigns && (
-        <div className="w-full max-w-2xl mb-10">
-          <h2 className="text-lg font-semibold text-foreground mb-3">
-            Your Campaigns
-          </h2>
-          <CampaignList
-            campaigns={campaigns}
-            activeCampaignId={activeCampaign?.id ?? null}
-          />
-        </div>
-      )}
+      {/* Campaigns Section */}
+      <div className="w-full mb-12">
+        <h2 className="text-lg font-semibold text-foreground mb-3">
+          {campaigns.length > 0 ? "Your Campaigns" : "Get Started"}
+        </h2>
+        <CampaignList
+          campaigns={campaigns}
+          activeCampaignId={activeCampaign?.id ?? null}
+        />
+      </div>
 
       {/* Feature Highlights */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl w-full mb-12">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
         {features.map((feature) => (
           <div
             key={feature.title}
@@ -83,19 +80,6 @@ export default async function WelcomePage() {
             </div>
           </div>
         ))}
-      </div>
-
-      {/* Create Campaign */}
-      <div className="w-full max-w-md rounded-lg border border-gold/20 bg-card p-6">
-        <h2 className="text-lg font-semibold text-foreground mb-1">
-          {hasCampaigns ? "Create New Campaign" : "Create Your First Campaign"}
-        </h2>
-        <p className="text-sm text-muted-foreground mb-4">
-          {hasCampaigns
-            ? "Start a new adventure alongside your existing campaigns."
-            : "Give your campaign a name to get started."}
-        </p>
-        <CreateCampaignForm />
       </div>
     </div>
   );

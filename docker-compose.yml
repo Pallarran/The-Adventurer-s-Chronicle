@@ -1,5 +1,8 @@
 services:
   app:
+    container_name: adventurers-chronicle
+    labels:
+      net.unraid.docker.icon: "https://raw.githubusercontent.com/Pallarran/The-Adventurer-s-Chronicle/main/public/logo-icon.png"
     build:
       context: .
       dockerfile: Dockerfile
@@ -17,6 +20,9 @@ services:
     restart: unless-stopped
 
   db:
+    container_name: adventurers-chronicle-db
+    labels:
+      net.unraid.docker.icon: "https://raw.githubusercontent.com/Pallarran/The-Adventurer-s-Chronicle/main/public/logo-icon.png"
     image: postgres:16-alpine
     environment:
       - POSTGRES_USER=postgres

@@ -14,7 +14,8 @@ SSH into your Unraid server and clone to a persistent location:
 ```bash
 mkdir -p /mnt/user/appdata/adventurers-chronicle
 cd /mnt/user/appdata/adventurers-chronicle
-git clone https://github.com/Pallarran/The-Adventurer-s-Chronicle.git .
+git clone https://github.com/Pallarran/The-Adventurer-s-Chronicle.git
+cd The-Adventurer-s-Chronicle
 ```
 
 ## Step 2 — Set your database password
@@ -54,7 +55,7 @@ http://<your-unraid-ip>:4000/dashboard
 When you push new code from your dev machine:
 
 ```bash
-cd /mnt/user/appdata/adventurers-chronicle
+cd /mnt/user/appdata/adventurers-chronicle/The-Adventurer-s-Chronicle
 git pull
 docker compose up -d --build
 ```

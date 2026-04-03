@@ -51,6 +51,14 @@ export async function createCampaign(name: string, description?: string) {
   return campaign;
 }
 
+export async function updateCampaign(id: string, name: string, description?: string) {
+  await prisma.campaign.update({
+    where: { id },
+    data: { name, description: description || null },
+  });
+  revalidatePath("/", "layout");
+}
+
 export async function setActiveCampaign(campaignId: string) {
   const cookieStore = await cookies();
   cookieStore.set(CAMPAIGN_COOKIE, campaignId, {

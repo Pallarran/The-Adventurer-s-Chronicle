@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { NavLink } from "./nav-link";
-import { mainNavItems, utilityNavItems } from "./sidebar";
+import { mainNavItems } from "./sidebar";
 import { useSidebarStats } from "./use-sidebar-stats";
 import { CampaignSwitcher } from "./campaign-switcher";
 
@@ -68,23 +68,10 @@ export function MobileSidebar({ activeCampaignId }: { activeCampaignId: string |
             <CampaignSwitcher activeCampaignId={activeCampaignId} />
           </div>
 
+          {/* Navigation */}
           <nav className="flex-1 space-y-0.5 px-3 py-3">
-            <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
-              Campaign
-            </p>
             {mainNavItems.map((item) => (
               <NavLink key={item.href} {...item} count={getCount(item.href)} />
-            ))}
-          </nav>
-
-          <Separator className="bg-sidebar-border" />
-
-          <nav className="space-y-0.5 px-3 py-3">
-            <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
-              Utilities
-            </p>
-            {utilityNavItems.map((item) => (
-              <NavLink key={item.href} {...item} />
             ))}
           </nav>
         </SheetContent>

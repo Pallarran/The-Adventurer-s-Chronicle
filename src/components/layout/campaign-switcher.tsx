@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, ChevronDown, Plus } from "lucide-react";
+import { Check, ChevronDown, Plus, Settings, Trash2 } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -21,6 +21,8 @@ import {
   getCampaigns,
   setActiveCampaign,
   createCampaign,
+  updateCampaign,
+  softDeleteCampaign,
 } from "@/lib/actions/campaigns";
 
 interface Campaign {
@@ -38,8 +40,10 @@ export function CampaignSwitcher({
   const router = useRouter();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [popoverOpen, setPopoverOpen] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [creating, setCreating] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const activeCampaign = campaigns.find((c) => c.id === activeCampaignId);
 
@@ -53,23 +57,52 @@ export function CampaignSwitcher({
     router.refresh();
   }
 
+  function openEdit(campaign: Campaign, e: React.MouseEvent) {
+    e.stopPropagation();
+    setPopoverOpen(false);
+    setEditingCampaign(campaign);
+    setEditOpen(true);
+  }
+
   async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setCreating(true);
-
+    setSaving(true);
     const formData = new FormData(e.currentTarget);
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
-
     await createCampaign(name, description || undefined);
-    setDialogOpen(false);
-    setCreating(false);
+    setCreateOpen(false);
+    setSaving(false);
+    router.refresh();
+  }
+
+  async function handleUpdate(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!editingCampaign) return;
+    setSaving(true);
+    const formData = new FormData(e.currentTarget);
+    const name = formData.get("name") as string;
+    const description = formData.get("description") as string;
+    await updateCampaign(editingCampaign.id, name, description || undefined);
+    setEditOpen(false);
+    setEditingCampaign(null);
+    setSaving(false);
+    router.refresh();
+  }
+
+  async function handleDelete() {
+    if (!editingCampaign) return;
+    setSaving(true);
+    await softDeleteCampaign(editingCampaign.id);
+    setEditOpen(false);
+    setEditingCampaign(null);
+    setSaving(false);
     router.refresh();
   }
 
   if (campaigns.length === 0) {
     return (
-      <div className="mx-3 mb-2 rounded-md border border-dashed border-border px-3 py-2">
+      <div className="mx-3 mb-1 rounded-md border border-dashed border-border px-3 py-2">
         <span className="text-xs text-muted-foreground">No campaigns</span>
       </div>
     );
@@ -79,7 +112,7 @@ export function CampaignSwitcher({
     <>
       <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
         <PopoverTrigger
-          className="mx-3 mb-2 flex w-[calc(100%-1.5rem)] items-center gap-2 rounded-md border border-border bg-sidebar px-3 py-1.5 text-left text-sm hover:bg-accent transition-colors cursor-pointer"
+          className="mx-3 mb-1 flex w-[calc(100%-1.5rem)] items-center gap-2 rounded-md border border-sidebar-border bg-sidebar-accent/50 px-3 py-1.5 text-left text-sm hover:bg-accent transition-colors cursor-pointer"
         >
           <span className="flex-1 truncate font-medium text-foreground">
             {activeCampaign?.name ?? "Select campaign"}
@@ -91,23 +124,34 @@ export function CampaignSwitcher({
           align="start"
           side="bottom"
           sideOffset={4}
-          className="w-56 p-1"
+          className="w-[var(--radix-popover-trigger-width)] p-1"
         >
           {campaigns.map((campaign) => (
-            <button
+            <div
               key={campaign.id}
-              onClick={() => handleSwitch(campaign.id)}
-              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent transition-colors text-left cursor-pointer"
+              className="group flex items-center rounded-md hover:bg-accent transition-colors"
             >
-              <Check
-                className={`h-3.5 w-3.5 shrink-0 ${
-                  campaign.id === activeCampaignId
-                    ? "text-gold"
-                    : "text-transparent"
-                }`}
-              />
-              <span className="flex-1 truncate">{campaign.name}</span>
-            </button>
+              <button
+                onClick={() => handleSwitch(campaign.id)}
+                className="flex flex-1 items-center gap-2 px-2 py-1.5 text-sm text-left cursor-pointer min-w-0"
+              >
+                <Check
+                  className={`h-3.5 w-3.5 shrink-0 ${
+                    campaign.id === activeCampaignId
+                      ? "text-gold"
+                      : "text-transparent"
+                  }`}
+                />
+                <span className="flex-1 truncate">{campaign.name}</span>
+              </button>
+              <button
+                onClick={(e) => openEdit(campaign, e)}
+                className="shrink-0 p-1.5 mr-1 rounded text-muted-foreground/0 group-hover:text-muted-foreground hover:!text-foreground transition-colors cursor-pointer"
+                title="Edit campaign"
+              >
+                <Settings className="h-3.5 w-3.5" />
+              </button>
+            </div>
           ))}
 
           <div className="my-1 h-px bg-border" />
@@ -115,7 +159,7 @@ export function CampaignSwitcher({
           <button
             onClick={() => {
               setPopoverOpen(false);
-              setDialogOpen(true);
+              setCreateOpen(true);
             }}
             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent transition-colors text-left cursor-pointer text-muted-foreground"
           >
@@ -125,7 +169,8 @@ export function CampaignSwitcher({
         </PopoverContent>
       </Popover>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      {/* Create Campaign Dialog */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Create New Campaign</DialogTitle>
@@ -147,9 +192,58 @@ export function CampaignSwitcher({
               />
             </div>
             <DialogFooter>
-              <Button type="submit" disabled={creating}>
-                {creating ? "Creating..." : "Create Campaign"}
+              <Button type="submit" disabled={saving}>
+                {saving ? "Creating..." : "Create Campaign"}
               </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Campaign Dialog */}
+      <Dialog open={editOpen} onOpenChange={(open) => {
+        setEditOpen(open);
+        if (!open) setEditingCampaign(null);
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Campaign</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleUpdate}>
+            <div className="space-y-3 py-2">
+              <Input
+                name="name"
+                placeholder="Campaign name"
+                defaultValue={editingCampaign?.name ?? ""}
+                required
+                autoFocus
+                minLength={1}
+                maxLength={100}
+                key={editingCampaign?.id}
+              />
+              <Input
+                name="description"
+                placeholder="Short description (optional)"
+                defaultValue={editingCampaign?.description ?? ""}
+                maxLength={200}
+                key={`desc-${editingCampaign?.id}`}
+              />
+            </div>
+            <DialogFooter className="flex-col gap-3 sm:flex-col">
+              <Button type="submit" disabled={saving}>
+                {saving ? "Saving..." : "Save Changes"}
+              </Button>
+              {campaigns.length > 1 && (
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={saving}
+                  className="flex items-center justify-center gap-2 text-sm text-destructive hover:text-destructive/80 transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  <span>Delete this campaign</span>
+                </button>
+              )}
             </DialogFooter>
           </form>
         </DialogContent>

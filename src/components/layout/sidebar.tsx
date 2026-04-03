@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { NavLink } from "./nav-link";
-import { Separator } from "@/components/ui/separator";
 import { useSidebarStats } from "./use-sidebar-stats";
 import { CampaignSwitcher } from "./campaign-switcher";
 
@@ -26,9 +25,6 @@ export const mainNavItems = [
   { href: "/items", label: "Items", icon: Package },
   { href: "/quests", label: "Quests & Goals", icon: Compass },
   { href: "/character", label: "Character", icon: Swords },
-];
-
-export const utilityNavItems = [
   { href: "/tools", label: "Links & Tools", icon: Link2 },
 ];
 
@@ -59,25 +55,10 @@ export function Sidebar({ activeCampaignId }: { activeCampaignId: string | null 
       {/* Campaign Switcher */}
       <CampaignSwitcher activeCampaignId={activeCampaignId} />
 
-      {/* Main Navigation */}
+      {/* Navigation */}
       <nav className="flex-1 space-y-0.5 px-3 py-3">
-        <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
-          Campaign
-        </p>
         {mainNavItems.map((item) => (
           <NavLink key={item.href} {...item} count={getCount(item.href)} />
-        ))}
-      </nav>
-
-      <Separator className="bg-sidebar-border" />
-
-      {/* Utility Navigation */}
-      <nav className="space-y-0.5 px-3 py-3">
-        <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
-          Utilities
-        </p>
-        {utilityNavItems.map((item) => (
-          <NavLink key={item.href} {...item} />
         ))}
       </nav>
     </aside>

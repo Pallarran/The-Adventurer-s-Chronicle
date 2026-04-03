@@ -11,7 +11,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 export interface TagOption {
   id: string;
@@ -95,8 +94,7 @@ export function TagInput({
               placeholder="Search or create..."
               className="h-8 text-sm mb-2"
             />
-            <ScrollArea className="max-h-36">
-              <div className="space-y-0.5">
+            <div className="max-h-36 overflow-y-auto space-y-0.5">
                 {filtered.map((tag) => (
                   <button
                     key={tag.id}
@@ -121,8 +119,7 @@ export function TagInput({
                     No tags found.
                   </p>
                 )}
-              </div>
-            </ScrollArea>
+            </div>
           </PopoverContent>
         </Popover>
       </div>

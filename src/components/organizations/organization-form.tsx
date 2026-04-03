@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useFormGuard } from "@/hooks/use-form-guard";
+import { extractMentionsFromContent } from "@/lib/extract-mentions";
 import { Input } from "@/components/ui/input";
 import { ComboboxInput } from "@/components/shared/combobox-input";
 import { getFormOptions, updateFormOptions } from "@/lib/actions/form-options";
@@ -113,6 +114,40 @@ export function OrganizationForm({
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   useFormGuard(dirty);
+
+  // ── Mention → picker auto-sync ──
+  const suppressedNpcs = useRef(new Set<string>());
+
+  const initializedRef = useRef(false);
+  useEffect(() => {
+    if (initializedRef.current || !organization?.notesBody) return;
+    initializedRef.current = true;
+    const mentions = extractMentionsFromContent(organization.notesBody as JSONContent);
+    const npcIds = new Set(selectedNpcs.map((n) => n.id));
+    for (const m of mentions.npc) if (!npcIds.has(m.id)) suppressedNpcs.current.add(m.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleNpcsChange = useCallback((next: RelationOption[]) => {
+    const nextIds = new Set(next.map((n) => n.id));
+    setSelectedNpcs((prev) => {
+      for (const p of prev) if (!nextIds.has(p.id)) suppressedNpcs.current.add(p.id);
+      return next;
+    });
+  }, []);
+
+  const handleNotesChange = useCallback((content: JSONContent) => {
+    setNotesBody(content);
+    setDirty(true);
+
+    const mentions = extractMentionsFromContent(content);
+
+    setSelectedNpcs((prev) => {
+      const ids = new Set(prev.map((n) => n.id));
+      const toAdd = mentions.npc.filter((m) => !ids.has(m.id) && !suppressedNpcs.current.has(m.id));
+      return toAdd.length ? [...prev, ...toAdd.map((m) => ({ id: m.id, name: m.label }))] : prev;
+    });
+  }, []);
 
   // Combobox option list (per-campaign)
   const [typeOptions, setTypeOptions] = useState<string[]>([]);
@@ -273,7 +308,7 @@ export function OrganizationForm({
             label={<><Users className="h-4 w-4" /> Known Members</>}
             options={allNpcs}
             selected={selectedNpcs}
-            onChange={setSelectedNpcs}
+            onChange={handleNpcsChange}
             placeholder="Search NPCs..."
           />
         </div>
@@ -293,7 +328,7 @@ export function OrganizationForm({
         <Label>Notes</Label>
         <RichTextEditor
           content={notesBody}
-          onChange={(c) => { setNotesBody(c); setDirty(true); }}
+          onChange={handleNotesChange}
           placeholder="Write notes about this organization..."
         />
       </div>

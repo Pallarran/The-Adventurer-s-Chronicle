@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useFormGuard } from "@/hooks/use-form-guard";
+import { extractMentionsFromContent } from "@/lib/extract-mentions";
 import { Input } from "@/components/ui/input";
 import { ComboboxInput } from "@/components/shared/combobox-input";
 import { getFormOptions, updateFormOptions } from "@/lib/actions/form-options";
@@ -113,6 +114,44 @@ export function NpcForm({
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   useFormGuard(dirty);
+
+  // ── Mention → picker auto-sync ──
+  const suppressedOrgs = useRef(new Set<string>());
+
+  // Seed suppressed set in edit mode: mentions already in notes but NOT in
+  // the organization field were intentionally excluded by the user previously.
+  const initializedRef = useRef(false);
+  useEffect(() => {
+    if (initializedRef.current || !npc?.notesBody) return;
+    initializedRef.current = true;
+    const mentions = extractMentionsFromContent(npc.notesBody as JSONContent);
+    const orgId = selectedOrg[0]?.id;
+    for (const m of mentions.organization) if (m.id !== orgId) suppressedOrgs.current.add(m.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Wrap picker onChange to track manual removals in suppressed set
+  const handleOrgChange = useCallback((next: RelationOption[]) => {
+    setSelectedOrg((prev) => {
+      for (const p of prev) if (!next.some((n) => n.id === p.id)) suppressedOrgs.current.add(p.id);
+      return next;
+    });
+  }, []);
+
+  // Sync mentions from editor content into organization picker
+  const handleNotesChange = useCallback((content: JSONContent) => {
+    setNotesBody(content);
+    setDirty(true);
+
+    const mentions = extractMentionsFromContent(content);
+
+    // Organization — single select, only auto-set if currently empty
+    setSelectedOrg((prev) => {
+      if (prev.length > 0) return prev;
+      const toAdd = mentions.organization.find((m) => !suppressedOrgs.current.has(m.id));
+      return toAdd ? [{ id: toAdd.id, name: toAdd.label }] : prev;
+    });
+  }, []);
 
   // Combobox option lists (per-campaign)
   const [genderOptions, setGenderOptions] = useState<string[]>([]);
@@ -317,7 +356,7 @@ export function NpcForm({
             label={<><Shield className="h-4 w-4" /> Organization</>}
             options={allOrganizations}
             selected={selectedOrg}
-            onChange={setSelectedOrg}
+            onChange={handleOrgChange}
             placeholder="Search organizations..."
             single
           />
@@ -358,7 +397,7 @@ export function NpcForm({
         <Label>Notes</Label>
         <RichTextEditor
           content={notesBody}
-          onChange={(c) => { setNotesBody(c); setDirty(true); }}
+          onChange={handleNotesChange}
           placeholder="Write notes about this NPC..."
         />
       </div>

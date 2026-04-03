@@ -11,7 +11,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 export interface RelationOption {
   id: string;
@@ -86,7 +85,7 @@ export function RelationPicker({
                 className="h-8 pl-7 text-sm"
               />
             </div>
-            <ScrollArea className="max-h-48">
+            <div className="max-h-48 overflow-y-auto">
               {filtered.length === 0 ? (
                 <p className="py-4 text-center text-sm text-muted-foreground">
                   No results found.
@@ -109,7 +108,7 @@ export function RelationPicker({
                   ))}
                 </div>
               )}
-            </ScrollArea>
+            </div>
             {filtered.length > 0 && (
               <p className="mt-1.5 border-t border-border pt-1.5 text-center text-[10px] text-muted-foreground/50">
                 Click to select

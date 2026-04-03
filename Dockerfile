@@ -12,7 +12,7 @@ COPY . .
 RUN npx prisma generate
 RUN npm run build
 
-# Stage 3: Runner
+# Stage 3: Runner (full deps — simple and reliable)
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
@@ -21,10 +21,12 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./
 COPY --from=builder /app/prisma ./prisma
-RUN npm install -g prisma@7
+COPY --from=builder /app/prisma.config.ts ./
+COPY --from=builder /app/src/generated ./src/generated
 
 COPY --chown=nextjs:nodejs docker-entrypoint.sh ./
 RUN sed -i 's/\r$//' docker-entrypoint.sh && chmod +x docker-entrypoint.sh

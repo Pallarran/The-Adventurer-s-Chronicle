@@ -7,4 +7,3 @@ uploads
 *.md
 .vscode
 *.code-workspace
-prisma.config.ts

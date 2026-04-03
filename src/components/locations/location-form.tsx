@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useFormGuard } from "@/hooks/use-form-guard";
 import { Input } from "@/components/ui/input";
+import { ComboboxInput } from "@/components/shared/combobox-input";
+import { getFormOptions, updateFormOptions } from "@/lib/actions/form-options";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { RichTextEditor } from "@/components/shared/rich-text-editor";
@@ -90,6 +92,29 @@ export function LocationForm({
   const [dirty, setDirty] = useState(false);
   useFormGuard(dirty);
 
+  // Combobox option list (per-campaign)
+  const [typeOptions, setTypeOptions] = useState<string[]>([]);
+
+  useEffect(() => {
+    getFormOptions("locationType").then(setTypeOptions);
+  }, []);
+
+  const handleAddType = useCallback((opt: string) => {
+    setTypeOptions((prev) => {
+      const next = [...prev, opt];
+      updateFormOptions("locationType", next);
+      return next;
+    });
+  }, []);
+
+  const handleRemoveType = useCallback((opt: string) => {
+    setTypeOptions((prev) => {
+      const next = prev.filter((o) => o !== opt);
+      updateFormOptions("locationType", next);
+      return next;
+    });
+  }, []);
+
   const parentOptions = allLocations.filter((l) => l.id !== location?.id);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -158,12 +183,14 @@ export function LocationForm({
               />
             </div>
             <div className="w-48 space-y-2">
-              <Label htmlFor="type">Type</Label>
-              <Input
-                id="type"
+              <Label>Type</Label>
+              <ComboboxInput
                 value={type}
-                onChange={(e) => setType(e.target.value)}
-                placeholder="e.g. City, Dungeon, Tavern"
+                onChange={setType}
+                options={typeOptions}
+                onAddOption={handleAddType}
+                onRemoveOption={handleRemoveType}
+                placeholder="e.g. City, Dungeon"
               />
             </div>
           </div>

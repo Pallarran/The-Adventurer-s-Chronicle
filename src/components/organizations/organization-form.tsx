@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useFormGuard } from "@/hooks/use-form-guard";
 import { Input } from "@/components/ui/input";
+import { ComboboxInput } from "@/components/shared/combobox-input";
+import { getFormOptions, updateFormOptions } from "@/lib/actions/form-options";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
@@ -112,6 +114,29 @@ export function OrganizationForm({
   const [dirty, setDirty] = useState(false);
   useFormGuard(dirty);
 
+  // Combobox option list (per-campaign)
+  const [typeOptions, setTypeOptions] = useState<string[]>([]);
+
+  useEffect(() => {
+    getFormOptions("organizationType").then(setTypeOptions);
+  }, []);
+
+  const handleAddType = useCallback((opt: string) => {
+    setTypeOptions((prev) => {
+      const next = [...prev, opt];
+      updateFormOptions("organizationType", next);
+      return next;
+    });
+  }, []);
+
+  const handleRemoveType = useCallback((opt: string) => {
+    setTypeOptions((prev) => {
+      const next = prev.filter((o) => o !== opt);
+      updateFormOptions("organizationType", next);
+      return next;
+    });
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -180,12 +205,14 @@ export function OrganizationForm({
               />
             </div>
             <div className="w-48 space-y-2">
-              <Label htmlFor="type">Type</Label>
-              <Input
-                id="type"
+              <Label>Type</Label>
+              <ComboboxInput
                 value={type}
-                onChange={(e) => setType(e.target.value)}
-                placeholder="e.g. Guild, Cult, Kingdom"
+                onChange={setType}
+                options={typeOptions}
+                onAddOption={handleAddType}
+                onRemoveOption={handleRemoveType}
+                placeholder="e.g. Guild, Kingdom"
               />
             </div>
           </div>

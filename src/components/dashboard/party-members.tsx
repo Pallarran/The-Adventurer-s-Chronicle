@@ -76,7 +76,8 @@ export async function PartyMembers({ campaignId }: PartyMembersProps) {
                       fill
                       className="object-cover"
                       style={{ objectPosition: `center ${npc.imagePositionY}%` }}
-                      sizes="64px"
+                      sizes="(min-width: 640px) 96px, 40vw"
+                      quality={90}
                     />
                   ) : (
                     <User className="h-6 w-6 text-gold/40" />

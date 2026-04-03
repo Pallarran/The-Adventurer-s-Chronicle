@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useFormGuard } from "@/hooks/use-form-guard";
 import { Input } from "@/components/ui/input";
+import { ComboboxInput } from "@/components/shared/combobox-input";
+import { getFormOptions, updateFormOptions } from "@/lib/actions/form-options";
+import type { FormOptionCategory } from "@/lib/constants/form-options";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -111,6 +114,38 @@ export function NpcForm({
   const [dirty, setDirty] = useState(false);
   useFormGuard(dirty);
 
+  // Combobox option lists (per-campaign)
+  const [genderOptions, setGenderOptions] = useState<string[]>([]);
+  const [raceOptions, setRaceOptions] = useState<string[]>([]);
+
+  useEffect(() => {
+    getFormOptions("npcGender").then(setGenderOptions);
+    getFormOptions("npcRace").then(setRaceOptions);
+  }, []);
+
+  const handleOptionChange = useCallback(
+    (category: FormOptionCategory, setOptions: (opts: string[]) => void) => ({
+      onAdd: (opt: string) => {
+        setOptions((prev) => {
+          const next = [...prev, opt];
+          updateFormOptions(category, next);
+          return next;
+        });
+      },
+      onRemove: (opt: string) => {
+        setOptions((prev) => {
+          const next = prev.filter((o) => o !== opt);
+          updateFormOptions(category, next);
+          return next;
+        });
+      },
+    }),
+    [],
+  );
+
+  const genderHandlers = handleOptionChange("npcGender", setGenderOptions);
+  const raceHandlers = handleOptionChange("npcRace", setRaceOptions);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -199,20 +234,24 @@ export function NpcForm({
           {/* Row 2: Race, Gender, Class/Role, Status */}
           <div className="flex flex-wrap items-end gap-4">
             <div className="w-36 space-y-2">
-              <Label htmlFor="race">Race</Label>
-              <Input
-                id="race"
+              <Label>Race</Label>
+              <ComboboxInput
                 value={race}
-                onChange={(e) => setRace(e.target.value)}
+                onChange={setRace}
+                options={raceOptions}
+                onAddOption={raceHandlers.onAdd}
+                onRemoveOption={raceHandlers.onRemove}
                 placeholder="e.g. Elf"
               />
             </div>
             <div className="w-32 space-y-2">
-              <Label htmlFor="gender">Gender</Label>
-              <Input
-                id="gender"
+              <Label>Gender</Label>
+              <ComboboxInput
                 value={gender}
-                onChange={(e) => setGender(e.target.value)}
+                onChange={setGender}
+                options={genderOptions}
+                onAddOption={genderHandlers.onAdd}
+                onRemoveOption={genderHandlers.onRemove}
                 placeholder="e.g. Male"
               />
             </div>

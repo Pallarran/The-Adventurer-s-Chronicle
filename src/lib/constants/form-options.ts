@@ -1,0 +1,40 @@
+export const DEFAULT_FORM_OPTIONS = {
+  npcGender: ["Male", "Female", "Non-binary", "Unknown"],
+  npcRace: [
+    "Human",
+    "Elf",
+    "Half-Elf",
+    "Dwarf",
+    "Halfling",
+    "Gnome",
+    "Half-Orc",
+    "Tiefling",
+    "Dragonborn",
+    "Orc",
+  ],
+  locationType: [
+    "City",
+    "Town",
+    "Village",
+    "Dungeon",
+    "Cave",
+    "Castle",
+    "Temple",
+    "Tavern",
+    "Forest",
+    "Ruins",
+  ],
+  organizationType: [
+    "Guild",
+    "Cult",
+    "Kingdom",
+    "Order",
+    "Church",
+    "Faction",
+    "Noble House",
+    "Military",
+    "Thieves' Guild",
+  ],
+} as const;
+
+export type FormOptionCategory = keyof typeof DEFAULT_FORM_OPTIONS;

@@ -37,19 +37,18 @@ export default async function WelcomePage() {
 
   return (
     <div className="flex flex-col items-center px-4 pt-4 pb-12 md:pt-6 md:pb-20 max-w-5xl mx-auto">
-      {/* Logo + Tagline — use bottom half of sprite (book + text) */}
-      <div className="-mb-10 w-[340px] h-[250px] overflow-hidden relative">
-        <Image
-          src="/logo-full-alt.png"
-          alt="The Adventurer's Chronicle"
-          width={340}
-          height={510}
-          className="absolute bottom-0 left-0"
-          priority
-        />
-      </div>
-      <p className="text-muted-foreground text-center max-w-lg mb-12">
-        Your personal companion for tabletop RPG campaigns.
+      {/* Logo */}
+      <Image
+        src="/logo-full.png"
+        alt="The Adventurer's Chronicle"
+        width={500}
+        height={342}
+        className="-mb-16"
+        priority
+        unoptimized
+      />
+      <p className="text-muted-foreground text-center mb-12">
+        Your personal companion for tabletop RPG campaigns.<br />
         Track sessions, NPCs, locations, quests, and your character — all in one place.
       </p>
 
@@ -65,7 +64,7 @@ export default async function WelcomePage() {
       </div>
 
       {/* Feature Highlights */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
         {features.map((feature) => (
           <div
             key={feature.title}

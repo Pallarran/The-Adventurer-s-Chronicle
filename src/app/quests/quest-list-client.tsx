@@ -3,10 +3,11 @@
 import { useState, useCallback, useMemo } from "react";
 import { QuestCard } from "@/components/quests/quest-card";
 import { SearchInput } from "@/components/shared/search-input";
-import { MultiSelectFilter } from "@/components/shared/multi-select-filter";
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown, X } from "lucide-react";
+import { ArrowUpDown, ChevronRight } from "lucide-react";
+import { QUEST_STATUS_COLORS } from "@/lib/colors";
 import type { QuestListItem } from "@/types";
+import type { QuestStatus } from "@/generated/prisma/client";
 
 type SortOption = "name-asc" | "name-desc" | "recent" | "oldest";
 
@@ -17,24 +18,23 @@ const sortLabels: Record<SortOption, string> = {
   "oldest": "Oldest First",
 };
 
-const STATUS_OPTIONS = [
-  { value: "LEAD", label: "Lead" },
-  { value: "ACTIVE", label: "Active" },
-  { value: "COMPLETED", label: "Completed" },
-  { value: "FAILED", label: "Failed" },
+const SECTIONS: { status: QuestStatus; label: string; color: string }[] = [
+  { status: "ACTIVE", label: "Active", color: QUEST_STATUS_COLORS.ACTIVE },
+  { status: "LEAD", label: "Leads", color: QUEST_STATUS_COLORS.LEAD },
+  { status: "COMPLETED", label: "Completed", color: QUEST_STATUS_COLORS.COMPLETED },
+  { status: "FAILED", label: "Failed / Abandoned", color: QUEST_STATUS_COLORS.FAILED },
 ];
 
-const DEFAULT_STATUSES = new Set(["LEAD", "ACTIVE"]);
+const DEFAULT_OPEN = new Set<string>(["ACTIVE", "LEAD"]);
 
 interface QuestListClientProps {
   quests: QuestListItem[];
-  headerActions?: React.ReactNode;
 }
 
-export function QuestListClient({ quests, headerActions }: QuestListClientProps) {
+export function QuestListClient({ quests }: QuestListClientProps) {
   const [search, setSearch] = useState("");
-  const [sort, setSort] = useState<SortOption>("name-asc");
-  const [statusFilters, setStatusFilters] = useState<Set<string>>(DEFAULT_STATUSES);
+  const [sort, setSort] = useState<SortOption>("recent");
+  const [openSections, setOpenSections] = useState<Set<string>>(DEFAULT_OPEN);
 
   const handleSearch = useCallback((value: string) => setSearch(value), []);
 
@@ -45,17 +45,21 @@ export function QuestListClient({ quests, headerActions }: QuestListClientProps)
     });
   }, []);
 
-  const clearFilters = useCallback(() => {
-    setStatusFilters(DEFAULT_STATUSES);
+  const toggleSection = useCallback((status: string) => {
+    setOpenSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(status)) next.delete(status);
+      else next.add(status);
+      return next;
+    });
   }, []);
 
-  // "has filters" when something differs from the default Lead+Active selection
-  const hasFilters = !(statusFilters.size === 2 && statusFilters.has("LEAD") && statusFilters.has("ACTIVE"));
+  const isSearching = search.length > 0;
 
-  const results = useMemo(() => {
+  // Filter + sort, then group by status
+  const grouped = useMemo(() => {
     let items = [...quests];
 
-    // Search
     if (search) {
       const q = search.toLowerCase();
       items = items.filter(
@@ -65,12 +69,6 @@ export function QuestListClient({ quests, headerActions }: QuestListClientProps)
       );
     }
 
-    // Status filter (empty set = show all)
-    if (statusFilters.size > 0) {
-      items = items.filter((quest) => statusFilters.has(quest.status));
-    }
-
-    // Sort
     items.sort((a, b) => {
       switch (sort) {
         case "name-asc":
@@ -86,8 +84,17 @@ export function QuestListClient({ quests, headerActions }: QuestListClientProps)
       }
     });
 
-    return items;
-  }, [quests, search, sort, statusFilters]);
+    const map = new Map<QuestStatus, QuestListItem[]>();
+    for (const section of SECTIONS) {
+      map.set(section.status, []);
+    }
+    for (const quest of items) {
+      map.get(quest.status)?.push(quest);
+    }
+    return map;
+  }, [quests, search, sort]);
+
+  const totalResults = Array.from(grouped.values()).reduce((sum, arr) => sum + arr.length, 0);
 
   return (
     <div className="space-y-4">
@@ -107,38 +114,67 @@ export function QuestListClient({ quests, headerActions }: QuestListClientProps)
           <ArrowUpDown className="h-3.5 w-3.5" />
           {sortLabels[sort]}
         </Button>
-        <div className="ml-auto">{headerActions}</div>
       </div>
 
-      {/* Filter dropdowns */}
-      <div className="flex flex-wrap items-center gap-2">
-        <MultiSelectFilter
-          label="Statuses"
-          options={STATUS_OPTIONS}
-          selected={statusFilters}
-          onChange={setStatusFilters}
-        />
+      {/* Collapsible sections */}
+      <div className="space-y-2">
+        {SECTIONS.map(({ status, label, color }) => {
+          const items = grouped.get(status) ?? [];
+          const isOpen = openSections.has(status);
 
-        {hasFilters && (
-          <button
-            onClick={clearFilters}
-            className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <X className="h-3 w-3" />
-            Clear
-          </button>
-        )}
+          // Hide empty sections when searching
+          if (isSearching && items.length === 0) return null;
+
+          return (
+            <div key={status} className="rounded-lg border border-border bg-card/50">
+              <button
+                type="button"
+                onClick={() => toggleSection(status)}
+                className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left transition-colors hover:bg-muted/50"
+              >
+                <ChevronRight
+                  className="h-4 w-4 text-muted-foreground transition-transform duration-200"
+                  style={{ transform: isOpen ? "rotate(90deg)" : undefined }}
+                />
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: color }}
+                />
+                <span className="text-sm font-semibold">{label}</span>
+                <span
+                  className="rounded-full px-2 py-0.5 text-xs font-medium"
+                  style={{
+                    backgroundColor: `${color}20`,
+                    color,
+                  }}
+                >
+                  {items.length}
+                </span>
+              </button>
+
+              {isOpen && (
+                <div className="border-t border-border px-4 py-3">
+                  {items.length > 0 ? (
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                      {items.map((quest) => (
+                        <QuestCard key={quest.id} quest={quest} />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="py-4 text-center text-xs text-muted-foreground">
+                      No {label.toLowerCase()} quests
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
-      {/* Grid */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {results.map((quest) => (
-          <QuestCard key={quest.id} quest={quest} />
-        ))}
-      </div>
-      {results.length === 0 && (
+      {isSearching && totalResults === 0 && (
         <p className="py-8 text-center text-sm text-muted-foreground">
-          No quests & goals match your search or filters.
+          No quests & goals match your search.
         </p>
       )}
     </div>

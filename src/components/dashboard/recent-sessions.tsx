@@ -110,6 +110,7 @@ export async function RecentSessions({ campaignId }: RecentSessionsProps) {
                     {new Date(session.realDatePlayed).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
+                      year: "numeric",
                     })}
                     {session.inGameDate && (
                       <span className="ml-1 text-muted-foreground/60">

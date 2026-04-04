@@ -149,6 +149,15 @@ select:focus-visible {
   box-shadow: 0 0 0 2px rgba(201, 170, 85, 0.15) !important;
 }
 
+/* Date input — gold calendar icon */
+.date-input-gold {
+  color-scheme: dark;
+}
+.date-input-gold::-webkit-calendar-picker-indicator {
+  filter: brightness(0) saturate(100%) invert(72%) sepia(30%) saturate(600%) hue-rotate(10deg) brightness(95%);
+  cursor: pointer;
+}
+
 /* Tiptap editor area focus */
 .ProseMirror:focus {
   outline: none;

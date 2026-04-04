@@ -4,7 +4,8 @@ export function extractTextFromJson(
   maxLength: number = 120
 ): string {
   if (!json || typeof json !== "object") return "";
-  const node = json as { text?: string; content?: unknown[] };
+  const node = json as { type?: string; text?: string; attrs?: { label?: string }; content?: unknown[] };
+  if (node.type === "mention" && node.attrs?.label) return node.attrs.label;
   if (node.text) return node.text;
   if (Array.isArray(node.content)) {
     let result = "";

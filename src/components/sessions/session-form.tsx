@@ -225,6 +225,7 @@ export function SessionForm({
             value={realDatePlayed}
             onChange={(e) => setRealDatePlayed(e.target.value)}
             required
+            className="date-input-gold"
           />
         </div>
         <div className="w-88 space-y-2">

@@ -204,10 +204,10 @@ function SortableRow({
         </div>
 
         {/* Features */}
-        <div className="truncate text-xs">{row.features || ""}</div>
+        <div className="whitespace-pre-line text-xs">{row.features || ""}</div>
 
         {/* Spells (hidden on mobile) */}
-        <div className="hidden truncate text-xs sm:block">{row.spells || ""}</div>
+        <div className="hidden whitespace-pre-line text-xs sm:block">{row.spells || ""}</div>
 
         {/* Notes */}
         <div className="truncate text-xs text-muted-foreground">

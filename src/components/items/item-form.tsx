@@ -79,6 +79,7 @@ export function ItemForm({ campaignId, item, allTags }: ItemFormProps) {
   const [auraStrength, setAuraStrength] = useState(parsedAura[0]);
   const [auraSchool, setAuraSchool] = useState(parsedAura[1]);
   const [attunement, setAttunement] = useState(item?.attunement ?? false);
+  const [sold, setSold] = useState(item?.sold ?? false);
   const [mainImage, setMainImage] = useState<string | null>(item?.mainImage ?? null);
   const [notesBody, setNotesBody] = useState<JSONContent | null>(
     (item?.notesBody as JSONContent) ?? null
@@ -103,6 +104,7 @@ export function ItemForm({ campaignId, item, allTags }: ItemFormProps) {
         rarity: rarity || undefined,
         aura: aura || undefined,
         attunement,
+        sold,
         mainImage: mainImage ?? undefined,
         notesBody: notesBody ?? undefined,
         tagIds: selectedTags.map((t) => t.id),
@@ -242,14 +244,24 @@ export function ItemForm({ campaignId, item, allTags }: ItemFormProps) {
               </div>
             </div>
 
-            {/* Row 3: Attunement toggle */}
-            <div className="flex items-center gap-3">
-              <Switch
-                checked={attunement}
-                onCheckedChange={(checked) => { setAttunement(checked); setDirty(true); }}
-                id="attunement"
-              />
-              <Label htmlFor="attunement" className="cursor-pointer">Requires Attunement</Label>
+            {/* Row 3: Toggles */}
+            <div className="flex flex-wrap items-center gap-6">
+              <div className="flex items-center gap-3">
+                <Switch
+                  checked={attunement}
+                  onCheckedChange={(checked) => { setAttunement(checked); setDirty(true); }}
+                  id="attunement"
+                />
+                <Label htmlFor="attunement" className="cursor-pointer">Requires Attunement</Label>
+              </div>
+              <div className="flex items-center gap-3">
+                <Switch
+                  checked={sold}
+                  onCheckedChange={(checked) => { setSold(checked); setDirty(true); }}
+                  id="sold"
+                />
+                <Label htmlFor="sold" className="cursor-pointer">Sold</Label>
+              </div>
             </div>
           </div>
         </div>

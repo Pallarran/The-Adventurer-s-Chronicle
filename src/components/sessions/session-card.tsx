@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { CalendarDays } from "lucide-react";
 import { QUEST_STATUS_COLORS } from "@/lib/colors";
@@ -66,8 +65,8 @@ export function SessionCard({ session }: SessionCardProps) {
           </div>
         )}
 
-        {/* Footer — dates & tags */}
-        <div className="space-y-1 border-t border-border/50 px-3 py-1.5">
+        {/* Footer — dates */}
+        <div className="border-t border-border/50 px-3 py-1.5">
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <CalendarDays className="h-3 w-3 shrink-0" />
             {new Date(session.realDatePlayed).toLocaleDateString("en-US", {
@@ -81,18 +80,6 @@ export function SessionCard({ session }: SessionCardProps) {
               </span>
             )}
           </div>
-          {session.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {session.tags.slice(0, 2).map((t) => (
-                <Badge key={t.tag.id} variant="outline" className="px-1.5 py-0 text-xs">
-                  {t.tag.name}
-                </Badge>
-              ))}
-              {session.tags.length > 2 && (
-                <span className="text-xs text-muted-foreground">+{session.tags.length - 2}</span>
-              )}
-            </div>
-          )}
         </div>
       </Card>
     </Link>

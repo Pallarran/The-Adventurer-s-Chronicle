@@ -18,7 +18,6 @@ const sessionInclude = {
   locations: { include: { location: { select: { id: true, name: true } } } },
   organizations: { include: { organization: { select: { id: true, name: true } } } },
   quests: { include: { quest: { select: { id: true, name: true, status: true, description: true } } } },
-  tags: { include: { tag: true } },
 } as const;
 
 interface SessionFilters {
@@ -66,7 +65,6 @@ interface CreateSessionData {
   locationIds?: string[];
   organizationIds?: string[];
   questIds?: string[];
-  tagIds?: string[];
 }
 
 export async function createSession(data: CreateSessionData) {
@@ -89,9 +87,6 @@ export async function createSession(data: CreateSessionData) {
         : undefined,
       quests: data.questIds?.length
         ? { create: data.questIds.map((questId) => ({ questId })) }
-        : undefined,
-      tags: data.tagIds?.length
-        ? { create: data.tagIds.map((tagId) => ({ tagId })) }
         : undefined,
     },
   });
@@ -117,7 +112,6 @@ interface UpdateSessionData {
   locationIds?: string[];
   organizationIds?: string[];
   questIds?: string[];
-  tagIds?: string[];
 }
 
 export async function updateSession(id: string, data: UpdateSessionData) {
@@ -134,7 +128,6 @@ export async function updateSession(id: string, data: UpdateSessionData) {
     prisma.sessionLocation.deleteMany({ where: { sessionId: id } }),
     prisma.sessionOrganization.deleteMany({ where: { sessionId: id } }),
     prisma.sessionQuest.deleteMany({ where: { sessionId: id } }),
-    prisma.sessionTag.deleteMany({ where: { sessionId: id } }),
   ]);
 
   const session = await prisma.session.update({
@@ -156,9 +149,6 @@ export async function updateSession(id: string, data: UpdateSessionData) {
         : undefined,
       quests: data.questIds?.length
         ? { create: data.questIds.map((questId) => ({ questId })) }
-        : undefined,
-      tags: data.tagIds?.length
-        ? { create: data.tagIds.map((tagId) => ({ tagId })) }
         : undefined,
     },
   });

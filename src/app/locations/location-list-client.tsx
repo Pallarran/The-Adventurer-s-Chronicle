@@ -17,9 +17,6 @@ const sortLabels: Record<SortOption, string> = {
   "oldest": "Oldest First",
 };
 
-const selectClass =
-  "rounded-full border border-border bg-background px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground focus:outline-none";
-
 interface LocationListClientProps {
   locations: LocationListItem[];
   headerActions?: React.ReactNode;
@@ -29,25 +26,14 @@ export function LocationListClient({ locations, headerActions }: LocationListCli
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<SortOption>("name-asc");
   const [typeFilters, setTypeFilters] = useState<Set<string>>(new Set());
-  const [tagFilter, setTagFilter] = useState<string | null>(null);
 
-  // Extract unique types and tags
+  // Extract unique types
   const typeOptions = useMemo(() => {
     const types = new Set<string>();
     locations.forEach((l) => {
       if (l.type) types.add(l.type);
     });
     return Array.from(types).sort().map((t) => ({ value: t, label: t }));
-  }, [locations]);
-
-  const allTags = useMemo(() => {
-    const tagSet = new Map<string, string>();
-    locations.forEach((l) =>
-      l.tags.forEach((t) => tagSet.set(t.tag.id, t.tag.name))
-    );
-    return Array.from(tagSet, ([id, name]) => ({ id, name })).sort((a, b) =>
-      a.name.localeCompare(b.name)
-    );
   }, [locations]);
 
   const handleSearch = useCallback((value: string) => setSearch(value), []);
@@ -61,10 +47,9 @@ export function LocationListClient({ locations, headerActions }: LocationListCli
 
   const clearFilters = useCallback(() => {
     setTypeFilters(new Set());
-    setTagFilter(null);
   }, []);
 
-  const hasFilters = typeFilters.size > 0 || tagFilter !== null;
+  const hasFilters = typeFilters.size > 0;
 
   const results = useMemo(() => {
     let items = [...locations];
@@ -84,13 +69,6 @@ export function LocationListClient({ locations, headerActions }: LocationListCli
       items = items.filter((l) => l.type !== null && typeFilters.has(l.type));
     }
 
-    // Tag filter
-    if (tagFilter) {
-      items = items.filter((l) =>
-        l.tags.some((t) => t.tag.id === tagFilter)
-      );
-    }
-
     // Sort
     items.sort((a, b) => {
       switch (sort) {
@@ -108,7 +86,7 @@ export function LocationListClient({ locations, headerActions }: LocationListCli
     });
 
     return items;
-  }, [locations, search, sort, typeFilters, tagFilter]);
+  }, [locations, search, sort, typeFilters]);
 
   return (
     <div className="space-y-4">
@@ -140,21 +118,6 @@ export function LocationListClient({ locations, headerActions }: LocationListCli
             selected={typeFilters}
             onChange={setTypeFilters}
           />
-        )}
-
-        {allTags.length > 0 && (
-          <select
-            value={tagFilter ?? ""}
-            onChange={(e) => setTagFilter(e.target.value || null)}
-            className={selectClass}
-          >
-            <option value="">All Tags</option>
-            {allTags.map((tag) => (
-              <option key={tag.id} value={tag.id}>
-                {tag.name}
-              </option>
-            ))}
-          </select>
         )}
 
         {hasFilters && (

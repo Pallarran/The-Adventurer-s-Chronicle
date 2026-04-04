@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { getActiveCampaign } from "@/lib/campaign";
 import { getLocations } from "@/lib/actions/locations";
 import { getOrganizations } from "@/lib/actions/organizations";
-import { getTags } from "@/lib/actions/tags";
 import { PageHeaderSetter } from "@/components/layout/page-header-setter";
 import { LocationForm, LocationFormActions } from "@/components/locations/location-form";
 
@@ -11,10 +10,9 @@ export const dynamic = "force-dynamic";
 export default async function NewLocationPage() {
   const campaign = await getActiveCampaign();
   if (!campaign) redirect("/");
-  const [locations, organizations, tags] = await Promise.all([
+  const [locations, organizations] = await Promise.all([
     getLocations(campaign.id),
     getOrganizations(campaign.id),
-    getTags(campaign.id),
   ]);
 
   return (
@@ -28,7 +26,6 @@ export default async function NewLocationPage() {
         campaignId={campaign.id}
         allLocations={locations.map((l) => ({ id: l.id, name: l.name }))}
         allOrganizations={organizations.map((o) => ({ id: o.id, name: o.name }))}
-        allTags={tags.map((t) => ({ id: t.id, name: t.name }))}
       />
     </div>
   );

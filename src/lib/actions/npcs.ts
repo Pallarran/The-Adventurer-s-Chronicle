@@ -10,7 +10,6 @@ type JsonValue = Prisma.JsonValue;
 
 const npcListInclude = {
   organization: { select: { id: true, name: true } },
-  tags: { include: { tag: true } },
   firstAppearanceSession: { select: { id: true, sessionNumber: true } },
   lastAppearanceSession: { select: { id: true, sessionNumber: true } },
 } as const;
@@ -19,7 +18,6 @@ const npcDetailInclude = {
   organization: { select: { id: true, name: true } },
   sessions: { include: { session: { select: { id: true, sessionNumber: true, title: true } } } },
   organizations: { include: { organization: { select: { id: true, name: true } } } },
-  tags: { include: { tag: true } },
   firstAppearanceSession: { select: { id: true, sessionNumber: true, title: true } },
   lastAppearanceSession: { select: { id: true, sessionNumber: true, title: true } },
 } as const;
@@ -30,7 +28,6 @@ interface NpcFilters {
   alignmentStance?: AlignmentStance;
   organizationId?: string;
   partyMember?: boolean;
-  tagId?: string;
   sortBy?: "name" | "updatedAt";
   sortOrder?: "asc" | "desc";
 }
@@ -41,7 +38,6 @@ export async function getNpcs(campaignId: string, filters?: NpcFilters): Promise
     status,
     organizationId,
     partyMember,
-    tagId,
     sortBy = "name",
     sortOrder = "asc",
   } = filters ?? {};
@@ -61,7 +57,6 @@ export async function getNpcs(campaignId: string, filters?: NpcFilters): Promise
       ...(status ? { status } : {}),
       ...(organizationId ? { organizationId } : {}),
       ...(partyMember !== undefined ? { partyMember } : {}),
-      ...(tagId ? { tags: { some: { tagId } } } : {}),
     },
     include: npcListInclude,
     orderBy: { [sortBy]: sortOrder },
@@ -88,7 +83,6 @@ interface CreateNpcData {
   organizationId?: string;
   notesBody?: JsonValue;
   mainImage?: string;
-  tagIds?: string[];
 }
 
 export async function createNpc(data: CreateNpcData) {
@@ -106,9 +100,6 @@ export async function createNpc(data: CreateNpcData) {
       organizationId: data.organizationId || null,
       notesBody: plainJson(data.notesBody),
       mainImage: data.mainImage,
-      tags: data.tagIds?.length
-        ? { create: data.tagIds.map((tagId) => ({ tagId })) }
-        : undefined,
     },
   });
 
@@ -128,14 +119,9 @@ interface UpdateNpcData {
   organizationId?: string | null;
   notesBody?: JsonValue;
   mainImage?: string | null;
-  tagIds?: string[];
 }
 
 export async function updateNpc(id: string, data: UpdateNpcData) {
-  if (data.tagIds !== undefined) {
-    await prisma.npcTag.deleteMany({ where: { npcId: id } });
-  }
-
   const npc = await prisma.npc.update({
     where: { id, deletedAt: null },
     data: {
@@ -150,9 +136,6 @@ export async function updateNpc(id: string, data: UpdateNpcData) {
       organizationId: data.organizationId,
       notesBody: plainJson(data.notesBody),
       mainImage: data.mainImage,
-      tags: data.tagIds?.length
-        ? { create: data.tagIds.map((tagId) => ({ tagId })) }
-        : undefined,
     },
   });
 

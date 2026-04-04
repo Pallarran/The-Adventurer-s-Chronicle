@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ImageWithCrop } from "@/components/shared/image-crop-button";
@@ -72,28 +71,12 @@ export function NpcCard({ npc }: NpcCardProps) {
             </p>
           </div>
 
-          <div className="mt-1 flex items-center justify-between gap-2">
-            {npc.organization ? (
-              <span className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
-                <Shield className="h-3 w-3 shrink-0" />
-                <span className="truncate">{npc.organization.name}</span>
-              </span>
-            ) : (
-              <span />
-            )}
-            {npc.tags.length > 0 && (
-              <div className="flex shrink-0 gap-1">
-                {npc.tags.slice(0, 2).map((t) => (
-                  <Badge key={t.tag.id} variant="outline" className="text-xs px-1.5 py-0">
-                    {t.tag.name}
-                  </Badge>
-                ))}
-                {npc.tags.length > 2 && (
-                  <span className="text-xs text-muted-foreground">+{npc.tags.length - 2}</span>
-                )}
-              </div>
-            )}
-          </div>
+          {npc.organization && (
+            <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+              <Shield className="h-3 w-3 shrink-0" />
+              <span className="truncate">{npc.organization.name}</span>
+            </div>
+          )}
         </div>
       </Card>
     </Link>

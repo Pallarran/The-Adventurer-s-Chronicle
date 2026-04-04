@@ -87,18 +87,6 @@ export function ItemCard({ item }: ItemCardProps) {
             </p>
           </div>
 
-          {item.tags.length > 0 && (
-            <div className="mt-1 flex flex-wrap gap-1">
-              {item.tags.slice(0, 2).map((t) => (
-                <Badge key={t.tag.id} variant="outline" className="text-xs px-1.5 py-0">
-                  {t.tag.name}
-                </Badge>
-              ))}
-              {item.tags.length > 2 && (
-                <span className="text-xs text-muted-foreground">+{item.tags.length - 2}</span>
-              )}
-            </div>
-          )}
         </div>
       </Card>
     </Link>

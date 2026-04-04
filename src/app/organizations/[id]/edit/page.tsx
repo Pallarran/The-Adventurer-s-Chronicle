@@ -3,7 +3,6 @@ import { getOrganization } from "@/lib/actions/organizations";
 import { getActiveCampaign } from "@/lib/campaign";
 import { getNpcs } from "@/lib/actions/npcs";
 import { getLocations } from "@/lib/actions/locations";
-import { getTags } from "@/lib/actions/tags";
 import { PageHeaderSetter } from "@/components/layout/page-header-setter";
 import { OrganizationForm, OrganizationFormActions } from "@/components/organizations/organization-form";
 
@@ -22,10 +21,9 @@ export default async function EditOrganizationPage({
   if (!campaign) redirect("/");
   if (!organization) notFound();
 
-  const [npcs, locations, tags] = await Promise.all([
+  const [npcs, locations] = await Promise.all([
     getNpcs(campaign.id),
     getLocations(campaign.id),
-    getTags(campaign.id),
   ]);
 
   return (
@@ -40,7 +38,6 @@ export default async function EditOrganizationPage({
         organization={organization}
         allLocations={locations.map((l) => ({ id: l.id, name: l.name }))}
         allNpcs={npcs.map((n) => ({ id: n.id, name: n.name }))}
-        allTags={tags.map((t) => ({ id: t.id, name: t.name }))}
       />
     </div>
   );

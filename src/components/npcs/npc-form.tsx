@@ -20,12 +20,10 @@ import {
 } from "@/components/ui/select";
 import { RichTextEditor } from "@/components/shared/rich-text-editor";
 import { RelationPicker, type RelationOption } from "@/components/shared/relation-picker";
-import { TagInput, type TagOption } from "@/components/shared/tag-input";
 import { ImageUpload } from "@/components/shared/image-upload";
 import { createNpc, updateNpc } from "@/lib/actions/npcs";
-import { createTag } from "@/lib/actions/tags";
 import { toast } from "sonner";
-import { Shield, Tag } from "lucide-react";
+import { Shield } from "lucide-react";
 import type { JSONContent } from "@tiptap/react";
 import type { NpcStatus, AlignmentStance } from "@/generated/prisma/client";
 import type { NpcDetail } from "@/types";
@@ -59,14 +57,12 @@ interface NpcFormProps {
   campaignId: string;
   npc?: NpcDetail;
   allOrganizations: RelationOption[];
-  allTags: TagOption[];
 }
 
 export function NpcForm({
   campaignId,
   npc,
   allOrganizations,
-  allTags,
 }: NpcFormProps) {
   const router = useRouter();
   const isEdit = !!npc;
@@ -85,9 +81,6 @@ export function NpcForm({
   );
   const [selectedOrg, setSelectedOrg] = useState<RelationOption[]>(
     npc?.organization ? [npc.organization] : []
-  );
-  const [selectedTags, setSelectedTags] = useState<TagOption[]>(
-    npc?.tags.map((t) => t.tag) ?? []
   );
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -180,7 +173,6 @@ export function NpcForm({
         organizationId: selectedOrg[0]?.id || undefined,
         notesBody: notesBody ?? undefined,
         mainImage: mainImage ?? undefined,
-        tagIds: selectedTags.map((t) => t.id),
       };
 
       if (isEdit) {
@@ -201,11 +193,6 @@ export function NpcForm({
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleCreateTag = async (tagName: string): Promise<TagOption> => {
-    const tag = await createTag(campaignId, tagName);
-    return { id: tag.id, name: tag.name };
   };
 
   return (
@@ -323,27 +310,16 @@ export function NpcForm({
         </div>
       </div>
 
-      {/* Relations + Tags — bordered cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="rounded-lg border border-border p-4">
-          <RelationPicker
-            label={<><Shield className="h-4 w-4" /> Organization</>}
-            options={allOrganizations}
-            selected={selectedOrg}
-            onChange={handleOrgChange}
-            placeholder="Search organizations..."
-            single
-          />
-        </div>
-        <div className="rounded-lg border border-border p-4">
-          <TagInput
-            label={<><Tag className="h-4 w-4" /> Tags</>}
-            availableTags={allTags}
-            selectedTags={selectedTags}
-            onChange={setSelectedTags}
-            onCreateTag={handleCreateTag}
-          />
-        </div>
+      {/* Relations — bordered card */}
+      <div className="rounded-lg border border-border p-4 sm:max-w-sm">
+        <RelationPicker
+          label={<><Shield className="h-4 w-4" /> Organization</>}
+          options={allOrganizations}
+          selected={selectedOrg}
+          onChange={handleOrgChange}
+          placeholder="Search organizations..."
+          single
+        />
       </div>
 
       {/* Notes */}

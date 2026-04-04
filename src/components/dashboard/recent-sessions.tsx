@@ -13,7 +13,7 @@ interface RecentSessionsProps {
 
 export async function RecentSessions({ campaignId }: RecentSessionsProps) {
   const [sessions, questCounts] = await Promise.all([
-    getRecentSessions(campaignId, 3),
+    getRecentSessions(campaignId, 4),
     getQuestStatusCounts(campaignId),
   ]);
   const hasQuests = questCounts.active > 0 || questCounts.leads > 0;
@@ -123,7 +123,7 @@ export async function RecentSessions({ campaignId }: RecentSessionsProps) {
                     )}
                   </div>
                   {excerpt && (
-                    <p className={`mt-1 text-xs text-muted-foreground/80 ${isFirst ? "line-clamp-4" : "line-clamp-1"}`}>
+                    <p className={`mt-1 text-xs text-muted-foreground/80 ${isFirst ? "line-clamp-5" : "line-clamp-1"}`}>
                       {excerpt}
                     </p>
                   )}

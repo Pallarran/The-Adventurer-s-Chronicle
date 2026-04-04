@@ -55,18 +55,6 @@ export function LocationCard({ location }: LocationCardProps) {
             </p>
           </div>
 
-          {location.tags.length > 0 && (
-            <div className="mt-1 flex flex-wrap gap-1">
-              {location.tags.slice(0, 2).map((t) => (
-                <Badge key={t.tag.id} variant="outline" className="text-xs px-1.5 py-0">
-                  {t.tag.name}
-                </Badge>
-              ))}
-              {location.tags.length > 2 && (
-                <span className="text-xs text-muted-foreground">+{location.tags.length - 2}</span>
-              )}
-            </div>
-          )}
         </div>
       </Card>
     </Link>

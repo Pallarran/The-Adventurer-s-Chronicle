@@ -7,7 +7,7 @@ import { RichTextDisplay } from "@/components/shared/rich-text-display";
 import { Badge, badgeVariants } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { Pencil, Package, Tag, Sparkles, Lock, BadgeDollarSign, ScrollText } from "lucide-react";
+import { Pencil, Package, Sparkles, Lock, BadgeDollarSign, ScrollText } from "lucide-react";
 import { ItemDeleteButton } from "./delete-button";
 import { ImageLightbox } from "@/components/shared/image-lightbox";
 import { RARITY_COLORS } from "@/lib/colors";
@@ -100,22 +100,6 @@ export default async function ItemDetailPage({
           )}
         </div>
       </div>
-
-      {/* Tags */}
-      {item.tags.length > 0 && (
-        <div className="mb-6 rounded-lg border border-border p-4">
-          <div className="mb-2 flex items-center gap-2 text-sm font-medium">
-            <Tag className="h-4 w-4" /> Tags
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {item.tags.map((t) => (
-              <Badge key={t.tag.id} variant="outline">
-                {t.tag.name}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Notes */}
       <div className="mb-6">

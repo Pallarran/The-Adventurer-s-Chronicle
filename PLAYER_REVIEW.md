@@ -42,7 +42,7 @@ The current system treats items as a flat party inventory. In practice, the Cloa
 
 **Suggestion:** Add an optional `heldBy` field on Items — either a freetext name or an NPC/Character reference. The item list could then group or filter by holder.
 
-### 5. No Session-to-Session "Previously On..." View — `TODO`
+### 5. No Session-to-Session "Previously On..." View — `DONE`
 Before each session, I want a quick recap: what happened last time, what quests are active, what NPCs are in play. The dashboard's "Recent Sessions" block only shows the last couple of sessions as cards — I need to click through to read the actual notes.
 
 **Suggestion:** Keep the current Recent Sessions box height, but reduce to 3 sessions and have the most recent one display a longer preview of the notes body text. This gives a quick "previously on..." feel without needing a separate view.
@@ -51,22 +51,26 @@ Before each session, I want a quick recap: what happened last time, what quests 
 
 ## UX Friction Points
 
-### 6. Quest Creation Flow Is Indirect — `TODO`
+### 6. Quest Creation Flow Is Indirect — `WONT FIX`
 Quests can only be created via the session notes form (the "New Quest" button was removed from the quests page). But sometimes I learn about a quest *between sessions* — from recap, from the DM's Discord, from reviewing notes. Having to go create a dummy session or edit an existing one just to log a new quest is friction.
 
 **Suggestion:** Re-add a "New Quest" link/button to the Quests page, or make it available via the Quick Create menu (Ctrl+K `+`). Session-linked creation should remain the primary path, but not the *only* path.
 
-### 7. No Relationship Indicators Between NPCs — `BACKLOG`
+**Resolution:** In practice, quests always come up during sessions — returning to the last session to add them is the natural workflow.
+
+### 7. No Relationship Indicators Between NPCs — `WONT FIX`
 I know Captain Varis works for The Silver Order (organization affiliation), but I can't see that Varis is Thorne's mentor, or that the innkeeper is actually a spy for the BBEG. NPC-to-NPC relationships don't exist.
 
 **Suggestion:** This is a bigger feature, but even a simple "Related NPCs" freetext field or a lightweight relationship type (ally/rival/family/mentor) would add a lot. For now, the notes field can capture this — but it's not queryable or visible from the card.
 
-### 8. Location Type Is Freetext — Inconsistent Over Time — `TODO`
+### 8. Location Type Is Freetext — Inconsistent Over Time — `DONE`
 Location types are freetext strings, which means I've entered "Tavern", "tavern", and "Inn/Tavern" across different locations. Same issue with Organization types.
 
 **Suggestion:** Either provide a dropdown of common types (like Items have) with a freetext fallback, or normalize on save (trim + title case). A pre-populated list like `City, Town, Village, Tavern, Temple, Dungeon, Wilderness, Castle, Shop, Other` would cover 90% of cases.
 
-### 9. Tags Are Powerful but Underutilized — `BACKLOG`
+**Resolution:** Location and Organization type fields now use a ComboboxInput with a saved dropdown of options plus the ability to add new ones — best of both worlds.
+
+### 9. Tags Are Powerful but Underutilized — `DONE` (removed)
 Tags exist on every entity, but there's no "Tag Management" page to see all tags, merge duplicates, or batch-assign. If I typo a tag ("Waterdeep" vs "waterdeep"), they become separate tags forever.
 
 **Suggestion:** Add a Tags management page under Tools, showing all tags with usage counts, rename, merge, and delete capabilities.
@@ -103,8 +107,8 @@ The Adventurer's Chronicle is the **narrative companion** to those mechanical to
 | 1 | Party Ledger (gold tracking) | Medium | Kills the Google Sheet | WONT FIX |
 | 2 | Item → Session link ("acquired in") | Small | Huge QoL | DONE |
 | 3 | Item → Owner/Holder field | Small | Huge QoL | WONT FIX |
-| 4 | Re-add Quest creation outside sessions | Trivial | Removes friction | TODO |
-| 5 | Location/Org type presets | Small | Consistency | TODO |
+| 4 | Re-add Quest creation outside sessions | Trivial | Removes friction | WONT FIX |
+| 5 | Location/Org type presets | Small | Consistency | DONE |
 
 ---
 

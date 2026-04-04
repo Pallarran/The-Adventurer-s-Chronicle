@@ -26,9 +26,6 @@ const STANCE_OPTIONS = [
   { value: "UNKNOWN", label: "Unknown" },
 ];
 
-const selectClass =
-  "rounded-full border border-border bg-background px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground focus:outline-none";
-
 interface OrgListClientProps {
   organizations: OrganizationListItem[];
   headerActions?: React.ReactNode;
@@ -39,25 +36,14 @@ export function OrgListClient({ organizations, headerActions }: OrgListClientPro
   const [sort, setSort] = useState<SortOption>("name-asc");
   const [stanceFilters, setStanceFilters] = useState<Set<string>>(new Set());
   const [typeFilters, setTypeFilters] = useState<Set<string>>(new Set());
-  const [tagFilter, setTagFilter] = useState<string | null>(null);
 
-  // Extract unique types and tags
+  // Extract unique types
   const typeOptions = useMemo(() => {
     const types = new Set<string>();
     organizations.forEach((o) => {
       if (o.type) types.add(o.type);
     });
     return Array.from(types).sort().map((t) => ({ value: t, label: t }));
-  }, [organizations]);
-
-  const allTags = useMemo(() => {
-    const tagSet = new Map<string, string>();
-    organizations.forEach((o) =>
-      o.tags.forEach((t) => tagSet.set(t.tag.id, t.tag.name))
-    );
-    return Array.from(tagSet, ([id, name]) => ({ id, name })).sort((a, b) =>
-      a.name.localeCompare(b.name)
-    );
   }, [organizations]);
 
   const handleSearch = useCallback((value: string) => setSearch(value), []);
@@ -72,10 +58,9 @@ export function OrgListClient({ organizations, headerActions }: OrgListClientPro
   const clearFilters = useCallback(() => {
     setStanceFilters(new Set());
     setTypeFilters(new Set());
-    setTagFilter(null);
   }, []);
 
-  const hasFilters = stanceFilters.size > 0 || typeFilters.size > 0 || tagFilter !== null;
+  const hasFilters = stanceFilters.size > 0 || typeFilters.size > 0;
 
   const results = useMemo(() => {
     let items = [...organizations];
@@ -100,13 +85,6 @@ export function OrgListClient({ organizations, headerActions }: OrgListClientPro
       items = items.filter((org) => org.type !== null && typeFilters.has(org.type));
     }
 
-    // Tag filter
-    if (tagFilter) {
-      items = items.filter((org) =>
-        org.tags.some((t) => t.tag.id === tagFilter)
-      );
-    }
-
     // Sort
     items.sort((a, b) => {
       switch (sort) {
@@ -124,7 +102,7 @@ export function OrgListClient({ organizations, headerActions }: OrgListClientPro
     });
 
     return items;
-  }, [organizations, search, sort, stanceFilters, typeFilters, tagFilter]);
+  }, [organizations, search, sort, stanceFilters, typeFilters]);
 
   return (
     <div className="space-y-4">
@@ -163,21 +141,6 @@ export function OrgListClient({ organizations, headerActions }: OrgListClientPro
             selected={typeFilters}
             onChange={setTypeFilters}
           />
-        )}
-
-        {allTags.length > 0 && (
-          <select
-            value={tagFilter ?? ""}
-            onChange={(e) => setTagFilter(e.target.value || null)}
-            className={selectClass}
-          >
-            <option value="">All Tags</option>
-            {allTags.map((tag) => (
-              <option key={tag.id} value={tag.id}>
-                {tag.name}
-              </option>
-            ))}
-          </select>
         )}
 
         {hasFilters && (

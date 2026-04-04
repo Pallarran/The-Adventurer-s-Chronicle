@@ -2,7 +2,6 @@ import { notFound, redirect } from "next/navigation";
 import { getNpc } from "@/lib/actions/npcs";
 import { getActiveCampaign } from "@/lib/campaign";
 import { getOrganizations } from "@/lib/actions/organizations";
-import { getTags } from "@/lib/actions/tags";
 import { PageHeaderSetter } from "@/components/layout/page-header-setter";
 import { NpcForm, NpcFormActions } from "@/components/npcs/npc-form";
 
@@ -21,10 +20,7 @@ export default async function EditNpcPage({
   if (!campaign) redirect("/");
   if (!npc) notFound();
 
-  const [organizations, tags] = await Promise.all([
-    getOrganizations(campaign.id),
-    getTags(campaign.id),
-  ]);
+  const organizations = await getOrganizations(campaign.id);
 
   return (
     <div>
@@ -37,7 +33,6 @@ export default async function EditNpcPage({
         campaignId={campaign.id}
         npc={npc}
         allOrganizations={organizations.map((o) => ({ id: o.id, name: o.name }))}
-        allTags={tags.map((t) => ({ id: t.id, name: t.name }))}
       />
     </div>
   );

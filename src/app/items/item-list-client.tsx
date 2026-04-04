@@ -38,7 +38,6 @@ export function ItemListClient({ items, headerActions }: ItemListClientProps) {
   const [sort, setSort] = useState<SortOption>("name-asc");
   const [typeFilters, setTypeFilters] = useState<Set<string>>(new Set());
   const [rarityFilters, setRarityFilters] = useState<Set<string>>(new Set());
-  const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [attunementFilter, setAttunementFilter] = useState<string>("");
   const [openSections, setOpenSections] = useState<Set<string>>(new Set(["inventory"]));
 
@@ -60,16 +59,6 @@ export function ItemListClient({ items, headerActions }: ItemListClientProps) {
       .map((r) => ({ value: r, label: r }));
   }, [items]);
 
-  const allTags = useMemo(() => {
-    const tagSet = new Map<string, string>();
-    items.forEach((i) =>
-      i.tags.forEach((t) => tagSet.set(t.tag.id, t.tag.name))
-    );
-    return Array.from(tagSet, ([id, name]) => ({ id, name })).sort((a, b) =>
-      a.name.localeCompare(b.name)
-    );
-  }, [items]);
-
   const handleSearch = useCallback((value: string) => setSearch(value), []);
 
   const cycleSort = useCallback(() => {
@@ -82,7 +71,6 @@ export function ItemListClient({ items, headerActions }: ItemListClientProps) {
   const clearFilters = useCallback(() => {
     setTypeFilters(new Set());
     setRarityFilters(new Set());
-    setTagFilter(null);
     setAttunementFilter("");
   }, []);
 
@@ -95,7 +83,7 @@ export function ItemListClient({ items, headerActions }: ItemListClientProps) {
     });
   }, []);
 
-  const hasFilters = typeFilters.size > 0 || rarityFilters.size > 0 || tagFilter !== null || attunementFilter !== "";
+  const hasFilters = typeFilters.size > 0 || rarityFilters.size > 0 || attunementFilter !== "";
   const isSearching = search.length > 0 || hasFilters;
 
   // Filter + sort, then group by sold status
@@ -126,12 +114,6 @@ export function ItemListClient({ items, headerActions }: ItemListClientProps) {
       filtered = filtered.filter((i) => !i.attunement);
     }
 
-    if (tagFilter) {
-      filtered = filtered.filter((i) =>
-        i.tags.some((t) => t.tag.id === tagFilter)
-      );
-    }
-
     filtered.sort((a, b) => {
       switch (sort) {
         case "name-asc":
@@ -154,7 +136,7 @@ export function ItemListClient({ items, headerActions }: ItemListClientProps) {
       else inventory.push(item);
     }
     return { inventory, sold };
-  }, [items, search, sort, typeFilters, rarityFilters, attunementFilter, tagFilter]);
+  }, [items, search, sort, typeFilters, rarityFilters, attunementFilter]);
 
   const totalResults = grouped.inventory.length + grouped.sold.length;
 
@@ -208,21 +190,6 @@ export function ItemListClient({ items, headerActions }: ItemListClientProps) {
           <option value="yes">Requires Attunement</option>
           <option value="no">No Attunement</option>
         </select>
-
-        {allTags.length > 0 && (
-          <select
-            value={tagFilter ?? ""}
-            onChange={(e) => setTagFilter(e.target.value || null)}
-            className={selectClass}
-          >
-            <option value="">All Tags</option>
-            {allTags.map((tag) => (
-              <option key={tag.id} value={tag.id}>
-                {tag.name}
-              </option>
-            ))}
-          </select>
-        )}
 
         {hasFilters && (
           <button

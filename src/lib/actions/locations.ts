@@ -10,7 +10,6 @@ type JsonValue = Prisma.JsonValue;
 
 const locationListInclude = {
   parentLocation: { select: { id: true, name: true } },
-  tags: { include: { tag: true } },
   organizations: { include: { organization: { select: { id: true, name: true } } } },
   firstAppearanceSession: { select: { id: true, sessionNumber: true } },
   lastAppearanceSession: { select: { id: true, sessionNumber: true } },
@@ -19,7 +18,6 @@ const locationListInclude = {
 const locationDetailInclude = {
   parentLocation: { select: { id: true, name: true } },
   childLocations: { select: { id: true, name: true, type: true } },
-  tags: { include: { tag: true } },
   organizations: { include: { organization: { select: { id: true, name: true } } } },
   sessions: { include: { session: { select: { id: true, sessionNumber: true, title: true } } } },
   firstAppearanceSession: { select: { id: true, sessionNumber: true, title: true } },
@@ -30,13 +28,12 @@ const locationDetailInclude = {
 interface LocationFilters {
   search?: string;
   type?: string;
-  tagId?: string;
   sortBy?: "name" | "updatedAt";
   sortOrder?: "asc" | "desc";
 }
 
 export async function getLocations(campaignId: string, filters?: LocationFilters): Promise<LocationListItem[]> {
-  const { search, type, tagId, sortBy = "name", sortOrder = "asc" } = filters ?? {};
+  const { search, type, sortBy = "name", sortOrder = "asc" } = filters ?? {};
 
   return prisma.location.findMany({
     where: {
@@ -44,7 +41,6 @@ export async function getLocations(campaignId: string, filters?: LocationFilters
       deletedAt: null,
       ...(search ? { name: { contains: search, mode: "insensitive" as const } } : {}),
       ...(type ? { type: { contains: type, mode: "insensitive" as const } } : {}),
-      ...(tagId ? { tags: { some: { tagId } } } : {}),
     },
     include: locationListInclude,
     orderBy: { [sortBy]: sortOrder },
@@ -66,7 +62,6 @@ interface CreateLocationData {
   notesBody?: JsonValue;
   mainImage?: string;
   organizationIds?: string[];
-  tagIds?: string[];
 }
 
 export async function createLocation(data: CreateLocationData) {
@@ -80,9 +75,6 @@ export async function createLocation(data: CreateLocationData) {
       mainImage: data.mainImage,
       organizations: data.organizationIds?.length
         ? { create: data.organizationIds.map((organizationId) => ({ organizationId })) }
-        : undefined,
-      tags: data.tagIds?.length
-        ? { create: data.tagIds.map((tagId) => ({ tagId })) }
         : undefined,
     },
   });
@@ -98,14 +90,10 @@ interface UpdateLocationData {
   notesBody?: JsonValue;
   mainImage?: string | null;
   organizationIds?: string[];
-  tagIds?: string[];
 }
 
 export async function updateLocation(id: string, data: UpdateLocationData) {
   const deletes = [];
-  if (data.tagIds !== undefined) {
-    deletes.push(prisma.locationTag.deleteMany({ where: { locationId: id } }));
-  }
   if (data.organizationIds !== undefined) {
     deletes.push(prisma.locationOrganization.deleteMany({ where: { locationId: id } }));
   }
@@ -121,9 +109,6 @@ export async function updateLocation(id: string, data: UpdateLocationData) {
       mainImage: data.mainImage,
       organizations: data.organizationIds?.length
         ? { create: data.organizationIds.map((organizationId) => ({ organizationId })) }
-        : undefined,
-      tags: data.tagIds?.length
-        ? { create: data.tagIds.map((tagId) => ({ tagId })) }
         : undefined,
     },
   });

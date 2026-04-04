@@ -18,12 +18,10 @@ import {
 } from "@/components/ui/select";
 import { RichTextEditor } from "@/components/shared/rich-text-editor";
 import { RelationPicker, type RelationOption } from "@/components/shared/relation-picker";
-import { TagInput, type TagOption } from "@/components/shared/tag-input";
 import { ImageUpload } from "@/components/shared/image-upload";
 import { createOrganization, updateOrganization } from "@/lib/actions/organizations";
-import { createTag } from "@/lib/actions/tags";
 import { toast } from "sonner";
-import { MapPin, Users, Tag } from "lucide-react";
+import { MapPin, Users } from "lucide-react";
 import type { AlignmentStance } from "@/generated/prisma/client";
 import type { JSONContent } from "@tiptap/react";
 import type { OrganizationDetail } from "@/types";
@@ -56,7 +54,6 @@ interface OrganizationFormProps {
   organization?: OrganizationDetail;
   allLocations: RelationOption[];
   allNpcs: RelationOption[];
-  allTags: TagOption[];
 }
 
 export function OrganizationForm({
@@ -64,7 +61,6 @@ export function OrganizationForm({
   organization,
   allLocations,
   allNpcs,
-  allTags,
 }: OrganizationFormProps) {
   const router = useRouter();
   const isEdit = !!organization;
@@ -79,9 +75,6 @@ export function OrganizationForm({
   );
   const [selectedNpcs, setSelectedNpcs] = useState<RelationOption[]>(
     organization?.npcs.map((n) => n.npc) ?? []
-  );
-  const [selectedTags, setSelectedTags] = useState<TagOption[]>(
-    organization?.tags.map((t) => t.tag) ?? []
   );
   const [mainImage, setMainImage] = useState<string | null>(
     organization?.mainImage ?? null
@@ -163,7 +156,6 @@ export function OrganizationForm({
         notesBody: notesBody ?? undefined,
         mainImage: mainImage ?? undefined,
         npcIds: selectedNpcs.map((n) => n.id),
-        tagIds: selectedTags.map((t) => t.id),
       };
 
       if (isEdit) {
@@ -184,11 +176,6 @@ export function OrganizationForm({
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleCreateTag = async (tagName: string): Promise<TagOption> => {
-    const tag = await createTag(campaignId, tagName);
-    return { id: tag.id, name: tag.name };
   };
 
   return (
@@ -245,8 +232,8 @@ export function OrganizationForm({
         </div>
       </div>
 
-      {/* Relations + Tags — bordered cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Relations — bordered cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="rounded-lg border border-border p-4">
           <RelationPicker
             label={<><MapPin className="h-4 w-4" /> Base Location</>}
@@ -264,15 +251,6 @@ export function OrganizationForm({
             selected={selectedNpcs}
             onChange={handleNpcsChange}
             placeholder="Search NPCs..."
-          />
-        </div>
-        <div className="rounded-lg border border-border p-4">
-          <TagInput
-            label={<><Tag className="h-4 w-4" /> Tags</>}
-            availableTags={allTags}
-            selectedTags={selectedTags}
-            onChange={setSelectedTags}
-            onCreateTag={handleCreateTag}
           />
         </div>
       </div>

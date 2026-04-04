@@ -11,12 +11,10 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { RichTextEditor } from "@/components/shared/rich-text-editor";
 import { RelationPicker, type RelationOption } from "@/components/shared/relation-picker";
-import { TagInput, type TagOption } from "@/components/shared/tag-input";
 import { ImageUpload } from "@/components/shared/image-upload";
 import { createLocation, updateLocation } from "@/lib/actions/locations";
-import { createTag } from "@/lib/actions/tags";
 import { toast } from "sonner";
-import { MapPin, Shield, Tag } from "lucide-react";
+import { MapPin, Shield } from "lucide-react";
 import type { JSONContent } from "@tiptap/react";
 import type { LocationDetail } from "@/types";
 
@@ -39,7 +37,6 @@ interface LocationFormProps {
   location?: LocationDetail;
   allLocations: RelationOption[];
   allOrganizations: RelationOption[];
-  allTags: TagOption[];
 }
 
 export function LocationForm({
@@ -47,7 +44,6 @@ export function LocationForm({
   location,
   allLocations,
   allOrganizations,
-  allTags,
 }: LocationFormProps) {
   const router = useRouter();
   const isEdit = !!location;
@@ -63,9 +59,6 @@ export function LocationForm({
   );
   const [selectedOrgs, setSelectedOrgs] = useState<RelationOption[]>(
     location?.organizations.map((o) => o.organization) ?? []
-  );
-  const [selectedTags, setSelectedTags] = useState<TagOption[]>(
-    location?.tags.map((t) => t.tag) ?? []
   );
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -142,7 +135,6 @@ export function LocationForm({
         notesBody: notesBody ?? undefined,
         parentLocationId: selectedParent[0]?.id || undefined,
         organizationIds: selectedOrgs.map((o) => o.id),
-        tagIds: selectedTags.map((t) => t.id),
       };
 
       if (isEdit) {
@@ -163,11 +155,6 @@ export function LocationForm({
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleCreateTag = async (tagName: string): Promise<TagOption> => {
-    const tag = await createTag(campaignId, tagName);
-    return { id: tag.id, name: tag.name };
   };
 
   return (
@@ -206,8 +193,8 @@ export function LocationForm({
         </div>
       </div>
 
-      {/* Relations + Tags — bordered cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Relations — bordered cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="rounded-lg border border-border p-4">
           <RelationPicker
             label={<><MapPin className="h-4 w-4" /> Parent Location</>}
@@ -225,15 +212,6 @@ export function LocationForm({
             selected={selectedOrgs}
             onChange={handleOrgsChange}
             placeholder="Search organizations..."
-          />
-        </div>
-        <div className="rounded-lg border border-border p-4">
-          <TagInput
-            label={<><Tag className="h-4 w-4" /> Tags</>}
-            availableTags={allTags}
-            selectedTags={selectedTags}
-            onChange={setSelectedTags}
-            onCreateTag={handleCreateTag}
           />
         </div>
       </div>

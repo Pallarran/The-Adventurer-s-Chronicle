@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { getActiveCampaign } from "@/lib/campaign";
 import { getOrganizations } from "@/lib/actions/organizations";
-import { getTags } from "@/lib/actions/tags";
 import { PageHeaderSetter } from "@/components/layout/page-header-setter";
 import { NpcForm, NpcFormActions } from "@/components/npcs/npc-form";
 
@@ -10,10 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function NewNpcPage() {
   const campaign = await getActiveCampaign();
   if (!campaign) redirect("/");
-  const [organizations, tags] = await Promise.all([
-    getOrganizations(campaign.id),
-    getTags(campaign.id),
-  ]);
+  const organizations = await getOrganizations(campaign.id);
 
   return (
     <div>
@@ -25,7 +21,6 @@ export default async function NewNpcPage() {
       <NpcForm
         campaignId={campaign.id}
         allOrganizations={organizations.map((o) => ({ id: o.id, name: o.name }))}
-        allTags={tags.map((t) => ({ id: t.id, name: t.name }))}
       />
     </div>
   );

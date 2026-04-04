@@ -11,7 +11,6 @@ type JsonValue = Prisma.JsonValue;
 const orgListInclude = {
   baseLocation: { select: { id: true, name: true } },
   npcs: { include: { npc: { select: { id: true, name: true } } } },
-  tags: { include: { tag: true } },
   firstAppearanceSession: { select: { id: true, sessionNumber: true } },
   lastAppearanceSession: { select: { id: true, sessionNumber: true } },
 } as const;
@@ -21,7 +20,6 @@ const orgDetailInclude = {
   npcs: { include: { npc: { select: { id: true, name: true, classRole: true } } } },
   locations: { include: { location: { select: { id: true, name: true } } } },
   sessions: { include: { session: { select: { id: true, sessionNumber: true, title: true } } } },
-  tags: { include: { tag: true } },
   primaryNpcs: { select: { id: true, name: true } },
   firstAppearanceSession: { select: { id: true, sessionNumber: true, title: true } },
   lastAppearanceSession: { select: { id: true, sessionNumber: true, title: true } },
@@ -31,13 +29,12 @@ interface OrganizationFilters {
   search?: string;
   type?: string;
   alignmentStance?: AlignmentStance;
-  tagId?: string;
   sortBy?: "name" | "updatedAt";
   sortOrder?: "asc" | "desc";
 }
 
 export async function getOrganizations(campaignId: string, filters?: OrganizationFilters): Promise<OrganizationListItem[]> {
-  const { search, type, alignmentStance, tagId, sortBy = "name", sortOrder = "asc" } =
+  const { search, type, alignmentStance, sortBy = "name", sortOrder = "asc" } =
     filters ?? {};
 
   return prisma.organization.findMany({
@@ -47,7 +44,6 @@ export async function getOrganizations(campaignId: string, filters?: Organizatio
       ...(search ? { name: { contains: search, mode: "insensitive" as const } } : {}),
       ...(type ? { type: { contains: type, mode: "insensitive" as const } } : {}),
       ...(alignmentStance ? { alignmentStance } : {}),
-      ...(tagId ? { tags: { some: { tagId } } } : {}),
     },
     include: orgListInclude,
     orderBy: { [sortBy]: sortOrder },
@@ -70,7 +66,6 @@ interface CreateOrganizationData {
   notesBody?: JsonValue;
   mainImage?: string;
   npcIds?: string[];
-  tagIds?: string[];
 }
 
 export async function createOrganization(data: CreateOrganizationData) {
@@ -85,9 +80,6 @@ export async function createOrganization(data: CreateOrganizationData) {
       mainImage: data.mainImage,
       npcs: data.npcIds?.length
         ? { create: data.npcIds.map((npcId) => ({ npcId })) }
-        : undefined,
-      tags: data.tagIds?.length
-        ? { create: data.tagIds.map((tagId) => ({ tagId })) }
         : undefined,
     },
   });
@@ -104,14 +96,10 @@ interface UpdateOrganizationData {
   notesBody?: JsonValue;
   mainImage?: string | null;
   npcIds?: string[];
-  tagIds?: string[];
 }
 
 export async function updateOrganization(id: string, data: UpdateOrganizationData) {
   const deletes = [];
-  if (data.tagIds !== undefined) {
-    deletes.push(prisma.organizationTag.deleteMany({ where: { organizationId: id } }));
-  }
   if (data.npcIds !== undefined) {
     deletes.push(prisma.organizationNpc.deleteMany({ where: { organizationId: id } }));
   }
@@ -128,9 +116,6 @@ export async function updateOrganization(id: string, data: UpdateOrganizationDat
       mainImage: data.mainImage,
       npcs: data.npcIds?.length
         ? { create: data.npcIds.map((npcId) => ({ npcId })) }
-        : undefined,
-      tags: data.tagIds?.length
-        ? { create: data.tagIds.map((tagId) => ({ tagId })) }
         : undefined,
     },
   });

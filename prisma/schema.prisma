@@ -71,7 +71,6 @@ model Campaign {
   organizations    Organization[]
   characterProfile CharacterProfile?
   toolLinks        ToolLink[]
-  tags             Tag[]
   quickNotes       QuickNote[]
   items            Item[]
   quests           Quest[]
@@ -95,7 +94,6 @@ model Session {
   npcs          SessionNpc[]
   locations     SessionLocation[]
   organizations SessionOrganization[]
-  tags          SessionTag[]
   quests        SessionQuest[]
 
   // Reverse relations for first/last appearance
@@ -140,7 +138,6 @@ model Npc {
 
   sessions      SessionNpc[]
   organizations OrganizationNpc[]
-  tags          NpcTag[]
 }
 
 model Location {
@@ -168,7 +165,6 @@ model Location {
 
   sessions           SessionLocation[]
   organizations      LocationOrganization[]
-  tags               LocationTag[]
   basedOrganizations Organization[] @relation("OrgBaseLocation")
 }
 
@@ -198,7 +194,6 @@ model Organization {
   sessions    SessionOrganization[]
   npcs        OrganizationNpc[]
   locations   LocationOrganization[]
-  tags        OrganizationTag[]
   primaryNpcs Npc[] @relation("NpcPrimaryOrg")
 }
 
@@ -276,23 +271,6 @@ model ToolLink {
   campaign   Campaign @relation(fields: [campaignId], references: [id])
 }
 
-model Tag {
-  id        String   @id @default(cuid())
-  name      String
-  createdAt DateTime @default(now())
-
-  campaignId String
-  campaign   Campaign @relation(fields: [campaignId], references: [id])
-
-  npcs          NpcTag[]
-  locations     LocationTag[]
-  organizations OrganizationTag[]
-  sessions      SessionTag[]
-  items         ItemTag[]
-
-  @@unique([campaignId, name])
-}
-
 model QuickNote {
   id        String   @id @default(cuid())
   content   Json?
@@ -323,8 +301,6 @@ model Item {
 
   acquiredInSessionId String?
   acquiredInSession   Session? @relation("ItemAcquiredIn", fields: [acquiredInSessionId], references: [id])
-
-  tags ItemTag[]
 }
 
 model Quest {
@@ -400,47 +376,3 @@ model LocationOrganization {
   @@id([locationId, organizationId])
 }
 
-model NpcTag {
-  npcId String
-  npc   Npc    @relation(fields: [npcId], references: [id], onDelete: Cascade)
-  tagId String
-  tag   Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
-
-  @@id([npcId, tagId])
-}
-
-model LocationTag {
-  locationId String
-  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  tagId      String
-  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
-
-  @@id([locationId, tagId])
-}
-
-model OrganizationTag {
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  tagId          String
-  tag            Tag          @relation(fields: [tagId], references: [id], onDelete: Cascade)
-
-  @@id([organizationId, tagId])
-}
-
-model SessionTag {
-  sessionId String
-  session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  tagId     String
-  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
-
-  @@id([sessionId, tagId])
-}
-
-model ItemTag {
-  itemId String
-  item   Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  tagId  String
-  tag    Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
-
-  @@id([itemId, tagId])
-}

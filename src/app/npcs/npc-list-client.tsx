@@ -37,9 +37,6 @@ const PARTY_OPTIONS = [
   { value: "non-party", label: "Non-Party" },
 ];
 
-const selectClass =
-  "rounded-full border border-border bg-background px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground focus:outline-none";
-
 interface NpcListClientProps {
   npcs: NpcListItem[];
   headerActions?: React.ReactNode;
@@ -51,18 +48,6 @@ export function NpcListClient({ npcs, headerActions }: NpcListClientProps) {
   const [statusFilters, setStatusFilters] = useState<Set<string>>(new Set());
   const [stanceFilters, setStanceFilters] = useState<Set<string>>(new Set());
   const [partyFilters, setPartyFilters] = useState<Set<string>>(new Set());
-  const [tagFilter, setTagFilter] = useState<string | null>(null);
-
-  // Extract unique tags from all NPCs
-  const allTags = useMemo(() => {
-    const tagSet = new Map<string, string>();
-    npcs.forEach((npc) =>
-      npc.tags.forEach((t) => tagSet.set(t.tag.id, t.tag.name))
-    );
-    return Array.from(tagSet, ([id, name]) => ({ id, name })).sort((a, b) =>
-      a.name.localeCompare(b.name)
-    );
-  }, [npcs]);
 
   const handleSearch = useCallback((value: string) => setSearch(value), []);
 
@@ -77,10 +62,9 @@ export function NpcListClient({ npcs, headerActions }: NpcListClientProps) {
     setStatusFilters(new Set());
     setStanceFilters(new Set());
     setPartyFilters(new Set());
-    setTagFilter(null);
   }, []);
 
-  const hasFilters = statusFilters.size > 0 || stanceFilters.size > 0 || partyFilters.size > 0 || tagFilter !== null;
+  const hasFilters = statusFilters.size > 0 || stanceFilters.size > 0 || partyFilters.size > 0;
 
   const results = useMemo(() => {
     let items = [...npcs];
@@ -116,13 +100,6 @@ export function NpcListClient({ npcs, headerActions }: NpcListClientProps) {
       });
     }
 
-    // Tag filter
-    if (tagFilter) {
-      items = items.filter((npc) =>
-        npc.tags.some((t) => t.tag.id === tagFilter)
-      );
-    }
-
     // Sort
     items.sort((a, b) => {
       switch (sort) {
@@ -140,7 +117,7 @@ export function NpcListClient({ npcs, headerActions }: NpcListClientProps) {
     });
 
     return items;
-  }, [npcs, search, sort, statusFilters, stanceFilters, partyFilters, tagFilter]);
+  }, [npcs, search, sort, statusFilters, stanceFilters, partyFilters]);
 
   return (
     <div className="space-y-4">
@@ -183,21 +160,6 @@ export function NpcListClient({ npcs, headerActions }: NpcListClientProps) {
           selected={partyFilters}
           onChange={setPartyFilters}
         />
-
-        {allTags.length > 0 && (
-          <select
-            value={tagFilter ?? ""}
-            onChange={(e) => setTagFilter(e.target.value || null)}
-            className={selectClass}
-          >
-            <option value="">All Tags</option>
-            {allTags.map((tag) => (
-              <option key={tag.id} value={tag.id}>
-                {tag.name}
-              </option>
-            ))}
-          </select>
-        )}
 
         {hasFilters && (
           <button

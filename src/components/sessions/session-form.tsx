@@ -9,12 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { RichTextEditor } from "@/components/shared/rich-text-editor";
 import { RelationPicker, type RelationOption } from "@/components/shared/relation-picker";
-import { TagInput, type TagOption } from "@/components/shared/tag-input";
 import { SessionQuestList } from "@/components/sessions/session-quest-list";
 import { createSession, updateSession } from "@/lib/actions/sessions";
-import { createTag } from "@/lib/actions/tags";
 import { toast } from "sonner";
-import { Users, MapPin, Shield, Tag } from "lucide-react";
+import { Users, MapPin, Shield } from "lucide-react";
 import type { JSONContent } from "@tiptap/react";
 import type { SessionDetail } from "@/types";
 
@@ -39,7 +37,6 @@ interface SessionFormProps {
   allNpcs: RelationOption[];
   allLocations: RelationOption[];
   allOrganizations: RelationOption[];
-  allTags: TagOption[];
 }
 
 export function SessionForm({
@@ -49,7 +46,6 @@ export function SessionForm({
   allNpcs,
   allLocations,
   allOrganizations,
-  allTags,
 }: SessionFormProps) {
   const router = useRouter();
   const isEdit = !!session;
@@ -74,9 +70,6 @@ export function SessionForm({
   );
   const [questIds, setQuestIds] = useState<string[]>(
     session?.quests.map((q) => q.quest.id) ?? []
-  );
-  const [selectedTags, setSelectedTags] = useState<TagOption[]>(
-    session?.tags.map((t) => t.tag) ?? []
   );
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -169,7 +162,6 @@ export function SessionForm({
         locationIds: selectedLocations.map((l) => l.id),
         organizationIds: selectedOrgs.map((o) => o.id),
         questIds,
-        tagIds: selectedTags.map((t) => t.id),
       };
 
       if (isEdit) {
@@ -186,11 +178,6 @@ export function SessionForm({
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleCreateTag = async (name: string): Promise<TagOption> => {
-    const tag = await createTag(campaignId, name);
-    return { id: tag.id, name: tag.name };
   };
 
   return (
@@ -239,8 +226,8 @@ export function SessionForm({
         </div>
       </div>
 
-      {/* Relations + Tags — bordered cards in single row */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Relations — bordered cards in single row */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="rounded-lg border border-border p-4">
           <RelationPicker
             label={<><Users className="h-4 w-4" /> Featured NPCs</>}
@@ -266,15 +253,6 @@ export function SessionForm({
             selected={selectedOrgs}
             onChange={handleOrgsChange}
             placeholder="Search organizations..."
-          />
-        </div>
-        <div className="rounded-lg border border-border p-4">
-          <TagInput
-            label={<><Tag className="h-4 w-4" /> Tags</>}
-            availableTags={allTags}
-            selectedTags={selectedTags}
-            onChange={setSelectedTags}
-            onCreateTag={handleCreateTag}
           />
         </div>
       </div>

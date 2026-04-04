@@ -14,7 +14,6 @@ import {
   Shield,
   CalendarDays,
   ScrollText,
-  Tag,
 } from "lucide-react";
 import { NpcDeleteButton } from "./delete-button";
 import { ImageLightbox } from "@/components/shared/image-lightbox";
@@ -113,8 +112,8 @@ export default async function NpcDetailPage({
         )}
       </div>
 
-      {/* Relations + Tags — bordered cards (matches form card order) */}
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Relations — bordered cards (matches form card order) */}
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="rounded-lg border border-border p-4">
           <div className="mb-2 flex items-center gap-2 text-sm font-medium">
             <Shield className="h-4 w-4" /> Organization
@@ -154,22 +153,6 @@ export default async function NpcDetailPage({
                 #{npc.lastAppearanceSession.sessionNumber}
                 {npc.lastAppearanceSession.title && ` — ${npc.lastAppearanceSession.title}`}
               </Link>
-            </div>
-          ) : (
-            <p className="text-sm italic text-muted-foreground/60">None</p>
-          )}
-        </div>
-        <div className="rounded-lg border border-border p-4">
-          <div className="mb-2 flex items-center gap-2 text-sm font-medium">
-            <Tag className="h-4 w-4" /> Tags
-          </div>
-          {npc.tags.length > 0 ? (
-            <div className="flex flex-wrap gap-1.5">
-              {npc.tags.map((t) => (
-                <Badge key={t.tag.id} variant="outline">
-                  {t.tag.name}
-                </Badge>
-              ))}
             </div>
           ) : (
             <p className="text-sm italic text-muted-foreground/60">None</p>

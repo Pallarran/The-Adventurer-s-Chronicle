@@ -3,10 +3,10 @@ import Link from "next/link";
 import { getSession } from "@/lib/actions/sessions";
 import { PageHeaderSetter } from "@/components/layout/page-header-setter";
 import { RichTextDisplay } from "@/components/shared/rich-text-display";
-import { Badge, badgeVariants } from "@/components/ui/badge";
+import { badgeVariants } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { Pencil, CalendarDays, ScrollText, Users, MapPin, Shield, Compass, Tag } from "lucide-react";
+import { Pencil, CalendarDays, ScrollText, Users, MapPin, Shield, Compass } from "lucide-react";
 import { SessionDeleteButton } from "./delete-button";
 import type { JSONContent } from "@tiptap/react";
 
@@ -63,8 +63,8 @@ export default async function SessionDetailPage({
         )}
       </div>
 
-      {/* Relations + Tags */}
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Relations */}
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="rounded-lg border border-border p-4">
           <div className="mb-2 flex items-center gap-2 text-sm font-medium">
             <Users className="h-4 w-4" /> Featured NPCs
@@ -101,22 +101,6 @@ export default async function SessionDetailPage({
             <div className="flex flex-wrap gap-1.5">
               {session.organizations.map((o) => (
                 <Link key={o.organization.id} href={`/organizations/${o.organization.id}`} className={cn(badgeVariants({variant: "secondary"}))}>{o.organization.name}</Link>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm italic text-muted-foreground/60">None</p>
-          )}
-        </div>
-        <div className="rounded-lg border border-border p-4">
-          <div className="mb-2 flex items-center gap-2 text-sm font-medium">
-            <Tag className="h-4 w-4" /> Tags
-          </div>
-          {session.tags.length > 0 ? (
-            <div className="flex flex-wrap gap-1.5">
-              {session.tags.map((t) => (
-                <Badge key={t.tag.id} variant="outline">
-                  {t.tag.name}
-                </Badge>
               ))}
             </div>
           ) : (

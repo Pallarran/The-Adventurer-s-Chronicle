@@ -7,7 +7,7 @@ import { RichTextDisplay } from "@/components/shared/rich-text-display";
 import { Badge, badgeVariants } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { Pencil, MapPin, Shield, ScrollText, CalendarDays, Building, Tag } from "lucide-react";
+import { Pencil, MapPin, Shield, ScrollText, CalendarDays, Building } from "lucide-react";
 import { LocationDeleteButton } from "./delete-button";
 import { ImageLightbox } from "@/components/shared/image-lightbox";
 import type { JSONContent } from "@tiptap/react";
@@ -62,8 +62,8 @@ export default async function LocationDetailPage({
         )}
       </div>
 
-      {/* Relations + Tags — bordered cards (matches form card order) */}
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      {/* Relations — bordered cards (matches form card order) */}
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-lg border border-border p-4">
           <div className="mb-2 flex items-center gap-2 text-sm font-medium">
             <MapPin className="h-4 w-4" /> Parent Location
@@ -122,22 +122,6 @@ export default async function LocationDetailPage({
                 <Link key={o.organization.id} href={`/organizations/${o.organization.id}`} className={cn(badgeVariants({variant: "secondary"}))}>
                     {o.organization.name}
                 </Link>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm italic text-muted-foreground/60">None</p>
-          )}
-        </div>
-        <div className="rounded-lg border border-border p-4">
-          <div className="mb-2 flex items-center gap-2 text-sm font-medium">
-            <Tag className="h-4 w-4" /> Tags
-          </div>
-          {location.tags.length > 0 ? (
-            <div className="flex flex-wrap gap-1.5">
-              {location.tags.map((t) => (
-                <Badge key={t.tag.id} variant="outline">
-                  {t.tag.name}
-                </Badge>
               ))}
             </div>
           ) : (

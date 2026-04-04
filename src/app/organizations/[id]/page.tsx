@@ -7,7 +7,7 @@ import { RichTextDisplay } from "@/components/shared/rich-text-display";
 import { Badge, badgeVariants } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { Pencil, Users, MapPin, CalendarDays, ScrollText, Shield, Tag } from "lucide-react";
+import { Pencil, Users, MapPin, CalendarDays, ScrollText, Shield } from "lucide-react";
 import { OrganizationDeleteButton } from "./delete-button";
 import { ImageLightbox } from "@/components/shared/image-lightbox";
 import { STANCE_COLORS, STANCE_LABELS } from "@/lib/colors";
@@ -76,8 +76,8 @@ export default async function OrganizationDetailPage({
         </Badge>
       </div>
 
-      {/* Relations + Tags — bordered cards (matches form card order) */}
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      {/* Relations — bordered cards (matches form card order) */}
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-lg border border-border p-4">
           <div className="mb-2 flex items-center gap-2 text-sm font-medium">
             <MapPin className="h-4 w-4" /> Base Location
@@ -134,22 +134,6 @@ export default async function OrganizationDetailPage({
             <div className="flex flex-wrap gap-1.5">
               {organization.npcs.map((n) => (
                 <Link key={n.npc.id} href={`/npcs/${n.npc.id}`} className={cn(badgeVariants({variant: "secondary"}))}>{n.npc.name}</Link>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm italic text-muted-foreground/60">None</p>
-          )}
-        </div>
-        <div className="rounded-lg border border-border p-4">
-          <div className="mb-2 flex items-center gap-2 text-sm font-medium">
-            <Tag className="h-4 w-4" /> Tags
-          </div>
-          {organization.tags.length > 0 ? (
-            <div className="flex flex-wrap gap-1.5">
-              {organization.tags.map((t) => (
-                <Badge key={t.tag.id} variant="outline">
-                  {t.tag.name}
-                </Badge>
               ))}
             </div>
           ) : (

@@ -15,11 +15,9 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { RichTextEditor } from "@/components/shared/rich-text-editor";
-import { TagInput, type TagOption } from "@/components/shared/tag-input";
 import { RelationPicker, type RelationOption } from "@/components/shared/relation-picker";
 import { ImageUpload } from "@/components/shared/image-upload";
 import { createItem, updateItem } from "@/lib/actions/items";
-import { createTag } from "@/lib/actions/tags";
 import {
   RARITY_OPTIONS,
   ITEM_TYPE_OPTIONS,
@@ -27,7 +25,7 @@ import {
   MAGIC_SCHOOL_OPTIONS,
 } from "@/lib/colors";
 import { toast } from "sonner";
-import { Tag, ScrollText } from "lucide-react";
+import { ScrollText } from "lucide-react";
 import type { JSONContent } from "@tiptap/react";
 import type { ItemDetail } from "@/types";
 
@@ -66,11 +64,10 @@ export function ItemFormActions({ isEdit }: { isEdit: boolean }) {
 interface ItemFormProps {
   campaignId: string;
   item?: ItemDetail;
-  allTags: TagOption[];
   allSessions: RelationOption[];
 }
 
-export function ItemForm({ campaignId, item, allTags, allSessions }: ItemFormProps) {
+export function ItemForm({ campaignId, item, allSessions }: ItemFormProps) {
   const router = useRouter();
   const isEdit = !!item;
 
@@ -85,9 +82,6 @@ export function ItemForm({ campaignId, item, allTags, allSessions }: ItemFormPro
   const [mainImage, setMainImage] = useState<string | null>(item?.mainImage ?? null);
   const [notesBody, setNotesBody] = useState<JSONContent | null>(
     (item?.notesBody as JSONContent) ?? null
-  );
-  const [selectedTags, setSelectedTags] = useState<TagOption[]>(
-    item?.tags.map((t) => t.tag) ?? []
   );
   const [acquiredSession, setAcquiredSession] = useState<RelationOption[]>(
     item?.acquiredInSession
@@ -114,7 +108,6 @@ export function ItemForm({ campaignId, item, allTags, allSessions }: ItemFormPro
         sold,
         mainImage: mainImage ?? undefined,
         notesBody: notesBody ?? undefined,
-        tagIds: selectedTags.map((t) => t.id),
         acquiredInSessionId: acquiredSession[0]?.id || undefined,
       };
 
@@ -139,11 +132,6 @@ export function ItemForm({ campaignId, item, allTags, allSessions }: ItemFormPro
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleCreateTag = async (tagName: string): Promise<TagOption> => {
-    const tag = await createTag(campaignId, tagName);
-    return { id: tag.id, name: tag.name };
   };
 
   // Select "none" sentinel value to clear
@@ -275,27 +263,16 @@ export function ItemForm({ campaignId, item, allTags, allSessions }: ItemFormPro
           </div>
         </div>
 
-        {/* Acquired in Session + Tags */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="rounded-lg border border-border p-4">
-            <RelationPicker
-              label={<><ScrollText className="h-4 w-4" /> Acquired in Session</>}
-              options={allSessions}
-              selected={acquiredSession}
-              onChange={(val) => { setAcquiredSession(val); setDirty(true); }}
-              placeholder="Search sessions..."
-              single
-            />
-          </div>
-          <div className="rounded-lg border border-border p-4">
-            <TagInput
-              label={<><Tag className="h-4 w-4" /> Tags</>}
-              availableTags={allTags}
-              selectedTags={selectedTags}
-              onChange={setSelectedTags}
-              onCreateTag={handleCreateTag}
-            />
-          </div>
+        {/* Acquired in Session */}
+        <div className="rounded-lg border border-border p-4 sm:max-w-sm">
+          <RelationPicker
+            label={<><ScrollText className="h-4 w-4" /> Acquired in Session</>}
+            options={allSessions}
+            selected={acquiredSession}
+            onChange={(val) => { setAcquiredSession(val); setDirty(true); }}
+            placeholder="Search sessions..."
+            single
+          />
         </div>
 
         {/* Notes */}

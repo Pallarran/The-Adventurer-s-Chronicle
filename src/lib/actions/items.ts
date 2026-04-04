@@ -9,12 +9,10 @@ import { plainJson } from "@/lib/plain-json";
 type JsonValue = Prisma.JsonValue;
 
 const itemListInclude = {
-  tags: { include: { tag: true } },
   acquiredInSession: { select: { id: true, sessionNumber: true, title: true } },
 } as const;
 
 const itemDetailInclude = {
-  tags: { include: { tag: true } },
   acquiredInSession: { select: { id: true, sessionNumber: true, title: true } },
 } as const;
 
@@ -22,13 +20,12 @@ interface ItemFilters {
   search?: string;
   type?: string;
   rarity?: string;
-  tagId?: string;
   sortBy?: "name" | "updatedAt";
   sortOrder?: "asc" | "desc";
 }
 
 export async function getItems(campaignId: string, filters?: ItemFilters): Promise<ItemListItem[]> {
-  const { search, type, rarity, tagId, sortBy = "name", sortOrder = "asc" } = filters ?? {};
+  const { search, type, rarity, sortBy = "name", sortOrder = "asc" } = filters ?? {};
 
   return prisma.item.findMany({
     where: {
@@ -37,7 +34,6 @@ export async function getItems(campaignId: string, filters?: ItemFilters): Promi
       ...(search ? { name: { contains: search, mode: "insensitive" as const } } : {}),
       ...(type ? { type: { contains: type, mode: "insensitive" as const } } : {}),
       ...(rarity ? { rarity } : {}),
-      ...(tagId ? { tags: { some: { tagId } } } : {}),
     },
     include: itemListInclude,
     orderBy: { [sortBy]: sortOrder },
@@ -61,7 +57,6 @@ interface CreateItemData {
   sold?: boolean;
   notesBody?: JsonValue;
   mainImage?: string;
-  tagIds?: string[];
   acquiredInSessionId?: string;
 }
 
@@ -78,9 +73,6 @@ export async function createItem(data: CreateItemData) {
       notesBody: plainJson(data.notesBody),
       mainImage: data.mainImage,
       acquiredInSessionId: data.acquiredInSessionId || null,
-      tags: data.tagIds?.length
-        ? { create: data.tagIds.map((tagId) => ({ tagId })) }
-        : undefined,
     },
   });
 
@@ -97,15 +89,10 @@ interface UpdateItemData {
   sold?: boolean;
   notesBody?: JsonValue;
   mainImage?: string | null;
-  tagIds?: string[];
   acquiredInSessionId?: string | null;
 }
 
 export async function updateItem(id: string, data: UpdateItemData) {
-  if (data.tagIds !== undefined) {
-    await prisma.itemTag.deleteMany({ where: { itemId: id } });
-  }
-
   const item = await prisma.item.update({
     where: { id, deletedAt: null },
     data: {
@@ -118,9 +105,6 @@ export async function updateItem(id: string, data: UpdateItemData) {
       notesBody: plainJson(data.notesBody),
       mainImage: data.mainImage,
       acquiredInSessionId: data.acquiredInSessionId,
-      tags: data.tagIds?.length
-        ? { create: data.tagIds.map((tagId) => ({ tagId })) }
-        : undefined,
     },
   });
 

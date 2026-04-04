@@ -105,6 +105,7 @@ model Session {
   locationLastAppearances  Location[]     @relation("LocationLastAppearance")
   orgFirstAppearances      Organization[] @relation("OrgFirstAppearance")
   orgLastAppearances       Organization[] @relation("OrgLastAppearance")
+  itemsAcquired            Item[]         @relation("ItemAcquiredIn")
 
   @@unique([campaignId, sessionNumber])
 }
@@ -319,6 +320,9 @@ model Item {
 
   campaignId String
   campaign   Campaign @relation(fields: [campaignId], references: [id])
+
+  acquiredInSessionId String?
+  acquiredInSession   Session? @relation("ItemAcquiredIn", fields: [acquiredInSessionId], references: [id])
 
   tags ItemTag[]
 }

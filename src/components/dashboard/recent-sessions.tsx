@@ -13,7 +13,7 @@ interface RecentSessionsProps {
 
 export async function RecentSessions({ campaignId }: RecentSessionsProps) {
   const [sessions, questCounts] = await Promise.all([
-    getRecentSessions(campaignId, 5),
+    getRecentSessions(campaignId, 3),
     getQuestStatusCounts(campaignId),
   ]);
   const hasQuests = questCounts.active > 0 || questCounts.leads > 0;
@@ -76,7 +76,11 @@ export async function RecentSessions({ campaignId }: RecentSessionsProps) {
       <CardContent className="flex-1">
         <div className="relative space-y-0">
           {sessions.map((session, index) => {
-            const excerpt = extractTextFromJson(session.notesBody, 120);
+            const isFirst = index === 0;
+            const excerpt = extractTextFromJson(
+              session.notesBody,
+              isFirst ? 400 : 120
+            );
             const isLast = index === sessions.length - 1;
 
             return (
@@ -119,7 +123,7 @@ export async function RecentSessions({ campaignId }: RecentSessionsProps) {
                     )}
                   </div>
                   {excerpt && (
-                    <p className="mt-1 line-clamp-1 text-xs text-muted-foreground/80">
+                    <p className={`mt-1 text-xs text-muted-foreground/80 ${isFirst ? "line-clamp-4" : "line-clamp-1"}`}>
                       {excerpt}
                     </p>
                   )}

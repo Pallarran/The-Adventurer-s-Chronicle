@@ -86,12 +86,14 @@ export type OrganizationListItem = Prisma.OrganizationGetPayload<{
 export type ItemListItem = Prisma.ItemGetPayload<{
   include: {
     tags: { include: { tag: true } };
+    acquiredInSession: { select: { id: true; sessionNumber: true; title: true } };
   };
 }>;
 
 export type ItemDetail = Prisma.ItemGetPayload<{
   include: {
     tags: { include: { tag: true } };
+    acquiredInSession: { select: { id: true; sessionNumber: true; title: true } };
   };
 }>;
 

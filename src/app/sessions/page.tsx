@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { ScrollText, Plus } from "lucide-react";
 import Link from "next/link";
 import { SessionListClient } from "./session-list-client";
+import { ExportAllSessionsButton } from "./export-all-button";
 import { PageHeaderSetter } from "@/components/layout/page-header-setter";
 
 export const dynamic = "force-dynamic";
@@ -33,10 +34,13 @@ export default async function SessionsPage() {
         <SessionListClient
           sessions={sessions}
           headerActions={
-            <Link href="/sessions/new" className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
-              <Plus className="mr-2 h-4 w-4" />
-              New Session
-            </Link>
+            <div className="flex items-center gap-2">
+              <ExportAllSessionsButton campaignId={campaign.id} />
+              <Link href="/sessions/new" className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
+                <Plus className="mr-2 h-4 w-4" />
+                New Session
+              </Link>
+            </div>
           }
         />
       )}

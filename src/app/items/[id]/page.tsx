@@ -4,10 +4,10 @@ import Image from "next/image";
 import { getItem } from "@/lib/actions/items";
 import { PageHeaderSetter } from "@/components/layout/page-header-setter";
 import { RichTextDisplay } from "@/components/shared/rich-text-display";
-import { Badge } from "@/components/ui/badge";
+import { Badge, badgeVariants } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { Pencil, Package, Tag, Sparkles, Lock, BadgeDollarSign } from "lucide-react";
+import { Pencil, Package, Tag, Sparkles, Lock, BadgeDollarSign, ScrollText } from "lucide-react";
 import { ItemDeleteButton } from "./delete-button";
 import { ImageLightbox } from "@/components/shared/image-lightbox";
 import { RARITY_COLORS } from "@/lib/colors";
@@ -86,6 +86,16 @@ export default async function ItemDetailPage({
             <div className="flex items-center gap-1 text-sm text-muted-foreground">
               <Sparkles className="h-3.5 w-3.5" />
               {item.aura}
+            </div>
+          )}
+          {item.acquiredInSession && (
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <ScrollText className="h-3.5 w-3.5 text-arcane-teal" />
+              Acquired in{" "}
+              <Link href={`/sessions/${item.acquiredInSession.id}`} className={cn(badgeVariants({ variant: "secondary" }))}>
+                #{item.acquiredInSession.sessionNumber}
+                {item.acquiredInSession.title && ` — ${item.acquiredInSession.title}`}
+              </Link>
             </div>
           )}
         </div>

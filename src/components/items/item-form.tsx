@@ -16,6 +16,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { RichTextEditor } from "@/components/shared/rich-text-editor";
 import { TagInput, type TagOption } from "@/components/shared/tag-input";
+import { RelationPicker, type RelationOption } from "@/components/shared/relation-picker";
 import { ImageUpload } from "@/components/shared/image-upload";
 import { createItem, updateItem } from "@/lib/actions/items";
 import { createTag } from "@/lib/actions/tags";
@@ -26,7 +27,7 @@ import {
   MAGIC_SCHOOL_OPTIONS,
 } from "@/lib/colors";
 import { toast } from "sonner";
-import { Tag } from "lucide-react";
+import { Tag, ScrollText } from "lucide-react";
 import type { JSONContent } from "@tiptap/react";
 import type { ItemDetail } from "@/types";
 
@@ -66,9 +67,10 @@ interface ItemFormProps {
   campaignId: string;
   item?: ItemDetail;
   allTags: TagOption[];
+  allSessions: RelationOption[];
 }
 
-export function ItemForm({ campaignId, item, allTags }: ItemFormProps) {
+export function ItemForm({ campaignId, item, allTags, allSessions }: ItemFormProps) {
   const router = useRouter();
   const isEdit = !!item;
 
@@ -86,6 +88,11 @@ export function ItemForm({ campaignId, item, allTags }: ItemFormProps) {
   );
   const [selectedTags, setSelectedTags] = useState<TagOption[]>(
     item?.tags.map((t) => t.tag) ?? []
+  );
+  const [acquiredSession, setAcquiredSession] = useState<RelationOption[]>(
+    item?.acquiredInSession
+      ? [{ id: item.acquiredInSession.id, name: `#${item.acquiredInSession.sessionNumber}${item.acquiredInSession.title ? ` — ${item.acquiredInSession.title}` : ""}` }]
+      : []
   );
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -108,6 +115,7 @@ export function ItemForm({ campaignId, item, allTags }: ItemFormProps) {
         mainImage: mainImage ?? undefined,
         notesBody: notesBody ?? undefined,
         tagIds: selectedTags.map((t) => t.id),
+        acquiredInSessionId: acquiredSession[0]?.id || undefined,
       };
 
       if (isEdit) {
@@ -117,6 +125,7 @@ export function ItemForm({ campaignId, item, allTags }: ItemFormProps) {
           rarity: rarity || null,
           aura: aura || null,
           mainImage: mainImage,
+          acquiredInSessionId: acquiredSession[0]?.id || null,
         });
         toast.success("Item updated.");
         router.push(`/items/${item.id}`);
@@ -266,15 +275,27 @@ export function ItemForm({ campaignId, item, allTags }: ItemFormProps) {
           </div>
         </div>
 
-        {/* Tags */}
-        <div className="rounded-lg border border-border p-4">
-          <TagInput
-            label={<><Tag className="h-4 w-4" /> Tags</>}
-            availableTags={allTags}
-            selectedTags={selectedTags}
-            onChange={setSelectedTags}
-            onCreateTag={handleCreateTag}
-          />
+        {/* Acquired in Session + Tags */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="rounded-lg border border-border p-4">
+            <RelationPicker
+              label={<><ScrollText className="h-4 w-4" /> Acquired in Session</>}
+              options={allSessions}
+              selected={acquiredSession}
+              onChange={(val) => { setAcquiredSession(val); setDirty(true); }}
+              placeholder="Search sessions..."
+              single
+            />
+          </div>
+          <div className="rounded-lg border border-border p-4">
+            <TagInput
+              label={<><Tag className="h-4 w-4" /> Tags</>}
+              availableTags={allTags}
+              selectedTags={selectedTags}
+              onChange={setSelectedTags}
+              onCreateTag={handleCreateTag}
+            />
+          </div>
         </div>
 
         {/* Notes */}

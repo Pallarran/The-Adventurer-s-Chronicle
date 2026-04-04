@@ -1,10 +1,13 @@
+"use client";
+
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ImageWithCrop } from "@/components/shared/image-crop-button";
-import { updateItemImagePosition } from "@/lib/actions/items";
+import { updateItemImagePosition, updateItem } from "@/lib/actions/items";
 import { RARITY_COLORS } from "@/lib/colors";
-import { Package } from "lucide-react";
+import { Package, BadgeDollarSign, PackageOpen } from "lucide-react";
 import type { ItemListItem } from "@/types";
 
 interface ItemCardProps {
@@ -12,6 +15,22 @@ interface ItemCardProps {
 }
 
 export function ItemCard({ item }: ItemCardProps) {
+  const [sold, setSold] = useState(item.sold);
+  const [isPending, startTransition] = useTransition();
+
+  const toggleSold = () => {
+    const newSold = !sold;
+    const prev = sold;
+    setSold(newSold);
+    startTransition(async () => {
+      try {
+        await updateItem(item.id, { sold: newSold });
+      } catch {
+        setSold(prev);
+      }
+    });
+  };
+
   return (
     <Link href={`/items/${item.id}`}>
       <Card className="h-full overflow-hidden transition-colors hover:border-gem-jade/30 hover:bg-card/80 hover:shadow-lg hover:shadow-gem-jade/10">
@@ -38,6 +57,25 @@ export function ItemCard({ item }: ItemCardProps) {
               {item.rarity}
             </Badge>
           )}
+
+          {/* Sold toggle button */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleSold();
+            }}
+            className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-background/80 text-muted-foreground backdrop-blur-sm transition-colors hover:bg-background hover:text-foreground"
+            title={sold ? "Move to inventory" : "Mark as sold"}
+            style={{ opacity: isPending ? 0.5 : 1 }}
+          >
+            {sold ? (
+              <PackageOpen className="h-3.5 w-3.5" />
+            ) : (
+              <BadgeDollarSign className="h-3.5 w-3.5" />
+            )}
+          </button>
         </div>
 
         {/* Info */}

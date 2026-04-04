@@ -309,6 +309,7 @@ model Item {
   rarity     String?
   aura       String?
   attunement Boolean   @default(false)
+  sold       Boolean   @default(false)
   notesBody  Json?
   mainImage      String?
   imagePositionY Int       @default(50)

@@ -7,7 +7,7 @@ import { RichTextDisplay } from "@/components/shared/rich-text-display";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { Pencil, Package, Tag, Sparkles, Lock } from "lucide-react";
+import { Pencil, Package, Tag, Sparkles, Lock, BadgeDollarSign } from "lucide-react";
 import { ItemDeleteButton } from "./delete-button";
 import { ImageLightbox } from "@/components/shared/image-lightbox";
 import { RARITY_COLORS } from "@/lib/colors";
@@ -73,6 +73,12 @@ export default async function ItemDetailPage({
               <Badge variant="outline" className="gap-1">
                 <Lock className="h-3 w-3" />
                 Requires Attunement
+              </Badge>
+            )}
+            {item.sold && (
+              <Badge variant="outline" className="gap-1 border-muted-foreground/30 bg-muted-foreground/10 text-muted-foreground">
+                <BadgeDollarSign className="h-3 w-3" />
+                Sold
               </Badge>
             )}
           </div>

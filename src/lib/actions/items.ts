@@ -56,6 +56,7 @@ interface CreateItemData {
   rarity?: string;
   aura?: string;
   attunement?: boolean;
+  sold?: boolean;
   notesBody?: JsonValue;
   mainImage?: string;
   tagIds?: string[];
@@ -70,6 +71,7 @@ export async function createItem(data: CreateItemData) {
       rarity: data.rarity,
       aura: data.aura,
       attunement: data.attunement ?? false,
+      sold: data.sold ?? false,
       notesBody: plainJson(data.notesBody),
       mainImage: data.mainImage,
       tags: data.tagIds?.length
@@ -88,6 +90,7 @@ interface UpdateItemData {
   rarity?: string | null;
   aura?: string | null;
   attunement?: boolean;
+  sold?: boolean;
   notesBody?: JsonValue;
   mainImage?: string | null;
   tagIds?: string[];
@@ -106,6 +109,7 @@ export async function updateItem(id: string, data: UpdateItemData) {
       rarity: data.rarity,
       aura: data.aura,
       attunement: data.attunement,
+      sold: data.sold,
       notesBody: plainJson(data.notesBody),
       mainImage: data.mainImage,
       tags: data.tagIds?.length

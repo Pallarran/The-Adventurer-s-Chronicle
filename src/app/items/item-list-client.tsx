@@ -5,7 +5,8 @@ import { ItemCard } from "@/components/items/item-card";
 import { SearchInput } from "@/components/shared/search-input";
 import { MultiSelectFilter } from "@/components/shared/multi-select-filter";
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown, X } from "lucide-react";
+import { ArrowUpDown, ChevronRight, X } from "lucide-react";
+import { GEM } from "@/lib/colors";
 import type { ItemListItem } from "@/types";
 
 type SortOption = "name-asc" | "name-desc" | "recent" | "oldest";
@@ -18,6 +19,11 @@ const sortLabels: Record<SortOption, string> = {
 };
 
 const RARITY_ORDER = ["Common", "Uncommon", "Rare", "Very Rare", "Legendary", "Artifact"];
+
+const SECTIONS: { key: string; label: string; color: string; sold: boolean }[] = [
+  { key: "inventory", label: "Inventory", color: GEM.jade, sold: false },
+  { key: "sold", label: "Sold", color: GEM.moonstone, sold: true },
+];
 
 const selectClass =
   "rounded-full border border-border bg-background px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground focus:outline-none";
@@ -34,6 +40,7 @@ export function ItemListClient({ items, headerActions }: ItemListClientProps) {
   const [rarityFilters, setRarityFilters] = useState<Set<string>>(new Set());
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [attunementFilter, setAttunementFilter] = useState<string>("");
+  const [openSections, setOpenSections] = useState<Set<string>>(new Set(["inventory"]));
 
   const typeOptions = useMemo(() => {
     const types = new Set<string>();
@@ -79,9 +86,20 @@ export function ItemListClient({ items, headerActions }: ItemListClientProps) {
     setAttunementFilter("");
   }, []);
 
-  const hasFilters = typeFilters.size > 0 || rarityFilters.size > 0 || tagFilter !== null || attunementFilter !== "";
+  const toggleSection = useCallback((key: string) => {
+    setOpenSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }, []);
 
-  const results = useMemo(() => {
+  const hasFilters = typeFilters.size > 0 || rarityFilters.size > 0 || tagFilter !== null || attunementFilter !== "";
+  const isSearching = search.length > 0 || hasFilters;
+
+  // Filter + sort, then group by sold status
+  const grouped = useMemo(() => {
     let filtered = [...items];
 
     if (search) {
@@ -129,8 +147,16 @@ export function ItemListClient({ items, headerActions }: ItemListClientProps) {
       }
     });
 
-    return filtered;
+    const inventory: ItemListItem[] = [];
+    const sold: ItemListItem[] = [];
+    for (const item of filtered) {
+      if (item.sold) sold.push(item);
+      else inventory.push(item);
+    }
+    return { inventory, sold };
   }, [items, search, sort, typeFilters, rarityFilters, attunementFilter, tagFilter]);
+
+  const totalResults = grouped.inventory.length + grouped.sold.length;
 
   return (
     <div className="space-y-4">
@@ -209,13 +235,63 @@ export function ItemListClient({ items, headerActions }: ItemListClientProps) {
         )}
       </div>
 
-      {/* Grid */}
-      <div className="grid gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
-        {results.map((item) => (
-          <ItemCard key={item.id} item={item} />
-        ))}
+      {/* Collapsible sections */}
+      <div className="space-y-2">
+        {SECTIONS.map(({ key, label, color, sold }) => {
+          const sectionItems = sold ? grouped.sold : grouped.inventory;
+          const isOpen = openSections.has(key);
+
+          // Hide empty sections when searching/filtering
+          if (isSearching && sectionItems.length === 0) return null;
+
+          return (
+            <div key={key} className="rounded-lg border border-border bg-card/50">
+              <button
+                type="button"
+                onClick={() => toggleSection(key)}
+                className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left transition-colors hover:bg-muted/50"
+              >
+                <ChevronRight
+                  className="h-4 w-4 text-muted-foreground transition-transform duration-200"
+                  style={{ transform: isOpen ? "rotate(90deg)" : undefined }}
+                />
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: color }}
+                />
+                <span className="text-sm font-semibold">{label}</span>
+                <span
+                  className="rounded-full px-2 py-0.5 text-xs font-medium"
+                  style={{
+                    backgroundColor: `${color}20`,
+                    color,
+                  }}
+                >
+                  {sectionItems.length}
+                </span>
+              </button>
+
+              {isOpen && (
+                <div className="border-t border-border px-4 py-3">
+                  {sectionItems.length > 0 ? (
+                    <div className="grid gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
+                      {sectionItems.map((item) => (
+                        <ItemCard key={item.id} item={item} />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="py-4 text-center text-xs text-muted-foreground">
+                      No {label.toLowerCase()} items
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
-      {results.length === 0 && (
+
+      {isSearching && totalResults === 0 && (
         <p className="py-8 text-center text-sm text-muted-foreground">
           No items match your search or filters.
         </p>

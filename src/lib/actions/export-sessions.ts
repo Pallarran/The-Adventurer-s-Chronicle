@@ -9,7 +9,6 @@ const sessionExportInclude = {
   locations: { include: { location: { select: { id: true, name: true } } } },
   organizations: { include: { organization: { select: { id: true, name: true } } } },
   quests: { include: { quest: { select: { id: true, name: true, status: true } } } },
-  tags: { include: { tag: true } },
 } as const;
 
 const STATUS_LABEL: Record<string, string> = {
@@ -48,12 +47,6 @@ export async function exportAllSessionsMarkdown(
     if (session.inGameDate) {
       parts.push(`**In-Game Date:** ${session.inGameDate}`);
     }
-    if (session.tags.length > 0) {
-      parts.push(
-        `**Tags:** ${session.tags.map((t) => t.tag.name).join(", ")}`
-      );
-    }
-
     // Linked entities
     if (session.npcs.length > 0) {
       parts.push(

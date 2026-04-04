@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { exportAllSessionsMarkdown } from "@/lib/actions/export-sessions";
+import { toast } from "sonner";
 
 interface ExportAllSessionsButtonProps {
   campaignId: string;
@@ -29,6 +30,8 @@ export function ExportAllSessionsButton({
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+    } catch {
+      toast.error("Failed to export sessions.");
     } finally {
       setExporting(false);
     }

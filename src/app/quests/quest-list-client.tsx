@@ -69,6 +69,9 @@ export function QuestListClient({ quests }: QuestListClientProps) {
       );
     }
 
+    const maxSession = (q: QuestListItem) =>
+      q.sessions.reduce((max, s) => Math.max(max, s.session.sessionNumber), 0);
+
     items.sort((a, b) => {
       switch (sort) {
         case "name-asc":
@@ -76,9 +79,9 @@ export function QuestListClient({ quests }: QuestListClientProps) {
         case "name-desc":
           return b.name.localeCompare(a.name);
         case "recent":
-          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+          return maxSession(b) - maxSession(a);
         case "oldest":
-          return new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
+          return maxSession(a) - maxSession(b);
         default:
           return 0;
       }

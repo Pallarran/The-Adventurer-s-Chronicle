@@ -7,6 +7,7 @@ import {
   type CharacterSectionType,
   type ProgressionRowType,
 } from "@/generated/prisma/client";
+import { plainJson } from "@/lib/plain-json";
 
 type JsonValue = Prisma.JsonValue;
 
@@ -152,15 +153,17 @@ export async function saveRoleplayTab(
 ) {
   const { overviewContent, ...rpFields } = data;
 
-  // Strip flight proxies from all JSON fields
-  const cleanFields: Record<string, Prisma.InputJsonValue | typeof Prisma.DbNull> = {};
-  for (const [key, value] of Object.entries(rpFields)) {
-    cleanFields[key] = value ? JSON.parse(JSON.stringify(value)) : Prisma.DbNull;
-  }
-
   await prisma.characterProfile.update({
     where: { id },
-    data: cleanFields,
+    data: {
+      personality: rpFields.personality ? plainJson(rpFields.personality) : rpFields.personality === null ? Prisma.DbNull : undefined,
+      ideals: rpFields.ideals ? plainJson(rpFields.ideals) : rpFields.ideals === null ? Prisma.DbNull : undefined,
+      bonds: rpFields.bonds ? plainJson(rpFields.bonds) : rpFields.bonds === null ? Prisma.DbNull : undefined,
+      flaws: rpFields.flaws ? plainJson(rpFields.flaws) : rpFields.flaws === null ? Prisma.DbNull : undefined,
+      voiceMannerisms: rpFields.voiceMannerisms ? plainJson(rpFields.voiceMannerisms) : rpFields.voiceMannerisms === null ? Prisma.DbNull : undefined,
+      currentGoals: rpFields.currentGoals ? plainJson(rpFields.currentGoals) : rpFields.currentGoals === null ? Prisma.DbNull : undefined,
+      fears: rpFields.fears ? plainJson(rpFields.fears) : rpFields.fears === null ? Prisma.DbNull : undefined,
+    },
   });
 
   if (overviewContent !== undefined) {

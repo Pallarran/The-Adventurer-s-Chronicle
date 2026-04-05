@@ -140,21 +140,27 @@ export async function saveProfileTab(
 export async function saveRoleplayTab(
   id: string,
   data: {
-    personality?: string | null;
-    ideals?: string | null;
-    bonds?: string | null;
-    flaws?: string | null;
-    voiceMannerisms?: string | null;
-    currentGoals?: string | null;
-    fears?: string | null;
+    personality?: JsonValue;
+    ideals?: JsonValue;
+    bonds?: JsonValue;
+    flaws?: JsonValue;
+    voiceMannerisms?: JsonValue;
+    currentGoals?: JsonValue;
+    fears?: JsonValue;
     overviewContent?: JsonValue;
   }
 ) {
   const { overviewContent, ...rpFields } = data;
 
+  // Strip flight proxies from all JSON fields
+  const cleanFields: Record<string, Prisma.InputJsonValue | typeof Prisma.DbNull> = {};
+  for (const [key, value] of Object.entries(rpFields)) {
+    cleanFields[key] = value ? JSON.parse(JSON.stringify(value)) : Prisma.DbNull;
+  }
+
   await prisma.characterProfile.update({
     where: { id },
-    data: rpFields,
+    data: cleanFields,
   });
 
   if (overviewContent !== undefined) {

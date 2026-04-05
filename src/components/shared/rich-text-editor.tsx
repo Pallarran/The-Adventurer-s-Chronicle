@@ -244,8 +244,7 @@ export function RichTextEditor({
     },
     editorProps: {
       attributes: {
-        class:
-          "prose prose-invert prose-sm max-w-none min-h-[150px] px-4 py-3 focus:outline-none",
+        class: `prose prose-invert prose-sm max-w-none ${minimal ? "min-h-[80px]" : "min-h-[150px]"} px-4 py-3 focus:outline-none`,
       },
     },
   });

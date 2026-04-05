@@ -208,14 +208,14 @@ model CharacterProfile {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // RP structured fields
-  personality     String?
-  ideals          String?
-  bonds           String?
-  flaws           String?
-  voiceMannerisms String?
-  currentGoals    String?
-  fears           String?
+  // RP structured fields (Tiptap JSON)
+  personality     Json?
+  ideals          Json?
+  bonds           Json?
+  flaws           Json?
+  voiceMannerisms Json?
+  currentGoals    Json?
+  fears           Json?
 
   campaignId String   @unique
   campaign   Campaign @relation(fields: [campaignId], references: [id])

@@ -18,7 +18,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { RichTextEditor } from "@/components/shared/rich-text-editor";
 import { ImageUpload } from "@/components/shared/image-upload";
 import { ProgressionTable } from "./progression-table";
@@ -54,13 +53,13 @@ interface CharacterHubClientProps {
     level: number | null;
     portrait: string | null;
     summary: string | null;
-    personality: string | null;
-    ideals: string | null;
-    bonds: string | null;
-    flaws: string | null;
-    voiceMannerisms: string | null;
-    currentGoals: string | null;
-    fears: string | null;
+    personality: JSONContent | null;
+    ideals: JSONContent | null;
+    bonds: JSONContent | null;
+    flaws: JSONContent | null;
+    voiceMannerisms: JSONContent | null;
+    currentGoals: JSONContent | null;
+    fears: JSONContent | null;
     sections: CharacterSection[];
   };
   progressionRows: ProgressionRow[];
@@ -117,13 +116,13 @@ export function CharacterHubClient({
   );
 
   // ── Roleplay tab state ──
-  const [personality, setPersonality] = useState(profile.personality ?? "");
-  const [ideals, setIdeals] = useState(profile.ideals ?? "");
-  const [bonds, setBonds] = useState(profile.bonds ?? "");
-  const [flaws, setFlaws] = useState(profile.flaws ?? "");
-  const [voiceMannerisms, setVoiceMannerisms] = useState(profile.voiceMannerisms ?? "");
-  const [currentGoals, setCurrentGoals] = useState(profile.currentGoals ?? "");
-  const [fears, setFears] = useState(profile.fears ?? "");
+  const personalityRef = useRef<JSONContent | null>(profile.personality ?? null);
+  const idealsRef = useRef<JSONContent | null>(profile.ideals ?? null);
+  const bondsRef = useRef<JSONContent | null>(profile.bonds ?? null);
+  const flawsRef = useRef<JSONContent | null>(profile.flaws ?? null);
+  const voiceMannerismsRef = useRef<JSONContent | null>(profile.voiceMannerisms ?? null);
+  const currentGoalsRef = useRef<JSONContent | null>(profile.currentGoals ?? null);
+  const fearsRef = useRef<JSONContent | null>(profile.fears ?? null);
   const [rpSaveStatus, setRpSaveStatus] = useState<SaveStatus>("idle");
 
   const overviewSection = getSectionByType(profile.sections, "OVERVIEW");
@@ -168,13 +167,13 @@ export function CharacterHubClient({
     setRpSaveStatus("saving");
     try {
       await saveRoleplayTab(profile.id, {
-        personality: personality.trim() || null,
-        ideals: ideals.trim() || null,
-        bonds: bonds.trim() || null,
-        flaws: flaws.trim() || null,
-        voiceMannerisms: voiceMannerisms.trim() || null,
-        currentGoals: currentGoals.trim() || null,
-        fears: fears.trim() || null,
+        personality: personalityRef.current,
+        ideals: idealsRef.current,
+        bonds: bondsRef.current,
+        flaws: flawsRef.current,
+        voiceMannerisms: voiceMannerismsRef.current,
+        currentGoals: currentGoalsRef.current,
+        fears: fearsRef.current,
         overviewContent: overviewContentRef.current,
       });
       showSaved(setRpSaveStatus, "roleplay");
@@ -183,7 +182,7 @@ export function CharacterHubClient({
       console.error("Failed to save roleplay:", err);
       setRpSaveStatus("idle");
     }
-  }, [profile.id, personality, ideals, bonds, flaws, voiceMannerisms, currentGoals, fears, showSaved]);
+  }, [profile.id, showSaved]);
 
   const [activeTab, setActiveTab] = useState(0);
 
@@ -389,39 +388,39 @@ export function CharacterHubClient({
               </p>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="rp-personality">Personality Traits</Label>
-                  <Input
-                    id="rp-personality"
-                    value={personality}
-                    onChange={(e) => setPersonality(e.target.value)}
+                  <Label>Personality Traits</Label>
+                  <RichTextEditor
+                    content={personalityRef.current}
+                    onChange={(c) => { personalityRef.current = c; setRpDirty(true); }}
                     placeholder="e.g. Always optimistic, fidgets when nervous"
+                    minimal
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="rp-ideals">Ideals</Label>
-                  <Input
-                    id="rp-ideals"
-                    value={ideals}
-                    onChange={(e) => setIdeals(e.target.value)}
+                  <Label>Ideals</Label>
+                  <RichTextEditor
+                    content={idealsRef.current}
+                    onChange={(c) => { idealsRef.current = c; setRpDirty(true); }}
                     placeholder="e.g. Freedom — everyone deserves to live free"
+                    minimal
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="rp-bonds">Bonds</Label>
-                  <Input
-                    id="rp-bonds"
-                    value={bonds}
-                    onChange={(e) => setBonds(e.target.value)}
+                  <Label>Bonds</Label>
+                  <RichTextEditor
+                    content={bondsRef.current}
+                    onChange={(c) => { bondsRef.current = c; setRpDirty(true); }}
                     placeholder="e.g. I owe my life to the priest who took me in"
+                    minimal
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="rp-flaws">Flaws</Label>
-                  <Input
-                    id="rp-flaws"
-                    value={flaws}
-                    onChange={(e) => setFlaws(e.target.value)}
+                  <Label>Flaws</Label>
+                  <RichTextEditor
+                    content={flawsRef.current}
+                    onChange={(c) => { flawsRef.current = c; setRpDirty(true); }}
                     placeholder="e.g. I turn tail and run when things look bad"
+                    minimal
                   />
                 </div>
               </div>
@@ -430,33 +429,30 @@ export function CharacterHubClient({
             {/* Voice, Goals, Fears */}
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="rp-voice">Voice & Mannerisms</Label>
-                <Textarea
-                  id="rp-voice"
-                  value={voiceMannerisms}
-                  onChange={(e) => setVoiceMannerisms(e.target.value)}
+                <Label>Voice & Mannerisms</Label>
+                <RichTextEditor
+                  content={voiceMannerismsRef.current}
+                  onChange={(c) => { voiceMannerismsRef.current = c; setRpDirty(true); }}
                   placeholder="Speech patterns, catchphrases, accent, verbal tics, physical mannerisms..."
-                  rows={3}
+                  minimal
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="rp-goals">Current Goals</Label>
-                <Textarea
-                  id="rp-goals"
-                  value={currentGoals}
-                  onChange={(e) => setCurrentGoals(e.target.value)}
+                <Label>Current Goals</Label>
+                <RichTextEditor
+                  content={currentGoalsRef.current}
+                  onChange={(c) => { currentGoalsRef.current = c; setRpDirty(true); }}
                   placeholder="Short-term and long-term goals — what drives your character right now?"
-                  rows={3}
+                  minimal
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="rp-fears">Fears & Motivations</Label>
-                <Textarea
-                  id="rp-fears"
-                  value={fears}
-                  onChange={(e) => setFears(e.target.value)}
+                <Label>Fears & Motivations</Label>
+                <RichTextEditor
+                  content={fearsRef.current}
+                  onChange={(c) => { fearsRef.current = c; setRpDirty(true); }}
                   placeholder="What scares your character? What pushes them forward?"
-                  rows={3}
+                  minimal
                 />
               </div>
             </div>

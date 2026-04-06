@@ -22,6 +22,12 @@ import {
   ImageIcon,
   Undo,
   Redo,
+  Plus,
+  Users,
+  MapPin,
+  Shield,
+  Package,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Toggle } from "@/components/ui/toggle";
@@ -29,6 +35,7 @@ import type { JSONContent } from "@tiptap/react";
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
   forwardRef,
   useImperativeHandle,
@@ -47,25 +54,96 @@ interface MentionSuggestion {
 interface MentionListProps {
   items: MentionSuggestion[];
   command: (item: { id: string; label: string; mentionType: string }) => void;
+  query: string;
 }
 
 interface MentionListRef {
   onKeyDown: (props: SuggestionKeyDownProps) => boolean;
 }
 
-const MentionList = forwardRef<MentionListRef, MentionListProps>(
-  ({ items, command }, ref) => {
-    const [selectedIndex, setSelectedIndex] = useState(0);
+const ENTITY_TYPES = [
+  { key: "npc" as const, label: "NPC", icon: Users },
+  { key: "location" as const, label: "Location", icon: MapPin },
+  { key: "organization" as const, label: "Organization", icon: Shield },
+  { key: "item" as const, label: "Item", icon: Package },
+];
 
+const typeLabel: Record<string, string> = {
+  npc: "NPC",
+  location: "Location",
+  organization: "Org",
+  item: "Item",
+};
+
+const MentionList = forwardRef<MentionListRef, MentionListProps>(
+  ({ items, command, query }, ref) => {
+    const [selectedIndex, setSelectedIndex] = useState(0);
+    const [mode, setMode] = useState<"search" | "create">("search");
+    const [createName, setCreateName] = useState(query);
+    const [isCreating, setIsCreating] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const nameInputRef = useRef<HTMLInputElement>(null);
+
+    // Reset selection when items change (new query results)
     useEffect(() => {
       setSelectedIndex(0);
+      setMode("search");
     }, [items]);
+
+    // Sync createName when query changes while in search mode
+    useEffect(() => {
+      if (mode === "search") setCreateName(query);
+    }, [query, mode]);
+
+    // Auto-focus name input when entering create mode
+    useEffect(() => {
+      if (mode === "create") {
+        // Small delay to let the DOM update before focusing
+        requestAnimationFrame(() => nameInputRef.current?.focus());
+      }
+    }, [mode]);
+
+    const handleCreate = useCallback(
+      async (type: "npc" | "location" | "organization" | "item") => {
+        const name = createName.trim();
+        if (!name) {
+          setError("Name is required");
+          return;
+        }
+        setIsCreating(true);
+        setError(null);
+        try {
+          const res = await fetch("/api/mentions/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, type }),
+          });
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.error || "Failed to create entity");
+          }
+          const created: { id: string; name: string; type: string } = await res.json();
+          command({ id: created.id, label: created.name, mentionType: created.type });
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "Creation failed");
+        } finally {
+          setIsCreating(false);
+        }
+      },
+      [createName, command]
+    );
 
     const selectItem = useCallback(
       (index: number) => {
-        const item = items[index];
-        if (item) {
-          command({ id: item.id, label: item.name, mentionType: item.type });
+        if (index < items.length) {
+          const item = items[index];
+          if (item) {
+            command({ id: item.id, label: item.name, mentionType: item.type });
+          }
+        } else {
+          // "Create new" row selected
+          setMode("create");
+          setSelectedIndex(0);
         }
       },
       [items, command]
@@ -73,12 +151,19 @@ const MentionList = forwardRef<MentionListRef, MentionListProps>(
 
     useImperativeHandle(ref, () => ({
       onKeyDown: ({ event }: SuggestionKeyDownProps) => {
+        if (mode === "create") {
+          // In create mode, let the focused input/buttons handle keys
+          return false;
+        }
+
+        // Search mode: navigate items + create row
+        const total = items.length + 1;
         if (event.key === "ArrowUp") {
-          setSelectedIndex((i) => (i + items.length - 1) % items.length);
+          setSelectedIndex((i) => (i + total - 1) % total);
           return true;
         }
         if (event.key === "ArrowDown") {
-          setSelectedIndex((i) => (i + 1) % items.length);
+          setSelectedIndex((i) => (i + 1) % total);
           return true;
         }
         if (event.key === "Enter") {
@@ -89,18 +174,83 @@ const MentionList = forwardRef<MentionListRef, MentionListProps>(
       },
     }));
 
-    if (items.length === 0) {
+    // ── Create mode UI ──
+    if (mode === "create") {
       return (
-        <div className="rounded-lg border border-border bg-popover p-2 shadow-md">
-          <span className="text-xs text-muted-foreground">No results</span>
+        <div className="min-w-[240px] rounded-lg border border-border bg-popover p-1 shadow-md">
+          <div className="px-2 py-1.5">
+            <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              Name
+            </label>
+            <input
+              ref={nameInputRef}
+              type="text"
+              value={createName}
+              onChange={(e) => {
+                setCreateName(e.target.value);
+                setError(null);
+              }}
+              className="mt-0.5 w-full rounded-md border border-input bg-background px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              onKeyDown={(e) => {
+                if (e.key === "Escape") {
+                  e.stopPropagation();
+                  setMode("search");
+                  setSelectedIndex(items.length);
+                } else if (e.key === "Enter" && !isCreating) {
+                  e.preventDefault();
+                  handleCreate(ENTITY_TYPES[selectedIndex].key);
+                } else if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  setSelectedIndex((i) => Math.min(i + 1, ENTITY_TYPES.length - 1));
+                } else if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  setSelectedIndex((i) => Math.max(i - 1, 0));
+                }
+              }}
+              disabled={isCreating}
+            />
+          </div>
+          <div className="mx-1 my-1 h-px bg-border" />
+          <div className="px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            Type
+          </div>
+          {ENTITY_TYPES.map((type, index) => {
+            const Icon = type.icon;
+            return (
+              <button
+                key={type.key}
+                className={cn(
+                  "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm",
+                  index === selectedIndex
+                    ? "bg-accent text-accent-foreground"
+                    : "text-foreground hover:bg-accent/50"
+                )}
+                onClick={() => handleCreate(type.key)}
+                type="button"
+                disabled={isCreating}
+              >
+                {isCreating && index === selectedIndex ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Icon className="h-4 w-4" />
+                )}
+                <span>{type.label}</span>
+              </button>
+            );
+          })}
+          {error && (
+            <p className="px-2 py-1 text-xs text-destructive">{error}</p>
+          )}
         </div>
       );
     }
 
-    const typeLabel = { npc: "NPC", location: "Location", organization: "Org", item: "Item" };
-
+    // ── Search mode UI ──
     return (
       <div className="rounded-lg border border-border bg-popover p-1 shadow-md">
+        {items.length === 0 && (
+          <span className="block px-2 py-1 text-xs text-muted-foreground">No results</span>
+        )}
         {items.map((item, index) => (
           <button
             key={item.id}
@@ -119,6 +269,20 @@ const MentionList = forwardRef<MentionListRef, MentionListProps>(
             </span>
           </button>
         ))}
+        {items.length > 0 && <div className="mx-1 my-1 h-px bg-border" />}
+        <button
+          className={cn(
+            "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm",
+            selectedIndex === items.length
+              ? "bg-accent text-accent-foreground"
+              : "text-muted-foreground hover:bg-accent/50"
+          )}
+          onClick={() => selectItem(items.length)}
+          type="button"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          <span>Create {query ? `"${query}"` : "new"}...</span>
+        </button>
       </div>
     );
   }

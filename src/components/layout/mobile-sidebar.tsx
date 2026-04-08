@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Menu } from "lucide-react";
+import { Menu, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -15,12 +15,15 @@ import { Separator } from "@/components/ui/separator";
 import { NavLink } from "./nav-link";
 import { mainNavItems } from "./sidebar";
 import { useSidebarStats } from "./use-sidebar-stats";
+import { useSidebarMode } from "./sidebar-mode-context";
 import { CampaignSwitcher } from "./campaign-switcher";
+import { cn } from "@/lib/utils";
 
 export function MobileSidebar({ activeCampaignId }: { activeCampaignId: string | null }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const { getCount } = useSidebarStats();
+  const { mode } = useSidebarMode();
 
   // Close drawer on route change
   useEffect(() => {
@@ -32,7 +35,10 @@ export function MobileSidebar({ activeCampaignId }: { activeCampaignId: string |
       <Button
         variant="ghost"
         size="icon-sm"
-        className="md:hidden"
+        className={cn(
+          "md:hidden",
+          mode === "hidden" && "md:inline-flex"
+        )}
         onClick={() => setOpen(true)}
         aria-label="Open menu"
       >
@@ -40,7 +46,7 @@ export function MobileSidebar({ activeCampaignId }: { activeCampaignId: string |
       </Button>
 
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="left" showCloseButton={false} className="w-60 p-0 bg-sidebar">
+        <SheetContent side="left" showCloseButton={false} className="w-60 p-0 bg-sidebar flex flex-col">
           <SheetTitle className="sr-only">Navigation</SheetTitle>
 
           {/* Logo */}
@@ -75,6 +81,11 @@ export function MobileSidebar({ activeCampaignId }: { activeCampaignId: string |
               <NavLink key={item.href} {...item} count={getCount(item.href)} />
             ))}
           </nav>
+
+          {/* Bottom: Settings */}
+          <div className="border-t border-sidebar-border px-3 py-3">
+            <NavLink href="/settings" label="Settings" icon={Settings} />
+          </div>
         </SheetContent>
       </Sheet>
     </>

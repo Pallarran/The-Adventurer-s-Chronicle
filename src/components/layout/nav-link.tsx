@@ -12,9 +12,16 @@ interface NavLinkProps {
   label: string;
   icon: LucideIcon;
   count?: number;
+  collapsed?: boolean;
 }
 
-export function NavLink({ href, label, icon: Icon, count }: NavLinkProps) {
+export function NavLink({
+  href,
+  label,
+  icon: Icon,
+  count,
+  collapsed = false,
+}: NavLinkProps) {
   const pathname = usePathname();
   const { requestNavigation } = useContext(FormGuardContext);
   const isActive = pathname === href || pathname.startsWith(`${href}/`);
@@ -29,8 +36,10 @@ export function NavLink({ href, label, icon: Icon, count }: NavLinkProps) {
     <Link
       href={href}
       onClick={handleClick}
+      title={collapsed ? label : undefined}
       className={cn(
-        "group relative flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200",
+        "group relative flex items-center rounded-md py-2 text-sm font-medium transition-all duration-200",
+        collapsed ? "justify-center px-2" : "gap-3 px-3",
         isActive
           ? "bg-gold/10 text-gold"
           : "text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -46,16 +55,20 @@ export function NavLink({ href, label, icon: Icon, count }: NavLinkProps) {
           isActive ? "text-gold" : "group-hover:text-foreground"
         )}
       />
-      <span>{label}</span>
-      {count !== undefined && (
-        <span
-          className={cn(
-            "ml-auto text-[11px] tabular-nums",
-            isActive ? "text-gold/60" : "text-muted-foreground/50"
+      {!collapsed && (
+        <>
+          <span>{label}</span>
+          {count !== undefined && (
+            <span
+              className={cn(
+                "ml-auto text-[11px] tabular-nums",
+                isActive ? "text-gold/60" : "text-muted-foreground/50"
+              )}
+            >
+              {count}
+            </span>
           )}
-        >
-          {count}
-        </span>
+        </>
       )}
     </Link>
   );

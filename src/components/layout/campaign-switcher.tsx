@@ -34,8 +34,10 @@ interface Campaign {
 
 export function CampaignSwitcher({
   activeCampaignId,
+  collapsed = false,
 }: {
   activeCampaignId: string | null;
+  collapsed?: boolean;
 }) {
   const router = useRouter();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -107,6 +109,16 @@ export function CampaignSwitcher({
   }
 
   if (campaigns.length === 0) {
+    if (collapsed) {
+      return (
+        <div
+          className="mx-2 mb-1 flex h-9 items-center justify-center rounded-md border border-dashed border-border"
+          title="No campaigns"
+        >
+          <span className="text-[10px] text-muted-foreground">—</span>
+        </div>
+      );
+    }
     return (
       <div className="mx-3 mb-1 rounded-md border border-dashed border-border px-3 py-2">
         <span className="text-xs text-muted-foreground">No campaigns</span>
@@ -114,23 +126,39 @@ export function CampaignSwitcher({
     );
   }
 
+  const activeInitial = (activeCampaign?.name ?? "?").trim().charAt(0).toUpperCase() || "?";
+
   return (
     <>
       <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-        <PopoverTrigger
-          className="mx-3 mb-1 flex w-[calc(100%-1.5rem)] items-center gap-2 rounded-md border border-sidebar-border bg-sidebar-accent/50 px-3 py-1.5 text-left text-sm hover:bg-accent transition-colors cursor-pointer"
-        >
-          <span className="flex-1 truncate text-xs font-medium text-muted-foreground">
-            {activeCampaign?.name ?? "Select campaign"}
-          </span>
-          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-        </PopoverTrigger>
+        {collapsed ? (
+          <PopoverTrigger
+            className="mx-auto mb-1 flex h-9 w-9 items-center justify-center rounded-md border border-sidebar-border bg-sidebar-accent/50 text-xs font-semibold text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer"
+            title={activeCampaign?.name ?? "Select campaign"}
+            aria-label={activeCampaign?.name ?? "Select campaign"}
+          >
+            {activeInitial}
+          </PopoverTrigger>
+        ) : (
+          <PopoverTrigger
+            className="mx-3 mb-1 flex w-[calc(100%-1.5rem)] items-center gap-2 rounded-md border border-sidebar-border bg-sidebar-accent/50 px-3 py-1.5 text-left text-sm hover:bg-accent transition-colors cursor-pointer"
+          >
+            <span className="flex-1 truncate text-xs font-medium text-muted-foreground">
+              {activeCampaign?.name ?? "Select campaign"}
+            </span>
+            <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+          </PopoverTrigger>
+        )}
 
         <PopoverContent
           align="start"
           side="bottom"
           sideOffset={4}
-          className="w-[var(--radix-popover-trigger-width)] p-1"
+          className={
+            collapsed
+              ? "w-56 p-1"
+              : "w-[var(--radix-popover-trigger-width)] p-1"
+          }
         >
           {campaigns.map((campaign) => (
             <div

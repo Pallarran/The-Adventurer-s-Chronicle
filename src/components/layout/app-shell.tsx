@@ -1,8 +1,8 @@
 import { Sidebar } from "./sidebar";
-import { MobileSidebar } from "./mobile-sidebar";
-import { Topbar } from "./topbar";
+import { AppShellClient } from "./app-shell-client";
 import { PageHeaderProvider } from "./page-header-context";
 import { FormGuardProvider } from "./form-guard-provider";
+import { SidebarModeProvider } from "./sidebar-mode-context";
 import { getActiveCampaign } from "@/lib/campaign";
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
@@ -12,13 +12,12 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <FormGuardProvider>
       <PageHeaderProvider>
-        <div className="min-h-screen">
-          <Sidebar activeCampaignId={campaignId} />
-          <div className="md:pl-60">
-            <Topbar activeCampaignId={campaignId} />
-            <main className="animate-in fade-in-0 duration-200 p-4 sm:p-6">{children}</main>
+        <SidebarModeProvider>
+          <div className="min-h-screen">
+            <Sidebar activeCampaignId={campaignId} />
+            <AppShellClient campaignId={campaignId}>{children}</AppShellClient>
           </div>
-        </div>
+        </SidebarModeProvider>
       </PageHeaderProvider>
     </FormGuardProvider>
   );

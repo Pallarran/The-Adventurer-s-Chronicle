@@ -58,8 +58,8 @@ export async function PartyMembers({ campaignId }: PartyMembersProps) {
         </CardTitle>
       </CardHeader>
 
-      <CardContent>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      <CardContent className="@container">
+        <div className="grid grid-cols-2 gap-3 @md:grid-cols-3 @3xl:grid-cols-4">
           {partyNpcs.map((npc) => {
             const isDead = npc.status === "DEAD";
             return (

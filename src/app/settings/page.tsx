@@ -1,7 +1,7 @@
 import { PageHeaderSetter } from "@/components/layout/page-header-setter";
 import { SidebarModeForm } from "@/components/settings/sidebar-mode-form";
 
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 
 export default function SettingsPage() {
   return (

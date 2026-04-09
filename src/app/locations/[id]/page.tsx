@@ -25,7 +25,12 @@ export default async function LocationDetailPage({
 
   return (
     <div>
-      <PageHeaderSetter title={location.name} backHref="/locations" backLabel="Locations" />
+      <PageHeaderSetter
+        title={location.name}
+        description={location.aliasTitle ?? undefined}
+        backHref="/locations"
+        backLabel="Locations"
+      />
 
       <div className="flex items-center gap-2 pb-4">
         <Link href={`/locations/${location.id}/edit`} className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>

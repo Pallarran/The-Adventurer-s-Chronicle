@@ -141,10 +141,11 @@ model Npc {
 }
 
 model Location {
-  id        String    @id @default(cuid())
-  name      String
-  type      String?
-  notesBody Json?
+  id         String  @id @default(cuid())
+  name       String
+  aliasTitle String?
+  type       String?
+  notesBody  Json?
   mainImage      String?
   imagePositionY Int       @default(50)
   createdAt      DateTime  @default(now())

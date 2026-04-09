@@ -43,6 +43,9 @@ export function LocationCard({ location }: LocationCardProps) {
         <div className="flex flex-col justify-between px-2 py-1">
           <div>
             <p className="truncate text-sm font-bold">{location.name}</p>
+            <p className="truncate text-xs text-muted-foreground italic">
+              {location.aliasTitle || "\u00A0"}
+            </p>
             <p className="truncate text-xs text-muted-foreground">
               {location.parentLocation ? (
                 <span className="flex items-center gap-1">

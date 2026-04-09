@@ -49,7 +49,10 @@ export async function GET(request: NextRequest) {
       where: {
         campaignId: campaign.id,
         deletedAt: null,
-        name: { contains: q, mode: "insensitive" as const },
+        OR: [
+          { name: { contains: q, mode: "insensitive" as const } },
+          { aliasTitle: { contains: q, mode: "insensitive" as const } },
+        ],
       },
       select: { id: true, name: true, type: true },
       take: 5,

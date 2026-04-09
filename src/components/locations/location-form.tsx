@@ -49,6 +49,7 @@ export function LocationForm({
   const isEdit = !!location;
 
   const [name, setName] = useState(location?.name ?? "");
+  const [aliasTitle, setAliasTitle] = useState(location?.aliasTitle ?? "");
   const [type, setType] = useState(location?.type ?? "");
   const [mainImage, setMainImage] = useState<string | null>(location?.mainImage ?? null);
   const [notesBody, setNotesBody] = useState<JSONContent | null>(
@@ -130,6 +131,7 @@ export function LocationForm({
     try {
       const data = {
         name,
+        aliasTitle: aliasTitle || undefined,
         type: type || undefined,
         mainImage: mainImage ?? undefined,
         notesBody: notesBody ?? undefined,
@@ -189,6 +191,15 @@ export function LocationForm({
                 placeholder="e.g. City, Dungeon"
               />
             </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="aliasTitle">Alias / Title</Label>
+            <Input
+              id="aliasTitle"
+              value={aliasTitle}
+              onChange={(e) => setAliasTitle(e.target.value)}
+              placeholder='e.g. "The Jewel of the East"'
+            />
           </div>
         </div>
       </div>

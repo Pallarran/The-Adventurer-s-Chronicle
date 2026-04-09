@@ -60,6 +60,7 @@ export function LocationListClient({ locations, headerActions }: LocationListCli
       items = items.filter(
         (l) =>
           l.name.toLowerCase().includes(q) ||
+          l.aliasTitle?.toLowerCase().includes(q) ||
           l.type?.toLowerCase().includes(q)
       );
     }

@@ -39,7 +39,14 @@ export async function getLocations(campaignId: string, filters?: LocationFilters
     where: {
       campaignId,
       deletedAt: null,
-      ...(search ? { name: { contains: search, mode: "insensitive" as const } } : {}),
+      ...(search
+        ? {
+            OR: [
+              { name: { contains: search, mode: "insensitive" as const } },
+              { aliasTitle: { contains: search, mode: "insensitive" as const } },
+            ],
+          }
+        : {}),
       ...(type ? { type: { contains: type, mode: "insensitive" as const } } : {}),
     },
     include: locationListInclude,
@@ -57,6 +64,7 @@ export async function getLocation(id: string): Promise<LocationDetail | null> {
 interface CreateLocationData {
   campaignId: string;
   name: string;
+  aliasTitle?: string;
   type?: string;
   parentLocationId?: string;
   notesBody?: JsonValue;
@@ -69,6 +77,7 @@ export async function createLocation(data: CreateLocationData) {
     data: {
       campaignId: data.campaignId,
       name: data.name,
+      aliasTitle: data.aliasTitle,
       type: data.type,
       parentLocationId: data.parentLocationId || null,
       notesBody: plainJson(data.notesBody),
@@ -85,6 +94,7 @@ export async function createLocation(data: CreateLocationData) {
 
 interface UpdateLocationData {
   name?: string;
+  aliasTitle?: string;
   type?: string;
   parentLocationId?: string | null;
   notesBody?: JsonValue;
@@ -103,6 +113,7 @@ export async function updateLocation(id: string, data: UpdateLocationData) {
     where: { id, deletedAt: null },
     data: {
       name: data.name,
+      aliasTitle: data.aliasTitle,
       type: data.type,
       parentLocationId: data.parentLocationId,
       notesBody: plainJson(data.notesBody),

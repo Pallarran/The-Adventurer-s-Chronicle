@@ -175,7 +175,7 @@ These assume a local LLM (e.g., Ollama) or API integration (Claude, OpenAI) conf
 
 | Priority | Feature | Type | Notes |
 |----------|---------|------|-------|
-| **1** | Session edit auto-save | QoL | Full form auto-save (notes + relations + metadata). Create stays manual, edit becomes fully auto-saving with debounce + save indicator. |
+| ~~**1**~~ | ~~Session edit auto-save~~ | ~~QoL~~ | **Complete** (commit `93e610b`). Full form auto-save with 1.5s debounce, "Save & Close" button, save status indicator. |
 | **2** | Dark / Light theme toggle | QoL | Light-mode color palette + toggle on Settings page. CSS variables are already structured for this. Persisted to localStorage like sidebar mode. |
 | **3** | Enhanced campaign export | QoL | Full campaign export to single Markdown file (all entities + sessions). Optimized for feeding to Claude Desktop as campaign context. |
 | **4** | AI foundation | AI infra | Anthropic SDK (`@anthropic-ai/sdk`), `ANTHROPIC_API_KEY` env var in Docker Compose, thin `lib/ai.ts` wrapper. Claude API as primary provider. |

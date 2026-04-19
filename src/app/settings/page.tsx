@@ -1,5 +1,6 @@
 import { PageHeaderSetter } from "@/components/layout/page-header-setter";
 import { SidebarModeForm } from "@/components/settings/sidebar-mode-form";
+import { ThemeModeForm } from "@/components/settings/theme-mode-form";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,10 @@ export default function SettingsPage() {
 
       <div className="rounded-lg border border-border bg-card p-6">
         <SidebarModeForm />
+      </div>
+
+      <div className="rounded-lg border border-border bg-card p-6">
+        <ThemeModeForm />
       </div>
     </div>
   );

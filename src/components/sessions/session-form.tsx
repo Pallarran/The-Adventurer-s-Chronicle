@@ -12,7 +12,7 @@ import { RelationPicker, type RelationOption } from "@/components/shared/relatio
 import { SessionQuestList } from "@/components/sessions/session-quest-list";
 import { createSession, updateSession } from "@/lib/actions/sessions";
 import { toast } from "sonner";
-import { Users, MapPin, Shield } from "lucide-react";
+import { Users, MapPin, Shield, Loader2, Check } from "lucide-react";
 import type { JSONContent } from "@tiptap/react";
 import type { SessionDetail } from "@/types";
 
@@ -21,11 +21,13 @@ export function SessionFormActions({ isEdit }: { isEdit: boolean }) {
   return (
     <>
       <Button type="submit" form="session-form">
-        {isEdit ? "Save Changes" : "Create Session"}
+        {isEdit ? "Save & Close" : "Create Session"}
       </Button>
-      <Button type="button" variant="outline" onClick={() => router.back()}>
-        Cancel
-      </Button>
+      {!isEdit && (
+        <Button type="button" variant="outline" onClick={() => router.back()}>
+          Cancel
+        </Button>
+      )}
     </>
   );
 }
@@ -74,6 +76,11 @@ export function SessionForm({
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   useFormGuard(dirty);
+
+  // ── Auto-save (edit mode only) ──
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(false);
 
   // ── Mention → picker auto-sync ──
   const suppressedNpcs = useRef(new Set<string>());
@@ -147,8 +154,55 @@ export function SessionForm({
     });
   }, []);
 
+  // ── Debounced auto-save effect (edit mode only) ──
+  useEffect(() => {
+    if (!isEdit) return;
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+      return;
+    }
+
+    setSaveStatus("saving");
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    debounceRef.current = setTimeout(async () => {
+      try {
+        await updateSession(session.id, {
+          sessionNumber,
+          title: title || undefined,
+          realDatePlayed: new Date(realDatePlayed),
+          inGameDate: inGameDate || undefined,
+          notesBody: notesBody ?? undefined,
+          npcIds: selectedNpcs.map((n) => n.id),
+          locationIds: selectedLocations.map((l) => l.id),
+          organizationIds: selectedOrgs.map((o) => o.id),
+          questIds,
+        });
+        setSaveStatus("saved");
+        setDirty(false);
+        setTimeout(() => setSaveStatus("idle"), 2000);
+      } catch {
+        toast.error("Auto-save failed.");
+        setSaveStatus("idle");
+      }
+    }, 1500);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    sessionNumber, title, realDatePlayed, inGameDate, notesBody,
+    selectedNpcs, selectedLocations, selectedOrgs, questIds,
+  ]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Cancel any pending auto-save debounce
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
     setSaving(true);
 
     try {
@@ -166,7 +220,8 @@ export function SessionForm({
 
       if (isEdit) {
         await updateSession(session.id, data);
-        toast.success("Session updated.");
+        setDirty(false);
+        toast.success("Session saved.");
         router.push(`/sessions/${session.id}`);
       } else {
         const newSession = await createSession({ ...data, campaignId });
@@ -186,7 +241,21 @@ export function SessionForm({
       {/* Title + compact metadata row */}
       <div className="flex flex-wrap items-end gap-4">
         <div className="min-w-[200px] flex-1 space-y-2">
-          <Label htmlFor="title">Title</Label>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="title">Title</Label>
+            {isEdit && saveStatus === "saving" && (
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Saving...
+              </span>
+            )}
+            {isEdit && saveStatus === "saved" && (
+              <span className="flex items-center gap-1 text-xs text-arcane-teal">
+                <Check className="h-3 w-3" />
+                Saved
+              </span>
+            )}
+          </div>
           <Input
             id="title"
             value={title}

@@ -3,35 +3,42 @@
 import { useState } from "react";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { exportAllSessionsMarkdown } from "@/lib/actions/export-sessions";
+import { exportCampaignMarkdown } from "@/lib/actions/export-campaign";
 import { toast } from "sonner";
 
-interface ExportAllSessionsButtonProps {
+interface CampaignExportButtonProps {
   campaignId: string;
+  campaignName: string;
 }
 
-export function ExportAllSessionsButton({
+export function CampaignExportButton({
   campaignId,
-}: ExportAllSessionsButtonProps) {
+  campaignName,
+}: CampaignExportButtonProps) {
   const [exporting, setExporting] = useState(false);
 
   const handleExport = async () => {
     setExporting(true);
     try {
-      const markdown = await exportAllSessionsMarkdown(campaignId);
+      const markdown = await exportCampaignMarkdown(campaignId);
       const blob = new Blob([markdown], {
         type: "text/markdown;charset=utf-8",
       });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "campaign-session-notes.md";
+      const slug = campaignName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
+      a.download = `${slug}-campaign-export.md`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      toast.success("Campaign exported.");
     } catch {
-      toast.error("Failed to export sessions.");
+      toast.error("Failed to export campaign.");
     } finally {
       setExporting(false);
     }
@@ -40,12 +47,11 @@ export function ExportAllSessionsButton({
   return (
     <Button
       variant="outline"
-      size="sm"
       onClick={handleExport}
       disabled={exporting}
     >
       <Download className="mr-2 h-4 w-4" />
-      {exporting ? "Exporting..." : "Export All .md"}
+      {exporting ? "Exporting..." : "Export Campaign .md"}
     </Button>
   );
 }

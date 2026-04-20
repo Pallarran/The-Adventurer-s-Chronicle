@@ -46,6 +46,10 @@ export default async function EditCharacterPage() {
     bonds: profile.bonds,
     flaws: profile.flaws,
     voiceMannerisms: profile.voiceMannerisms,
+    compass: profile.compass,
+    contradictions: profile.contradictions,
+    pocketPhrases: profile.pocketPhrases,
+    reminders: profile.reminders,
     currentGoals: profile.currentGoals,
     fears: profile.fears,
     sections: profile.sections.map((s) => ({

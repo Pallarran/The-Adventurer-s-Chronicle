@@ -137,8 +137,12 @@ export async function exportCampaignMarkdown(
       { key: "bonds", label: "Bonds" },
       { key: "flaws", label: "Flaws" },
       { key: "voiceMannerisms", label: "Voice & Mannerisms" },
+      { key: "compass", label: "The Compass" },
+      { key: "contradictions", label: "Contradictions" },
+      { key: "pocketPhrases", label: "Pocket Phrases" },
+      { key: "reminders", label: "Reminders / At the Table" },
       { key: "currentGoals", label: "Current Goals" },
-      { key: "fears", label: "Fears" },
+      { key: "fears", label: "Fears & Motivations" },
     ];
     for (const { key, label } of rpFields) {
       const val = character[key as keyof typeof character];

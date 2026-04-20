@@ -215,6 +215,10 @@ model CharacterProfile {
   bonds           Json?
   flaws           Json?
   voiceMannerisms Json?
+  compass         Json?
+  contradictions  Json?
+  pocketPhrases   Json?
+  reminders       Json?
   currentGoals    Json?
   fears           Json?
 

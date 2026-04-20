@@ -3,11 +3,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { JSONContent } from "@tiptap/react";
-import { Pencil, Eye, BookOpen } from "lucide-react";
+import { Pencil, Eye, BookOpen, Info } from "lucide-react";
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { RichTextDisplay } from "@/components/shared/rich-text-display";
 import { ImageLightbox } from "@/components/shared/image-lightbox";
 import { ProgressionTable } from "./progression-table";
@@ -45,6 +46,10 @@ interface CharacterHubClientProps {
     bonds: JSONContent | null;
     flaws: JSONContent | null;
     voiceMannerisms: JSONContent | null;
+    compass: JSONContent | null;
+    contradictions: JSONContent | null;
+    pocketPhrases: JSONContent | null;
+    reminders: JSONContent | null;
     currentGoals: JSONContent | null;
     fears: JSONContent | null;
     sections: CharacterSection[];
@@ -74,6 +79,24 @@ function hasContent(content: JSONContent | null | undefined): boolean {
   return true;
 }
 
+function SectionLabel({ label, description }: { label: string; description?: string }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+        {label}
+      </p>
+      {description && (
+        <Tooltip>
+          <TooltipTrigger className="text-muted-foreground/40 hover:text-muted-foreground transition-colors">
+            <Info className="h-3.5 w-3.5" />
+          </TooltipTrigger>
+          <TooltipContent side="top">{description}</TooltipContent>
+        </Tooltip>
+      )}
+    </div>
+  );
+}
+
 function TraitCard({ label, content }: { label: string; content: JSONContent | null }) {
   if (!hasContent(content)) return null;
   return (
@@ -88,17 +111,17 @@ function TraitCard({ label, content }: { label: string; content: JSONContent | n
 
 function SectionCard({
   label,
+  description,
   content,
 }: {
   label: string;
+  description?: string;
   content: JSONContent | null;
 }) {
   if (!hasContent(content)) return null;
   return (
     <div className="space-y-1.5 rounded-lg border border-border p-4">
-      <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
-        {label}
-      </p>
+      <SectionLabel label={label} description={description} />
       <RichTextDisplay content={content} className="text-sm" />
     </div>
   );
@@ -127,9 +150,13 @@ export function CharacterHubClient({
     hasContent(profile.flaws);
   const hasRightColumn =
     hasContent(profile.voiceMannerisms) ||
+    hasContent(profile.compass) ||
+    hasTraits ||
+    hasContent(profile.contradictions) ||
+    hasContent(profile.pocketPhrases) ||
+    hasContent(profile.reminders) ||
     hasContent(profile.currentGoals) ||
-    hasContent(profile.fears) ||
-    hasTraits;
+    hasContent(profile.fears);
   const hasBackstory = hasContent(backstoryContent);
 
   return (
@@ -211,24 +238,30 @@ export function CharacterHubClient({
             <div className={`grid gap-6 ${hasRightColumn && hasBackstory ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1"}`}>
               {hasBackstory && (
                 <div className="space-y-1.5 rounded-lg border border-border p-4">
-                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
-                    Backstory
-                  </p>
+                  <SectionLabel label="Backstory" />
                   <RichTextDisplay content={backstoryContent} className="text-sm" />
                 </div>
               )}
 
               {hasRightColumn && (
                 <div className="space-y-4">
-                  <SectionCard label="Voice & Mannerisms" content={profile.voiceMannerisms} />
-                  <SectionCard label="Current Goals" content={profile.currentGoals} />
-                  <SectionCard label="Fears & Motivations" content={profile.fears} />
+                  <SectionCard
+                    label="Voice & Mannerisms"
+                    description="How he speaks and moves. Speech patterns, verbal tics, physical tells."
+                    content={profile.voiceMannerisms}
+                  />
+                  <SectionCard
+                    label="The Compass"
+                    description="How he chooses under pressure. Decision-making defaults when things get complicated."
+                    content={profile.compass}
+                  />
 
                   {hasTraits && (
                     <div className="space-y-2">
-                      <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
-                        Character Traits
-                      </p>
+                      <SectionLabel
+                        label="Character Traits"
+                        description="Personality, Ideals, Bonds, Flaws. The core sheet fields that anchor everything else."
+                      />
                       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <TraitCard label="Personality" content={profile.personality} />
                         <TraitCard label="Ideals" content={profile.ideals} />
@@ -237,6 +270,32 @@ export function CharacterHubClient({
                       </div>
                     </div>
                   )}
+
+                  <SectionCard
+                    label="Contradictions"
+                    description="The internal tensions to inhabit, not resolve. What keeps him from flattening into a single trait."
+                    content={profile.contradictions}
+                  />
+                  <SectionCard
+                    label="Pocket Phrases"
+                    description="Short lines ready to use when you blank at the table. Emergency lookup, not dialogue samples."
+                    content={profile.pocketPhrases}
+                  />
+                  <SectionCard
+                    label="Reminders / At the Table"
+                    description="Self-correction notes. Traps to avoid and habits to hold."
+                    content={profile.reminders}
+                  />
+                  <SectionCard
+                    label="Current Goals"
+                    description="What he's actively pursuing in the campaign. Short-term and long-term, updated as the story moves."
+                    content={profile.currentGoals}
+                  />
+                  <SectionCard
+                    label="Fears & Motivations"
+                    description="What drives him and what he's afraid to find. Internal life for session prep and quiet moments."
+                    content={profile.fears}
+                  />
                 </div>
               )}
             </div>

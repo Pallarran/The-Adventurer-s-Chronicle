@@ -146,6 +146,10 @@ export async function saveRoleplayTab(
     bonds?: JsonValue;
     flaws?: JsonValue;
     voiceMannerisms?: JsonValue;
+    compass?: JsonValue;
+    contradictions?: JsonValue;
+    pocketPhrases?: JsonValue;
+    reminders?: JsonValue;
     currentGoals?: JsonValue;
     fears?: JsonValue;
     overviewContent?: JsonValue;
@@ -153,16 +157,24 @@ export async function saveRoleplayTab(
 ) {
   const { overviewContent, ...rpFields } = data;
 
+  function rpVal(v: JsonValue | undefined) {
+    return v ? plainJson(v) : v === null ? Prisma.DbNull : undefined;
+  }
+
   await prisma.characterProfile.update({
     where: { id },
     data: {
-      personality: rpFields.personality ? plainJson(rpFields.personality) : rpFields.personality === null ? Prisma.DbNull : undefined,
-      ideals: rpFields.ideals ? plainJson(rpFields.ideals) : rpFields.ideals === null ? Prisma.DbNull : undefined,
-      bonds: rpFields.bonds ? plainJson(rpFields.bonds) : rpFields.bonds === null ? Prisma.DbNull : undefined,
-      flaws: rpFields.flaws ? plainJson(rpFields.flaws) : rpFields.flaws === null ? Prisma.DbNull : undefined,
-      voiceMannerisms: rpFields.voiceMannerisms ? plainJson(rpFields.voiceMannerisms) : rpFields.voiceMannerisms === null ? Prisma.DbNull : undefined,
-      currentGoals: rpFields.currentGoals ? plainJson(rpFields.currentGoals) : rpFields.currentGoals === null ? Prisma.DbNull : undefined,
-      fears: rpFields.fears ? plainJson(rpFields.fears) : rpFields.fears === null ? Prisma.DbNull : undefined,
+      personality: rpVal(rpFields.personality),
+      ideals: rpVal(rpFields.ideals),
+      bonds: rpVal(rpFields.bonds),
+      flaws: rpVal(rpFields.flaws),
+      voiceMannerisms: rpVal(rpFields.voiceMannerisms),
+      compass: rpVal(rpFields.compass),
+      contradictions: rpVal(rpFields.contradictions),
+      pocketPhrases: rpVal(rpFields.pocketPhrases),
+      reminders: rpVal(rpFields.reminders),
+      currentGoals: rpVal(rpFields.currentGoals),
+      fears: rpVal(rpFields.fears),
     },
   });
 

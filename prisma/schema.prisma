@@ -83,6 +83,7 @@ model Session {
   realDatePlayed  DateTime
   inGameDate      String?
   notesBody       Json?
+  summary         String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   deletedAt       DateTime?

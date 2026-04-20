@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Pencil, CalendarDays, ScrollText, Users, MapPin, Shield, Compass } from "lucide-react";
 import { SessionDeleteButton } from "./delete-button";
+import { SessionSummaryBlock } from "./summary-block";
 import type { JSONContent } from "@tiptap/react";
 
 const QUEST_STATUS: { value: string; label: string; borderClass: string; dotClass: string }[] = [
@@ -62,6 +63,13 @@ export default async function SessionDetailPage({
           </>
         )}
       </div>
+
+      {/* AI Summary */}
+      <SessionSummaryBlock
+        sessionId={session.id}
+        summary={session.summary}
+        hasNotes={!!session.notesBody}
+      />
 
       {/* Relations */}
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

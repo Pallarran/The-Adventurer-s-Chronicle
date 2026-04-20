@@ -77,10 +77,10 @@ export async function RecentSessions({ campaignId }: RecentSessionsProps) {
         <div className="relative space-y-0">
           {sessions.map((session, index) => {
             const isFirst = index === 0;
-            const excerpt = extractTextFromJson(
-              session.notesBody,
-              isFirst ? 400 : 120
-            );
+            const displayText =
+              isFirst && session.summary
+                ? session.summary
+                : extractTextFromJson(session.notesBody, isFirst ? 400 : 120);
             const isLast = index === sessions.length - 1;
 
             return (
@@ -122,9 +122,9 @@ export async function RecentSessions({ campaignId }: RecentSessionsProps) {
                       </span>
                     )}
                   </div>
-                  {excerpt && (
+                  {displayText && (
                     <p className={`mt-1 text-xs text-muted-foreground/80 ${isFirst ? "line-clamp-5" : "line-clamp-1"}`}>
-                      {excerpt}
+                      {displayText}
                     </p>
                   )}
                 </div>

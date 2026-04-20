@@ -178,6 +178,7 @@ export async function getRecentSessions(campaignId: string, limit: number = 5) {
       realDatePlayed: true,
       inGameDate: true,
       notesBody: true,
+      summary: true,
     },
     orderBy: { sessionNumber: "desc" },
     take: limit,

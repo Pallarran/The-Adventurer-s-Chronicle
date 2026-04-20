@@ -12,6 +12,8 @@ services:
       - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD:-changeme}@db:5432/adventurers_chronicle
       - UPLOAD_DIR=/app/uploads
       - NEXT_PUBLIC_APP_NAME=The Adventurers Chronicle
+      - OLLAMA_URL=${OLLAMA_URL:-http://host.docker.internal:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen3:14b}
     volumes:
       - uploads:/app/uploads
     depends_on:

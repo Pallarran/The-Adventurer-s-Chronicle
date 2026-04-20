@@ -223,6 +223,25 @@ select:focus-visible {
   outline: none;
 }
 
+/* Tiptap list styling (Tailwind preflight strips list-style) */
+.ProseMirror ul {
+  list-style-type: disc;
+  padding-left: 1.5em;
+}
+.ProseMirror ol {
+  list-style-type: decimal;
+  padding-left: 1.5em;
+}
+.ProseMirror ul ul {
+  list-style-type: circle;
+}
+.ProseMirror ul ul ul {
+  list-style-type: square;
+}
+.ProseMirror li > p {
+  display: inline;
+}
+
 /* Tiptap placeholder styling */
 .tiptap p.is-editor-empty:first-child::before {
   color: var(--muted-foreground);

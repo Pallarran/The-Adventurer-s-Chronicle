@@ -1,5 +1,7 @@
 const OLLAMA_URL = process.env.OLLAMA_URL || "http://localhost:11434";
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "Dnd-Summarizer";
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "gemma3:12b";
+
+const SESSION_SUMMARY_SYSTEM = `You are a concise summarizer for a tabletop RPG campaign journal written from a player's perspective. You will receive campaign context (character info, relevant NPCs, locations) followed by session notes. Produce a summary of 3-5 bullet points. Each bullet should be one sentence capturing a key event, discovery, or decision. Use the correct names for characters, NPCs, and locations from the context provided. Write in past tense, third person. Use plain text with no markdown formatting. Do not add commentary, analysis, or speculation beyond what the notes describe.`;
 
 interface OllamaGenerateResponse {
   response: string;
@@ -12,9 +14,11 @@ interface OllamaTagsResponse {
 
 /**
  * Call Ollama's generate endpoint (non-streaming).
- * System prompt is expected to be baked into the model's Modelfile.
  */
-async function ollamaGenerate(prompt: string): Promise<string> {
+async function ollamaGenerate(
+  prompt: string,
+  system: string
+): Promise<string> {
   const url = `${OLLAMA_URL}/api/generate`;
 
   let res: Response;
@@ -25,6 +29,7 @@ async function ollamaGenerate(prompt: string): Promise<string> {
       body: JSON.stringify({
         model: OLLAMA_MODEL,
         prompt,
+        system,
         stream: false,
       }),
     });
@@ -44,16 +49,21 @@ async function ollamaGenerate(prompt: string): Promise<string> {
 }
 
 /**
- * Generate a summary of session notes using the configured Ollama model.
+ * Generate a summary of session notes with campaign context.
  */
 export async function generateSessionSummary(
-  notesMarkdown: string
+  notesMarkdown: string,
+  context: string
 ): Promise<string> {
   if (!notesMarkdown.trim()) {
     throw new Error("No notes to summarize.");
   }
 
-  return ollamaGenerate(notesMarkdown);
+  const prompt = context
+    ? `--- CAMPAIGN CONTEXT ---\n${context}\n\n--- SESSION NOTES ---\n${notesMarkdown}`
+    : notesMarkdown;
+
+  return ollamaGenerate(prompt, SESSION_SUMMARY_SYSTEM);
 }
 
 /**

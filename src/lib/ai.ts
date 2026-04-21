@@ -66,6 +66,26 @@ export async function generateSessionSummary(
   return ollamaGenerate(prompt, SESSION_SUMMARY_SYSTEM);
 }
 
+const NOTE_POLISH_SYSTEM = `You are a prose editor for a tabletop RPG campaign journal written from a player's perspective. You will receive campaign context (character info, relevant NPCs, locations) followed by rough session notes. Rewrite the notes into clear, well-structured narrative prose. Keep the same events, details, and chronological order — do not add events, speculation, or information not present in the original notes. Use the correct names for characters, NPCs, and locations from the context provided. Write in past tense, third person. Organize into paragraphs grouped by scene or topic. You may use markdown formatting (headings, bold, italic) for readability. Preserve all factual details from the original notes.`;
+
+/**
+ * Polish rough session notes into fuller narrative prose.
+ */
+export async function polishSessionNotes(
+  notesMarkdown: string,
+  context: string
+): Promise<string> {
+  if (!notesMarkdown.trim()) {
+    throw new Error("No notes to polish.");
+  }
+
+  const prompt = context
+    ? `--- CAMPAIGN CONTEXT ---\n${context}\n\n--- SESSION NOTES ---\n${notesMarkdown}`
+    : notesMarkdown;
+
+  return ollamaGenerate(prompt, NOTE_POLISH_SYSTEM);
+}
+
 /**
  * Check if Ollama is reachable and return available model info.
  */

@@ -12,6 +12,7 @@ import { RelationPicker, type RelationOption } from "@/components/shared/relatio
 import { SessionQuestList } from "@/components/sessions/session-quest-list";
 import { createSession, updateSession } from "@/lib/actions/sessions";
 import { toast } from "sonner";
+import { NotePolishPanel } from "@/components/sessions/note-polish-panel";
 import { Users, MapPin, Shield, Loader2, Check } from "lucide-react";
 import type { JSONContent } from "@tiptap/react";
 import type { SessionDetail } from "@/types";
@@ -326,15 +327,25 @@ export function SessionForm({
         </div>
       </div>
 
-      {/* Session Notes */}
-      <div className="space-y-2">
-        <Label>Session Notes</Label>
-        <RichTextEditor
-          content={notesBody}
-          onChange={handleNotesChange}
-          placeholder="Write your session notes..."
-        />
-      </div>
+      {/* Session Notes (+ Polish Panel in edit mode) */}
+      {isEdit ? (
+        <NotePolishPanel sessionId={session.id}>
+          <RichTextEditor
+            content={notesBody}
+            onChange={handleNotesChange}
+            placeholder="Write your session notes..."
+          />
+        </NotePolishPanel>
+      ) : (
+        <div className="space-y-2">
+          <Label>Session Notes</Label>
+          <RichTextEditor
+            content={notesBody}
+            onChange={handleNotesChange}
+            placeholder="Write your session notes..."
+          />
+        </div>
+      )}
 
       {/* Quests & Goals — inline creation list */}
       <SessionQuestList

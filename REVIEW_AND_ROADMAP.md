@@ -33,6 +33,12 @@ These were not in the original DEVELOPMENT_PLAN.md but were implemented during o
 | **Container Queries** | Party members grid uses Tailwind v4 @container for true responsive sizing |
 | **Combobox Input** | Searchable dropdowns with inline option creation |
 | **First/Last Appearance Tracking** | Auto-computed when sessions are linked/unlinked to entities |
+| **Session Auto-Save** | 1.5s debounced auto-save on session edit form with save status indicator and "Save & Close" button |
+| **Dark/Light Theme Toggle** | Warm parchment light theme via next-themes, toggle on Settings page, persisted to localStorage |
+| **Campaign Export** | Full campaign Markdown export (character, NPCs, locations, orgs, items, quests, sessions) on Settings page |
+| **AI Foundation (Ollama)** | Local AI via Ollama — `lib/ai.ts` fetch wrapper, `OLLAMA_URL`/`OLLAMA_MODEL` env vars, connection status on Settings page. No API key or subscription needed |
+| **Session Summary Generator** | "Generate Summary" button on session detail page. 3-5 bullet points using session-scoped context (character profile + linked entities only). Saved to `summary` field, shown on dashboard |
+| **Tiptap Toolbar Styling Fixes** | Custom ProseMirror CSS for headings, blockquotes (gold callout), task lists, horizontal rules — Tailwind preflight strips defaults without typography plugin |
 
 ### Planned Feature That Was Removed
 
@@ -44,7 +50,7 @@ These were not in the original DEVELOPMENT_PLAN.md but were implemented during o
 
 - No multiplayer/collaboration
 - No user authentication
-- No AI features
+- ~~No AI features~~ — AI implemented via Ollama (local, free, opt-in)
 - No Notion sync/import
 - No mobile-first or native app
 - No public publishing mode
@@ -119,7 +125,7 @@ Sessions, NPCs, Locations, Organizations, Items, Quests — each with: list view
 
 13. **Gold / Inventory Tracking** — Track party gold, consumables, and item quantities. Currently Items are binary (have/sold); adding quantity, value, and a running total would be useful.
 
-14. **Dark/Light Theme Toggle** — Currently dark-only. Some users may want a light mode for daytime use. The CSS variables are already well-structured for this.
+14. ~~**Dark/Light Theme Toggle**~~ — **Complete** (commit `20bd3b6`). Warm parchment light theme + toggle on Settings page.
 
 15. **Campaign Templates** — Pre-built campaign seeds with sample sessions, NPCs, locations for new users or testing.
 
@@ -131,7 +137,7 @@ These assume a local LLM (e.g., Ollama) or API integration (Claude, OpenAI) conf
 
 #### Tier 1 — High Value, Low Complexity
 
-16. **Session Summary Generator** — Takes the full Tiptap JSON notes from a session and produces a 3-5 bullet point summary. Useful for the dashboard "Last Session Recap" and for players who want quick refreshers. Input: session notes JSON. Output: structured summary text saved to a `summary` field on Session.
+16. ~~**Session Summary Generator**~~ — **Complete**. "Generate Summary" button on session detail page. Produces 3-5 bullet points using session-scoped context (character profile + linked NPCs/locations/orgs/quests). Saved to `summary` field on Session, shown on dashboard.
 
 17. **Campaign Recap Generator** — "Previously on The Adventurer's Chronicle..." — Takes the last N sessions and generates a narrative recap paragraph. Could be shown on the dashboard or triggered on-demand. Useful before each game night.
 
@@ -161,25 +167,28 @@ These assume a local LLM (e.g., Ollama) or API integration (Claude, OpenAI) conf
 
 28. **Auto-Linking** — After writing session notes, AI suggests entities to link (NPCs, locations, organizations mentioned in the text) and auto-creates @mention tags or relation picks.
 
-#### AI Architecture Considerations
+#### AI Architecture (Current Implementation)
 
-- **Provider-agnostic**: Support Ollama (local), Claude API, OpenAI API via a provider config in Settings
-- **Context window management**: Campaign data can be large; use RAG (retrieval-augmented generation) with embeddings stored in PostgreSQL (pgvector extension) for semantic search across all notes
-- **Cost controls**: Token usage tracking, configurable limits, local-first option with Ollama
-- **Privacy**: All data stays on the user's server; API calls only when explicitly triggered
-- **UX pattern**: AI actions should be triggered by explicit buttons (magic wand icon), never automatic. Results shown in a preview panel before saving.
+- **Provider**: Ollama only (local, free, private). No API key or subscription needed
+- **Model**: Configurable via `OLLAMA_MODEL` env var (default: `gemma3:12b`)
+- **System prompts**: Managed in app code (`src/lib/ai.ts`), not baked into custom Ollama models
+- **Context strategy**: Session-scoped — only character profile + entities linked to the specific session (not full campaign dump). Keeps prompts small and relevant
+- **Key files**: `src/lib/ai.ts` (Ollama wrapper), `src/lib/actions/ai.ts` (server actions + context builder)
+- **Privacy**: All data stays on the user's server; Ollama runs locally
+- **UX pattern**: AI actions triggered by explicit buttons, never automatic. Results shown before saving
+- **Future**: Could add provider-agnostic layer (Claude API, OpenAI) if needed later
 
 ---
 
-## Part 4: Confirmed Roadmap (Reviewed 2026-04-19)
+## Part 4: Confirmed Roadmap (Reviewed 2026-04-20)
 
 | Priority | Feature | Type | Notes |
 |----------|---------|------|-------|
 | ~~**1**~~ | ~~Session edit auto-save~~ | ~~QoL~~ | **Complete** (commit `93e610b`). Full form auto-save with 1.5s debounce, "Save & Close" button, save status indicator. |
-| **2** | Dark / Light theme toggle | QoL | Light-mode color palette + toggle on Settings page. CSS variables are already structured for this. Persisted to localStorage like sidebar mode. |
-| **3** | Enhanced campaign export | QoL | Full campaign export to single Markdown file (all entities + sessions). Optimized for feeding to Claude Desktop as campaign context. |
-| **4** | AI foundation | AI infra | Anthropic SDK (`@anthropic-ai/sdk`), `ANTHROPIC_API_KEY` env var in Docker Compose, thin `lib/ai.ts` wrapper. Claude API as primary provider. |
-| **5** | Session Summary Generator | AI Tier 1 | "Generate Summary" button on session detail. Produces 3-5 bullet points saved to new `summary` field on Session. Shown on dashboard recent sessions block. |
+| ~~**2**~~ | ~~Dark / Light theme toggle~~ | ~~QoL~~ | **Complete** (commit `20bd3b6`). Warm parchment light theme + toggle on Settings page. Powered by next-themes, persisted to localStorage. |
+| ~~**3**~~ | ~~Enhanced campaign export~~ | ~~QoL~~ | **Complete** (commit `b0e7e89`). Full campaign export (character, NPCs, locations, orgs, items, quests, sessions) to single Markdown file on Settings page. Replaces old session-only export. |
+| ~~**4**~~ | ~~AI foundation~~ | ~~AI infra~~ | **Complete** (commit `ae2ad78`). Ollama (not Anthropic SDK — free, local, no API key). `lib/ai.ts` wrapper, `OLLAMA_URL`/`OLLAMA_MODEL` env vars, Settings page status card. |
+| ~~**5**~~ | ~~Session Summary Generator~~ | ~~AI Tier 1~~ | **Complete** (commit `e4234dc`). Session-scoped context (character + linked entities only), `summary` field on Session, dashboard integration. |
 | **6** | Note Enhancement | AI Tier 1 | "Polish Notes" button on session edit. Expands rough shorthand into fuller prose. Preview/diff before accepting. |
 | **7** | Quest Thread Detector | AI Tier 2 | Analyze all session notes to find: unresolved plot threads, entities mentioned but not created, quests needing status updates. |
 | **8** | Auto-Linking | AI Tier 2 | After writing session notes, AI suggests entity links ("Link Thorn to this session?"). Complements auto-save. |

@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { tiptapJsonToMarkdown } from "@/lib/tiptap-to-markdown";
 import {
   generateSessionSummary,
+  polishSessionNotes,
   checkOllamaConnection as checkConnection,
 } from "@/lib/ai";
 import type { JSONContent } from "@tiptap/react";
@@ -177,6 +178,28 @@ export async function generateAndSaveSummary(
   revalidatePath("/dashboard");
 
   return summary;
+}
+
+/**
+ * Polish rough session notes into narrative prose (ephemeral — not saved).
+ */
+export async function polishNotes(sessionId: string): Promise<string> {
+  const session = await prisma.session.findUnique({
+    where: { id: sessionId },
+    select: { notesBody: true, campaignId: true },
+  });
+
+  if (!session) throw new Error("Session not found.");
+  if (!session.notesBody) throw new Error("Session has no notes to polish.");
+
+  const [markdown, context] = await Promise.all([
+    Promise.resolve(tiptapJsonToMarkdown(session.notesBody as JSONContent)),
+    buildSessionContext(sessionId, session.campaignId),
+  ]);
+
+  if (!markdown.trim()) throw new Error("Session notes are empty.");
+
+  return polishSessionNotes(markdown, context);
 }
 
 /**

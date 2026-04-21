@@ -1,7 +1,5 @@
 const OLLAMA_URL = process.env.OLLAMA_URL || "http://localhost:11434";
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "qwen3:14b";
-
-const SESSION_SUMMARY_SYSTEM = `You are a concise note summarizer for a tabletop RPG campaign journal. Given session notes, produce a summary of 3-5 bullet points. Each bullet should be one sentence capturing a key event, discovery, or decision. Use plain text, no markdown formatting. Do not add commentary or analysis — just summarize what happened. /no_think`;
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "Dnd-Summarizer";
 
 interface OllamaGenerateResponse {
   response: string;
@@ -14,8 +12,9 @@ interface OllamaTagsResponse {
 
 /**
  * Call Ollama's generate endpoint (non-streaming).
+ * System prompt is expected to be baked into the model's Modelfile.
  */
-async function ollamaGenerate(prompt: string, system: string): Promise<string> {
+async function ollamaGenerate(prompt: string): Promise<string> {
   const url = `${OLLAMA_URL}/api/generate`;
 
   let res: Response;
@@ -26,11 +25,10 @@ async function ollamaGenerate(prompt: string, system: string): Promise<string> {
       body: JSON.stringify({
         model: OLLAMA_MODEL,
         prompt,
-        system,
         stream: false,
       }),
     });
-  } catch (err) {
+  } catch {
     throw new Error(
       `Cannot connect to Ollama at ${OLLAMA_URL}. Make sure Ollama is running on your server.`
     );
@@ -46,7 +44,7 @@ async function ollamaGenerate(prompt: string, system: string): Promise<string> {
 }
 
 /**
- * Generate a 3-5 bullet point summary of session notes.
+ * Generate a summary of session notes using the configured Ollama model.
  */
 export async function generateSessionSummary(
   notesMarkdown: string
@@ -55,7 +53,7 @@ export async function generateSessionSummary(
     throw new Error("No notes to summarize.");
   }
 
-  return ollamaGenerate(notesMarkdown, SESSION_SUMMARY_SYSTEM);
+  return ollamaGenerate(notesMarkdown);
 }
 
 /**

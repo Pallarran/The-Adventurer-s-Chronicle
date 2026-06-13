@@ -127,10 +127,10 @@ function QuestRowItem({
         <button
           type="button"
           onClick={onToggleExpand}
-          className="flex min-w-0 flex-1 items-center gap-2 text-left"
+          className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden text-left"
         >
-          <span className="truncate font-medium">{row.name || "Untitled quest"}</span>
-          <span className="truncate text-xs text-muted-foreground">
+          <span className="min-w-0 shrink-0 max-w-[60%] truncate font-medium">{row.name || "Untitled quest"}</span>
+          <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
             {row.description || ""}
           </span>
         </button>

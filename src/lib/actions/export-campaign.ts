@@ -36,6 +36,28 @@ function sessionRef(s: { sessionNumber: number; title?: string | null }): string
   return s.title ? `Session ${s.sessionNumber} (${s.title})` : `Session ${s.sessionNumber}`;
 }
 
+interface StatusChange {
+  fromStatus: string | null;
+  toStatus: string;
+  note: string | null;
+}
+
+function transitionLabel(c: StatusChange): string {
+  const to = QUEST_STATUS_LABEL[c.toStatus] ?? c.toStatus;
+  return c.fromStatus
+    ? `${QUEST_STATUS_LABEL[c.fromStatus] ?? c.fromStatus} → ${to}`
+    : `Created as ${to}`;
+}
+
+// Bullet for a quest's Status History (includes the session where it happened).
+function changeLine(
+  c: StatusChange & { session: { sessionNumber: number; title?: string | null } | null }
+): string {
+  const where = c.session ? sessionRef(c.session) : "no session";
+  const note = c.note ? ` — ${c.note}` : "";
+  return `- ${transitionLabel(c)} — ${where}${note}`;
+}
+
 export async function exportCampaignMarkdown(
   campaignId: string
 ): Promise<string> {
@@ -88,6 +110,10 @@ export async function exportCampaignMarkdown(
             include: { session: { select: { sessionNumber: true } } },
             orderBy: { session: { sessionNumber: "asc" } },
           },
+          statusChanges: {
+            include: { session: { select: { sessionNumber: true, title: true } } },
+            orderBy: { createdAt: "asc" },
+          },
         },
         orderBy: { name: "asc" },
       }),
@@ -98,6 +124,10 @@ export async function exportCampaignMarkdown(
           locations: { include: { location: { select: { name: true } } } },
           organizations: { include: { organization: { select: { name: true } } } },
           quests: { include: { quest: { select: { name: true, status: true } } } },
+          questStatusChanges: {
+            include: { quest: { select: { name: true, deletedAt: true } } },
+            orderBy: { createdAt: "asc" },
+          },
         },
         orderBy: { sessionNumber: "asc" },
       }),
@@ -297,6 +327,12 @@ export async function exportCampaignMarkdown(
         const nums = quest.sessions.map((s) => `#${s.session.sessionNumber}`).join(", ");
         parts.push(`**Linked Sessions:** ${nums}`);
       }
+
+      if (quest.statusChanges.length > 0) {
+        parts.push(
+          `**Status History:**\n${quest.statusChanges.map(changeLine).join("\n")}`
+        );
+      }
     }
   }
 
@@ -338,6 +374,18 @@ export async function exportCampaignMarkdown(
         );
       }
       if (featured.length) parts.push(featured.join("\n"));
+
+      const questUpdates = session.questStatusChanges.filter((c) => !c.quest.deletedAt);
+      if (questUpdates.length > 0) {
+        parts.push(
+          `**Quest Updates:**\n${questUpdates
+            .map((c) => {
+              const note = c.note ? ` — ${c.note}` : "";
+              return `- ${c.quest.name}: ${transitionLabel(c)}${note}`;
+            })
+            .join("\n")}`
+        );
+      }
 
       if (session.notesBody) {
         const text = md(session.notesBody);

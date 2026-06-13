@@ -4,6 +4,7 @@ import { getActiveCampaign } from "@/lib/campaign";
 import { getNpcs } from "@/lib/actions/npcs";
 import { getLocations } from "@/lib/actions/locations";
 import { getOrganizations } from "@/lib/actions/organizations";
+import { getOpenQuests, getResolvedQuests } from "@/lib/actions/quests";
 import { PageHeaderSetter } from "@/components/layout/page-header-setter";
 import { SessionForm, SessionFormActions } from "@/components/sessions/session-form";
 
@@ -22,10 +23,12 @@ export default async function EditSessionPage({
   if (!campaign) redirect("/");
   if (!session) notFound();
 
-  const [npcs, locations, organizations] = await Promise.all([
+  const [npcs, locations, organizations, openQuests, resolvedQuests] = await Promise.all([
     getNpcs(campaign.id),
     getLocations(campaign.id),
     getOrganizations(campaign.id),
+    getOpenQuests(campaign.id),
+    getResolvedQuests(campaign.id),
   ]);
 
   return (
@@ -41,6 +44,18 @@ export default async function EditSessionPage({
         allNpcs={npcs.map((n) => ({ id: n.id, name: n.name }))}
         allLocations={locations.map((l) => ({ id: l.id, name: l.name }))}
         allOrganizations={organizations.map((o) => ({ id: o.id, name: o.name }))}
+        openQuests={openQuests.map((q) => ({
+          id: q.id,
+          name: q.name,
+          status: q.status,
+          description: q.description,
+        }))}
+        resolvedQuests={resolvedQuests.map((q) => ({
+          id: q.id,
+          name: q.name,
+          status: q.status,
+          description: q.description,
+        }))}
       />
     </div>
   );

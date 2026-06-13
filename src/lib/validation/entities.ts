@@ -151,6 +151,8 @@ export const questCreateSchema = z.object({
   description: z.string().trim().max(5000, "Description is too long.").optional(),
   status: questStatus.optional(),
   questGiverNpcId: id.optional(),
+  // Session this quest was first noted in — stamps the creation status-history entry.
+  originSessionId: id.optional(),
 });
 
 export const questUpdateSchema = z.object({

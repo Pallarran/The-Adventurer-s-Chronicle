@@ -97,6 +97,9 @@ model Session {
   organizations SessionOrganization[]
   quests        SessionQuest[]
 
+  // Quest lifecycle changes that happened in this session
+  questStatusChanges QuestStatusChange[]
+
   // Reverse relations for first/last appearance
   npcFirstAppearances      Npc[]          @relation("NpcFirstAppearance")
   npcLastAppearances       Npc[]          @relation("NpcLastAppearance")
@@ -338,9 +341,25 @@ model Quest {
   questGiverNpcId String?
   questGiver      Npc?   @relation("QuestGiver", fields: [questGiverNpcId], references: [id], onDelete: SetNull)
 
-  sessions SessionQuest[]
+  sessions      SessionQuest[]
+  statusChanges QuestStatusChange[]
 
   @@index([campaignId, deletedAt])
+}
+
+model QuestStatusChange {
+  id         String       @id @default(cuid())
+  questId    String
+  quest      Quest        @relation(fields: [questId], references: [id], onDelete: Cascade)
+  fromStatus QuestStatus?
+  toStatus   QuestStatus
+  sessionId  String?
+  session    Session?     @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  note       String?
+  createdAt  DateTime     @default(now())
+
+  @@index([questId])
+  @@index([sessionId])
 }
 
 // ============================================================

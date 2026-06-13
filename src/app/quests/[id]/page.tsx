@@ -5,9 +5,11 @@ import { PageHeaderSetter } from "@/components/layout/page-header-setter";
 import { Badge, badgeVariants } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { Pencil, ScrollText, User } from "lucide-react";
+import { Pencil, ScrollText, User, History } from "lucide-react";
 import { QuestDeleteButton } from "./delete-button";
+import { QuestStatusTimeline } from "@/components/quests/quest-status-timeline";
 import { QUEST_STATUS_COLORS, QUEST_STATUS_LABELS } from "@/lib/colors";
+import { RESOLVED_STATUSES } from "@/lib/quest-status";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +23,19 @@ export default async function QuestDetailPage({
   if (!quest) notFound();
 
   const statusColor = QUEST_STATUS_COLORS[quest.status] ?? "#6a6a7a";
+
+  // Lifecycle anchors derived from the status history.
+  const changes = quest.statusChanges;
+  const firstSeen =
+    changes.find((c) => c.session)?.session ??
+    [...quest.sessions].sort(
+      (a, b) => a.session.sessionNumber - b.session.sessionNumber
+    )[0]?.session ??
+    null;
+  const resolvedSession = RESOLVED_STATUSES.includes(quest.status)
+    ? [...changes].reverse().find((c) => RESOLVED_STATUSES.includes(c.toStatus) && c.session)
+        ?.session ?? null
+    : null;
 
   return (
     <div>
@@ -63,6 +78,27 @@ export default async function QuestDetailPage({
             </Link>
           </span>
         )}
+        {(firstSeen || resolvedSession) && (
+          <span className="flex items-center gap-1 text-sm text-muted-foreground">
+            {firstSeen && (
+              <>
+                First seen
+                <Link href={`/sessions/${firstSeen.id}`} className="text-foreground hover:underline">
+                  #{firstSeen.sessionNumber}
+                </Link>
+              </>
+            )}
+            {firstSeen && resolvedSession && <span className="text-border">·</span>}
+            {resolvedSession && (
+              <>
+                Resolved
+                <Link href={`/sessions/${resolvedSession.id}`} className="text-foreground hover:underline">
+                  #{resolvedSession.sessionNumber}
+                </Link>
+              </>
+            )}
+          </span>
+        )}
       </div>
 
       {/* Description */}
@@ -102,6 +138,29 @@ export default async function QuestDetailPage({
           )}
         </div>
       </div>
+
+      {/* Status history — horizontal timeline */}
+      {changes.length > 0 && (
+        <div className="mb-6">
+          <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold">
+            <History className="h-4 w-4" />
+            Status History
+          </h2>
+          <div className="overflow-hidden rounded-lg border border-border bg-card p-4">
+            <QuestStatusTimeline
+              nodes={changes.map((c) => ({
+                id: c.id,
+                status: c.toStatus,
+                isCreation: c.fromStatus === null,
+                sessionId: c.session?.id ?? null,
+                sessionNumber: c.session?.sessionNumber ?? null,
+                sessionTitle: c.session?.title ?? null,
+                note: c.note,
+              }))}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

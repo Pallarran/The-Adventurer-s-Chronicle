@@ -1,24 +1,19 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "@/lib/actions/sessions";
+import { getQuestStatusChangesForSession } from "@/lib/actions/quests";
 import { PageHeaderSetter } from "@/components/layout/page-header-setter";
 import { RichTextDisplay } from "@/components/shared/rich-text-display";
+import { SessionQuestRow } from "@/components/sessions/session-quest-row";
 import { badgeVariants } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { Pencil, CalendarDays, ScrollText, Users, MapPin, Shield, Compass } from "lucide-react";
+import { Pencil, CalendarDays, ScrollText, Users, MapPin, Shield, Compass, History } from "lucide-react";
 import { SessionDeleteButton } from "./delete-button";
 import { SessionSummaryBlock } from "./summary-block";
+import { QUEST_STATUS_ORDER, QUEST_STATUS_STYLES } from "@/lib/quest-status";
+import { QUEST_STATUS_COLORS, QUEST_STATUS_LABELS } from "@/lib/colors";
 import type { JSONContent } from "@tiptap/react";
-
-const QUEST_STATUS: { value: string; label: string; borderClass: string; dotClass: string }[] = [
-  { value: "LEAD", label: "Lead", borderClass: "border-l-amber-500", dotClass: "bg-amber-500" },
-  { value: "ACTIVE", label: "Active", borderClass: "border-l-blue-500", dotClass: "bg-blue-500" },
-  { value: "COMPLETED", label: "Completed", borderClass: "border-l-emerald-500", dotClass: "bg-emerald-500" },
-  { value: "FAILED", label: "Failed", borderClass: "border-l-red-500", dotClass: "bg-red-500" },
-];
-
-const QUEST_CONFIG = Object.fromEntries(QUEST_STATUS.map((s) => [s.value, s]));
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +25,10 @@ export default async function SessionDetailPage({
   const { id } = await params;
   const session = await getSession(id);
   if (!session) notFound();
+
+  const questUpdates = (await getQuestStatusChangesForSession(id)).filter(
+    (c) => !c.quest.deletedAt
+  );
 
   return (
     <div>
@@ -138,25 +137,16 @@ export default async function SessionDetailPage({
 
         {session.quests.length > 0 ? (
           <div className="divide-y divide-border/30">
-            {session.quests.map((q) => {
-              const cfg = QUEST_CONFIG[q.quest.status] ?? QUEST_STATUS[0];
-              return (
-                <Link
-                  key={q.quest.id}
-                  href={`/quests/${q.quest.id}`}
-                  className={cn(
-                    "grid grid-cols-[10px_minmax(0,1fr)_minmax(0,1.5fr)] items-center gap-2 border-l-2 px-3 py-2 text-sm transition-colors hover:bg-muted/30",
-                    cfg.borderClass
-                  )}
-                >
-                  <span className={cn("h-2.5 w-2.5 rounded-full", cfg.dotClass)} />
-                  <span className="truncate font-medium">{q.quest.name}</span>
-                  <span className="truncate text-xs text-muted-foreground">
-                    {q.quest.description || ""}
-                  </span>
-                </Link>
-              );
-            })}
+            {session.quests.map((q) => (
+              <SessionQuestRow
+                key={q.quest.id}
+                questId={q.quest.id}
+                sessionId={session.id}
+                name={q.quest.name}
+                description={q.quest.description}
+                initialStatus={q.quest.status}
+              />
+            ))}
           </div>
         ) : (
           <div className="px-3 py-4 text-center text-sm text-muted-foreground/60">
@@ -166,14 +156,52 @@ export default async function SessionDetailPage({
 
         {/* Legend */}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-border px-3 py-2 text-[11px] text-muted-foreground/60">
-          {QUEST_STATUS.map((s) => (
-            <span key={s.value} className="flex items-center gap-1">
-              <span className={cn("h-2 w-2 rounded-full", s.dotClass)} />
-              {s.label}
+          {QUEST_STATUS_ORDER.map((value) => (
+            <span key={value} className="flex items-center gap-1">
+              <span className={cn("h-2 w-2 rounded-full", QUEST_STATUS_STYLES[value].dotClass)} />
+              {QUEST_STATUS_STYLES[value].label}
             </span>
           ))}
         </div>
       </div>
+
+      {/* Quest updates made in this session */}
+      {questUpdates.length > 0 && (
+        <div className="mt-6 rounded-lg border border-border bg-card">
+          <div className="flex items-center gap-2 border-b border-border px-3 py-2 text-sm font-medium">
+            <History className="h-4 w-4" />
+            Quest Updates This Session
+          </div>
+          <div className="divide-y divide-border/30">
+            {questUpdates.map((c) => {
+              const color = QUEST_STATUS_COLORS[c.toStatus];
+              return (
+                <Link
+                  key={c.id}
+                  href={`/quests/${c.quest.id}`}
+                  className="flex items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-muted/30"
+                >
+                  <span
+                    className="inline-flex shrink-0 items-center rounded-full border border-transparent px-2 py-0.5 text-xs font-medium"
+                    style={{ backgroundColor: `${color}20`, color }}
+                  >
+                    {QUEST_STATUS_LABELS[c.toStatus]}
+                  </span>
+                  <span className="truncate font-medium">{c.quest.name}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    {c.fromStatus
+                      ? `${QUEST_STATUS_LABELS[c.fromStatus]} → ${QUEST_STATUS_LABELS[c.toStatus]}`
+                      : "created"}
+                  </span>
+                  {c.note && (
+                    <span className="truncate text-xs text-muted-foreground/70">— {c.note}</span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

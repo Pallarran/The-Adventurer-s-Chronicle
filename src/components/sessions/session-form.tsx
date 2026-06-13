@@ -9,8 +9,13 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { RichTextEditor } from "@/components/shared/rich-text-editor";
 import { RelationPicker, type RelationOption } from "@/components/shared/relation-picker";
-import { SessionQuestList } from "@/components/sessions/session-quest-list";
+import {
+  SessionQuestPanel,
+  type QuestPanelItem,
+  type StagedQuestChanges,
+} from "@/components/sessions/session-quest-panel";
 import { createSession, updateSession } from "@/lib/actions/sessions";
+import { createQuest, setQuestStatus } from "@/lib/actions/quests";
 import { toast } from "sonner";
 import { NotePolishPanel } from "@/components/sessions/note-polish-panel";
 import { Users, MapPin, Shield, Loader2, Check } from "lucide-react";
@@ -40,6 +45,8 @@ interface SessionFormProps {
   allNpcs: RelationOption[];
   allLocations: RelationOption[];
   allOrganizations: RelationOption[];
+  openQuests: QuestPanelItem[];
+  resolvedQuests: QuestPanelItem[];
 }
 
 export function SessionForm({
@@ -49,6 +56,8 @@ export function SessionForm({
   allNpcs,
   allLocations,
   allOrganizations,
+  openQuests,
+  resolvedQuests,
 }: SessionFormProps) {
   const router = useRouter();
   const isEdit = !!session;
@@ -71,9 +80,9 @@ export function SessionForm({
   const [selectedOrgs, setSelectedOrgs] = useState<RelationOption[]>(
     session?.organizations.map((o) => o.organization) ?? []
   );
-  const [questIds, setQuestIds] = useState<string[]>(
-    session?.quests.map((q) => q.quest.id) ?? []
-  );
+  // Quest links are owned by the status history (no manual list). In create
+  // mode the panel stages changes here, applied after the session is created.
+  const stagedQuestsRef = useRef<StagedQuestChanges>({ statusEdits: [], newQuests: [] });
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   useFormGuard(dirty);
@@ -178,7 +187,6 @@ export function SessionForm({
           npcIds: selectedNpcs.map((n) => n.id),
           locationIds: selectedLocations.map((l) => l.id),
           organizationIds: selectedOrgs.map((o) => o.id),
-          questIds,
         });
         if (!result.ok) {
           toast.error(result.error);
@@ -200,7 +208,7 @@ export function SessionForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     sessionNumber, title, realDatePlayed, inGameDate, notesBody,
-    selectedNpcs, selectedLocations, selectedOrgs, questIds,
+    selectedNpcs, selectedLocations, selectedOrgs,
   ]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -221,7 +229,6 @@ export function SessionForm({
         npcIds: selectedNpcs.map((n) => n.id),
         locationIds: selectedLocations.map((l) => l.id),
         organizationIds: selectedOrgs.map((o) => o.id),
-        questIds,
       };
 
       if (isEdit) {
@@ -243,8 +250,24 @@ export function SessionForm({
           toast.error(result.error);
           return;
         }
+        // Apply staged quest work against the new session: create-here quests
+        // and status changes both stamp the new session (and tie the quest to it).
+        const newId = result.data.id;
+        const staged = stagedQuestsRef.current;
+        for (const nq of staged.newQuests) {
+          await createQuest({
+            campaignId,
+            name: nq.name,
+            status: nq.status,
+            description: nq.description ?? undefined,
+            originSessionId: newId,
+          });
+        }
+        for (const edit of staged.statusEdits) {
+          await setQuestStatus(edit.questId, edit.toStatus, { sessionId: newId });
+        }
         toast.success("Session created.");
-        router.push(`/sessions/${result.data.id}`);
+        router.push(`/sessions/${newId}`);
       }
     } catch {
       toast.error("Failed to save session.");
@@ -364,19 +387,24 @@ export function SessionForm({
         </div>
       )}
 
-      {/* Quests & Goals — inline creation list */}
-      <SessionQuestList
-        initialQuests={
+      {/* Quests & Goals — open-thread tracker */}
+      <SessionQuestPanel
+        linkedQuests={
           session?.quests.map((q) => ({
             id: q.quest.id,
             name: q.quest.name,
             status: q.quest.status,
             description: q.quest.description,
-            persisted: true,
           })) ?? []
         }
+        openQuests={openQuests}
+        resolvedQuests={resolvedQuests}
         campaignId={campaignId}
-        onQuestsChange={setQuestIds}
+        sessionId={session?.id}
+        onStagedChange={(staged) => {
+          stagedQuestsRef.current = staged;
+        }}
+        onActivity={() => setDirty(true)}
         disabled={saving}
       />
 

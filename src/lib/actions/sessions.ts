@@ -83,9 +83,8 @@ export async function createSession(
         organizations: data.organizationIds?.length
           ? { create: data.organizationIds.map((organizationId) => ({ organizationId })) }
           : undefined,
-        quests: data.questIds?.length
-          ? { create: data.questIds.map((questId) => ({ questId })) }
-          : undefined,
+        // Quest links are owned by the quest actions (status-history stamps),
+        // applied by the form's create-mode orchestration after this returns.
       },
     });
 
@@ -119,12 +118,12 @@ export async function updateSession(
       prisma.sessionOrganization.findMany({ where: { sessionId: id }, select: { organizationId: true } }),
     ]);
 
-    // Update relations by deleting and recreating
+    // Update relations by deleting and recreating. Quest links are NOT
+    // touched here — they're owned by the quest actions (status-history stamps).
     await prisma.$transaction([
       prisma.sessionNpc.deleteMany({ where: { sessionId: id } }),
       prisma.sessionLocation.deleteMany({ where: { sessionId: id } }),
       prisma.sessionOrganization.deleteMany({ where: { sessionId: id } }),
-      prisma.sessionQuest.deleteMany({ where: { sessionId: id } }),
     ]);
 
     const session = await prisma.session.update({
@@ -143,9 +142,6 @@ export async function updateSession(
           : undefined,
         organizations: data.organizationIds?.length
           ? { create: data.organizationIds.map((organizationId) => ({ organizationId })) }
-          : undefined,
-        quests: data.questIds?.length
-          ? { create: data.questIds.map((questId) => ({ questId })) }
           : undefined,
       },
     });

@@ -113,5 +113,8 @@ export type QuestDetail = Prisma.QuestGetPayload<{
   include: {
     questGiver: { select: { id: true; name: true } };
     sessions: { include: { session: { select: { id: true; sessionNumber: true; title: true } } } };
+    statusChanges: {
+      include: { session: { select: { id: true; sessionNumber: true; title: true } } };
+    };
   };
 }>;

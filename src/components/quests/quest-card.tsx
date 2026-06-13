@@ -3,25 +3,12 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Compass, ScrollText, ChevronDown } from "lucide-react";
-import { updateQuest } from "@/lib/actions/quests";
+import { QuestStatusControl } from "@/components/quests/quest-status-control";
+import { Compass, ScrollText } from "lucide-react";
+import { setQuestStatus } from "@/lib/actions/quests";
 import { toast } from "sonner";
-import { QUEST_STATUS_COLORS, QUEST_STATUS_LABELS } from "@/lib/colors";
 import type { QuestListItem } from "@/types";
 import type { QuestStatus } from "@/generated/prisma/client";
-
-const STATUS_OPTIONS: { value: QuestStatus; label: string; color: string }[] = [
-  { value: "LEAD", label: QUEST_STATUS_LABELS.LEAD, color: QUEST_STATUS_COLORS.LEAD },
-  { value: "ACTIVE", label: QUEST_STATUS_LABELS.ACTIVE, color: QUEST_STATUS_COLORS.ACTIVE },
-  { value: "COMPLETED", label: QUEST_STATUS_LABELS.COMPLETED, color: QUEST_STATUS_COLORS.COMPLETED },
-  { value: "FAILED", label: QUEST_STATUS_LABELS.FAILED, color: QUEST_STATUS_COLORS.FAILED },
-];
 
 interface QuestCardProps {
   quest: QuestListItem;
@@ -30,7 +17,6 @@ interface QuestCardProps {
 export function QuestCard({ quest }: QuestCardProps) {
   const [status, setStatus] = useState<QuestStatus>(quest.status);
   const [isPending, startTransition] = useTransition();
-  const statusColor = QUEST_STATUS_COLORS[status] ?? "#6a6a7a";
 
   const handleStatusChange = (newStatus: QuestStatus) => {
     if (newStatus === status) return;
@@ -38,7 +24,7 @@ export function QuestCard({ quest }: QuestCardProps) {
     setStatus(newStatus); // optimistic
     startTransition(async () => {
       try {
-        const result = await updateQuest(quest.id, { status: newStatus });
+        const result = await setQuestStatus(quest.id, newStatus);
         if (!result.ok) {
           setStatus(prev); // revert on error
           toast.error(result.error);
@@ -55,42 +41,11 @@ export function QuestCard({ quest }: QuestCardProps) {
         {/* Status bar */}
         <div className="flex items-center gap-2 border-b border-border px-3 py-2">
           <Compass className="h-4 w-4 text-muted-foreground/50" />
-
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium transition-colors hover:opacity-80 border-transparent"
-              style={{
-                backgroundColor: `${statusColor}20`,
-                color: statusColor,
-                borderColor: `${statusColor}40`,
-              }}
-              onClick={(e) => e.preventDefault()}
-            >
-              {QUEST_STATUS_LABELS[status] ?? status}
-              <ChevronDown className="h-3 w-3" style={{ opacity: isPending ? 0.5 : 1 }} />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="start"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-            >
-              {STATUS_OPTIONS.map((opt) => (
-                <DropdownMenuItem
-                  key={opt.value}
-                  onClick={() => handleStatusChange(opt.value)}
-                  className="gap-2 text-xs"
-                >
-                  <span
-                    className="h-2 w-2 rounded-full"
-                    style={{ backgroundColor: opt.color }}
-                  />
-                  {opt.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <QuestStatusControl
+            status={status}
+            isPending={isPending}
+            onSelect={handleStatusChange}
+          />
         </div>
 
         {/* Content */}

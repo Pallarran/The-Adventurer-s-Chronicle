@@ -56,10 +56,10 @@ export function SessionQuestRow({
       <QuestStatusControl status={status} isPending={isPending} onSelect={handleSelect} />
       <Link
         href={`/quests/${questId}`}
-        className="flex min-w-0 flex-1 items-center gap-2 hover:underline"
+        className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden hover:underline"
       >
-        <span className="truncate font-medium">{name}</span>
-        <span className="truncate text-xs text-muted-foreground">{description || ""}</span>
+        <span className="shrink-0 font-medium">{name}</span>
+        <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{description || ""}</span>
       </Link>
     </div>
   );

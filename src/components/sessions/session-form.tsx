@@ -278,7 +278,7 @@ export function SessionForm({
 
   return (
     <form id="session-form" onSubmit={handleSubmit} onChange={() => setDirty(true)} className="space-y-6">
-      <fieldset disabled={saving} className="space-y-6">
+      <fieldset disabled={saving} className="min-w-0 space-y-6">
       {/* Title + compact metadata row */}
       <div className="flex flex-wrap items-end gap-4">
         <div className="min-w-[200px] flex-1 space-y-2">

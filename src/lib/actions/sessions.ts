@@ -21,7 +21,7 @@ const sessionInclude = {
   npcs: { include: { npc: { select: { id: true, name: true } } } },
   locations: { include: { location: { select: { id: true, name: true } } } },
   organizations: { include: { organization: { select: { id: true, name: true } } } },
-  quests: { include: { quest: { select: { id: true, name: true, status: true, description: true } } } },
+  quests: { include: { quest: { select: { id: true, name: true, status: true, description: true, questGiverNpcId: true } } } },
 } as const;
 
 interface SessionFilters {

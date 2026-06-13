@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { Plus, Save, Loader2, X, Compass, Link2, ChevronRight, ChevronDown } from "lucide-react";
+import { Plus, Save, Loader2, X, Compass, Link2, ChevronRight, ChevronDown, User } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import { RelationPicker, type RelationOption } from "@/components/shared/relation-picker";
 import { QuestStatusControl } from "@/components/quests/quest-status-control";
 import { createQuest, updateQuest, setQuestStatus } from "@/lib/actions/quests";
 import { QUEST_STATUS_ORDER, QUEST_STATUS_STYLES, RESOLVED_STATUSES } from "@/lib/quest-status";
@@ -23,13 +24,14 @@ export interface QuestPanelItem {
   name: string;
   status: QuestStatus;
   description: string | null;
+  questGiverNpcId: string | null;
 }
 
 export interface StagedQuestChanges {
   // existing quests whose status was changed while creating the session
   statusEdits: { questId: string; toStatus: QuestStatus }[];
   // brand-new quests authored while creating the session
-  newQuests: { name: string; status: QuestStatus; description: string | null }[];
+  newQuests: { name: string; status: QuestStatus; description: string | null; questGiverNpcId: string | null }[];
 }
 
 interface QuestRow extends QuestPanelItem {
@@ -45,6 +47,8 @@ interface SessionQuestPanelProps {
   openQuests: QuestPanelItem[];
   /** Resolved (Completed + Failed) quests — hidden behind a toggle, available to reopen. */
   resolvedQuests: QuestPanelItem[];
+  /** All NPCs in the campaign — options for the quest-giver picker. */
+  allNpcs: RelationOption[];
   campaignId: string;
   /** Undefined for a not-yet-saved session (create form). */
   sessionId?: string;
@@ -77,6 +81,7 @@ function QuestRowItem({
   saving,
   statusPending,
   isEdit,
+  allNpcs,
   onToggleExpand,
   onStatusChange,
   onSave,
@@ -88,14 +93,20 @@ function QuestRowItem({
   saving: boolean;
   statusPending: boolean;
   isEdit: boolean;
+  allNpcs: RelationOption[];
   onToggleExpand: () => void;
   onStatusChange: (s: QuestStatus) => void;
-  onSave: (data: { name: string; status: QuestStatus; description: string | null }) => void;
+  onSave: (data: { name: string; status: QuestStatus; description: string | null; questGiverNpcId: string | null }) => void;
   onDiscard: () => void;
 }) {
   const [editName, setEditName] = useState(row.name);
   const [editStatus, setEditStatus] = useState<QuestStatus>(row.status);
   const [editDescription, setEditDescription] = useState(row.description ?? "");
+  const [editQuestGiver, setEditQuestGiver] = useState<RelationOption[]>(() => {
+    if (!row.questGiverNpcId) return [];
+    const n = allNpcs.find((x) => x.id === row.questGiverNpcId);
+    return [{ id: row.questGiverNpcId, name: n?.name ?? "Unknown NPC" }];
+  });
 
   const styles = QUEST_STATUS_STYLES[row.status];
 
@@ -139,8 +150,8 @@ function QuestRowItem({
       {/* Expanded editor */}
       {expanded && (
         <div className="space-y-3 border-t border-border/50 bg-muted/10 px-3 py-3">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto]">
-            <div className="space-y-1">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+            <div className={cn("space-y-1", row.persisted ? "sm:col-span-3" : "sm:col-span-2")}>
               <Label className="text-[10px] uppercase tracking-wider text-muted-foreground/60">Name</Label>
               <Input
                 value={editName}
@@ -157,7 +168,7 @@ function QuestRowItem({
                 <select
                   value={editStatus}
                   onChange={(e) => setEditStatus(e.target.value as QuestStatus)}
-                  className="flex h-8 w-full rounded-md border border-input bg-background px-3 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:w-36"
+                  className="flex h-8 w-full rounded-md border border-input bg-background px-3 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   {QUEST_STATUS_ORDER.map((value) => (
                     <option key={value} value={value}>
@@ -167,6 +178,16 @@ function QuestRowItem({
                 </select>
               </div>
             )}
+            <div className="space-y-1">
+              <RelationPicker
+                label={<><User className="h-3.5 w-3.5" /> Quest Giver</>}
+                options={allNpcs}
+                selected={editQuestGiver}
+                onChange={setEditQuestGiver}
+                placeholder="Search NPCs..."
+                single
+              />
+            </div>
           </div>
 
           <div className="space-y-1">
@@ -190,6 +211,7 @@ function QuestRowItem({
                   name: editName.trim(),
                   status: editStatus,
                   description: editDescription.trim() || null,
+                  questGiverNpcId: editQuestGiver[0]?.id ?? null,
                 })
               }
             >
@@ -218,6 +240,7 @@ export function SessionQuestPanel({
   linkedQuests,
   openQuests,
   resolvedQuests,
+  allNpcs,
   campaignId,
   sessionId,
   onStagedChange,
@@ -260,7 +283,7 @@ export function SessionQuestPanel({
       .map((r) => ({ questId: r.id, toStatus: r.status }));
     const newQuests = rows
       .filter((r) => !r.persisted && r.saved && r.name.trim())
-      .map((r) => ({ name: r.name.trim(), status: r.status, description: r.description }));
+      .map((r) => ({ name: r.name.trim(), status: r.status, description: r.description, questGiverNpcId: r.questGiverNpcId }));
     onStagedChange({ statusEdits, newQuests });
   }, [rows, isEdit, onStagedChange]);
 
@@ -296,28 +319,28 @@ export function SessionQuestPanel({
     const tempId = `temp-${++tempIdCounter}`;
     setRows((prev) => [
       ...prev,
-      { id: tempId, name: "", status: "LEAD", description: null, persisted: false, baseStatus: "LEAD", saved: false },
+      { id: tempId, name: "", status: "LEAD", description: null, questGiverNpcId: null, persisted: false, baseStatus: "LEAD", saved: false },
     ]);
     setExpandedId(tempId);
   }, []);
 
   const handleSave = useCallback(
-    async (id: string, data: { name: string; status: QuestStatus; description: string | null }) => {
+    async (id: string, data: { name: string; status: QuestStatus; description: string | null; questGiverNpcId: string | null }) => {
       const row = rows.find((r) => r.id === id);
       if (!row) return;
       onActivity?.();
 
-      // Persisted quest: name/description edits only (status flows through the badge).
+      // Persisted quest: name/description/giver edits (status flows through the badge).
       if (row.persisted) {
         setSavingId(id);
         try {
-          const result = await updateQuest(id, { name: data.name, description: data.description });
+          const result = await updateQuest(id, { name: data.name, description: data.description, questGiverNpcId: data.questGiverNpcId });
           if (!result.ok) {
             toast.error(result.error);
             return;
           }
           setRows((prev) =>
-            prev.map((r) => (r.id === id ? { ...r, name: data.name, description: data.description } : r))
+            prev.map((r) => (r.id === id ? { ...r, name: data.name, description: data.description, questGiverNpcId: data.questGiverNpcId } : r))
           );
           setExpandedId(null);
         } catch {
@@ -342,6 +365,7 @@ export function SessionQuestPanel({
           name: data.name,
           status: data.status,
           description: data.description ?? undefined,
+          questGiverNpcId: data.questGiverNpcId ?? undefined,
           originSessionId: sessionId,
         });
         if (!result.ok) {
@@ -437,6 +461,7 @@ export function SessionQuestPanel({
                 saving={savingId === row.id}
                 statusPending={statusPendingId === row.id}
                 isEdit={isEdit}
+                allNpcs={allNpcs}
                 onToggleExpand={() => setExpandedId((prev) => (prev === row.id ? null : row.id))}
                 onStatusChange={(s) => handleStatusChange(row.id, s)}
                 onSave={(data) => handleSave(row.id, data)}

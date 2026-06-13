@@ -49,12 +49,14 @@ export default async function EditSessionPage({
           name: q.name,
           status: q.status,
           description: q.description,
+          questGiverNpcId: q.questGiverNpcId,
         }))}
         resolvedQuests={resolvedQuests.map((q) => ({
           id: q.id,
           name: q.name,
           status: q.status,
           description: q.description,
+          questGiverNpcId: q.questGiverNpcId,
         }))}
       />
     </div>

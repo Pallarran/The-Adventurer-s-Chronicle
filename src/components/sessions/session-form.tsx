@@ -260,6 +260,7 @@ export function SessionForm({
             name: nq.name,
             status: nq.status,
             description: nq.description ?? undefined,
+            questGiverNpcId: nq.questGiverNpcId ?? undefined,
             originSessionId: newId,
           });
         }
@@ -395,10 +396,12 @@ export function SessionForm({
             name: q.quest.name,
             status: q.quest.status,
             description: q.quest.description,
+            questGiverNpcId: q.quest.questGiverNpcId,
           })) ?? []
         }
         openQuests={openQuests}
         resolvedQuests={resolvedQuests}
+        allNpcs={allNpcs}
         campaignId={campaignId}
         sessionId={session?.id}
         onStagedChange={(staged) => {

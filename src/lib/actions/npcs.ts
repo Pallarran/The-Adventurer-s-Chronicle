@@ -2,11 +2,16 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import type { NpcStatus, AlignmentStance, Prisma } from "@/generated/prisma/client";
+import type { NpcStatus, AlignmentStance } from "@/generated/prisma/client";
 import type { NpcListItem, NpcDetail } from "@/types";
 import { plainJson } from "@/lib/plain-json";
-
-type JsonValue = Prisma.JsonValue;
+import { createEntityActions } from "@/lib/actions/entity-factory";
+import {
+  npcCreateSchema,
+  npcUpdateSchema,
+  type CreateNpcData,
+  type UpdateNpcData,
+} from "@/lib/validation/entities";
 
 const npcListInclude = {
   organization: { select: { id: true, name: true } },
@@ -16,6 +21,7 @@ const npcListInclude = {
 
 const npcDetailInclude = {
   organization: { select: { id: true, name: true } },
+  currentLocation: { select: { id: true, name: true } },
   sessions: { include: { session: { select: { id: true, sessionNumber: true, title: true } } } },
   organizations: { include: { organization: { select: { id: true, name: true } } } },
   firstAppearanceSession: { select: { id: true, sessionNumber: true, title: true } },
@@ -70,99 +76,68 @@ export async function getNpc(id: string): Promise<NpcDetail | null> {
   }) as Promise<NpcDetail | null>;
 }
 
-interface CreateNpcData {
-  campaignId: string;
-  name: string;
-  aliasTitle?: string;
-  gender?: string;
-  classRole?: string;
-  race?: string;
-  status?: NpcStatus;
-  alignmentStance?: AlignmentStance;
-  partyMember?: boolean;
-  organizationId?: string;
-  notesBody?: JsonValue;
-  mainImage?: string;
-}
+const npcActions = createEntityActions({
+  label: "NPC",
+  basePath: "/npcs",
+  delegate: prisma.npc,
+  createSchema: npcCreateSchema,
+  updateSchema: npcUpdateSchema,
+  performCreate: (data) =>
+    prisma.npc.create({
+      data: {
+        campaignId: data.campaignId,
+        name: data.name,
+        aliasTitle: data.aliasTitle,
+        gender: data.gender,
+        classRole: data.classRole,
+        race: data.race,
+        status: data.status ?? "ALIVE",
+        alignmentStance: data.alignmentStance ?? "UNKNOWN",
+        partyMember: data.partyMember ?? false,
+        organizationId: data.organizationId || null,
+        currentLocationId: data.currentLocationId || null,
+        notesBody: plainJson(data.notesBody),
+        mainImage: data.mainImage,
+      },
+    }),
+  performUpdate: (id, data) =>
+    prisma.npc.update({
+      where: { id, deletedAt: null },
+      data: {
+        name: data.name,
+        aliasTitle: data.aliasTitle,
+        gender: data.gender,
+        classRole: data.classRole,
+        race: data.race,
+        status: data.status,
+        alignmentStance: data.alignmentStance,
+        partyMember: data.partyMember,
+        organizationId: data.organizationId,
+        currentLocationId: data.currentLocationId,
+        notesBody: plainJson(data.notesBody),
+        mainImage: data.mainImage,
+      },
+    }),
+});
 
 export async function createNpc(data: CreateNpcData) {
-  const npc = await prisma.npc.create({
-    data: {
-      campaignId: data.campaignId,
-      name: data.name,
-      aliasTitle: data.aliasTitle,
-      gender: data.gender,
-      classRole: data.classRole,
-      race: data.race,
-      status: data.status ?? "ALIVE",
-      alignmentStance: data.alignmentStance ?? "UNKNOWN",
-      partyMember: data.partyMember ?? false,
-      organizationId: data.organizationId || null,
-      notesBody: plainJson(data.notesBody),
-      mainImage: data.mainImage,
-    },
-  });
-
-  revalidatePath("/npcs");
-  return npc;
-}
-
-interface UpdateNpcData {
-  name?: string;
-  aliasTitle?: string;
-  gender?: string;
-  classRole?: string;
-  race?: string;
-  status?: NpcStatus;
-  alignmentStance?: AlignmentStance;
-  partyMember?: boolean;
-  organizationId?: string | null;
-  notesBody?: JsonValue;
-  mainImage?: string | null;
+  return npcActions.create(data);
 }
 
 export async function updateNpc(id: string, data: UpdateNpcData) {
-  const npc = await prisma.npc.update({
-    where: { id, deletedAt: null },
-    data: {
-      name: data.name,
-      aliasTitle: data.aliasTitle,
-      gender: data.gender,
-      classRole: data.classRole,
-      race: data.race,
-      status: data.status,
-      alignmentStance: data.alignmentStance,
-      partyMember: data.partyMember,
-      organizationId: data.organizationId,
-      notesBody: plainJson(data.notesBody),
-      mainImage: data.mainImage,
-    },
-  });
-
-  revalidatePath("/npcs");
-  revalidatePath(`/npcs/${id}`);
-  return npc;
+  return npcActions.update(id, data);
 }
 
 export async function deleteNpc(id: string) {
-  await prisma.npc.update({
-    where: { id },
-    data: { deletedAt: new Date() },
-  });
-  revalidatePath("/npcs");
-  revalidatePath(`/npcs/${id}`);
+  return npcActions.softDelete(id);
 }
 
 export async function restoreNpc(id: string) {
-  await prisma.npc.update({
-    where: { id },
-    data: { deletedAt: null },
-  });
-  revalidatePath("/npcs");
+  return npcActions.restore(id);
 }
 
 export async function purgeNpc(id: string) {
-  await prisma.npc.delete({ where: { id } });
+  return npcActions.purge(id);
 }
 
 export async function updateNpcImagePosition(id: string, positionY: number) {

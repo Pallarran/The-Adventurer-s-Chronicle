@@ -17,7 +17,12 @@ export function SessionDeleteButton({ id }: { id: string }) {
 
   const handleDelete = async () => {
     setLoading(true);
-    await deleteSession(id);
+    const result = await deleteSession(id);
+    if (!result.ok) {
+      toast.error(result.error);
+      setLoading(false);
+      return;
+    }
     router.push("/sessions");
 
     let purged = false;
@@ -32,7 +37,11 @@ export function SessionDeleteButton({ id }: { id: string }) {
         onClick: async () => {
           if (purged) return;
           clearTimeout(purgeTimer);
-          await restoreSession(id);
+          const restored = await restoreSession(id);
+          if (!restored.ok) {
+            toast.error(restored.error);
+            return;
+          }
           router.push(`/sessions/${id}`);
         },
       },

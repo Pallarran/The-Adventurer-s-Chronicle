@@ -6,8 +6,10 @@ import { useFormGuard } from "@/hooks/use-form-guard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { RelationPicker, type RelationOption } from "@/components/shared/relation-picker";
 import { createQuest, updateQuest } from "@/lib/actions/quests";
 import { toast } from "sonner";
+import { User } from "lucide-react";
 import type { QuestStatus } from "@/generated/prisma/client";
 import type { QuestDetail } from "@/types";
 
@@ -35,15 +37,19 @@ export function QuestFormActions({ isEdit }: { isEdit: boolean }) {
 interface QuestFormProps {
   campaignId: string;
   quest?: QuestDetail;
+  allNpcs: RelationOption[];
 }
 
-export function QuestForm({ campaignId, quest }: QuestFormProps) {
+export function QuestForm({ campaignId, quest, allNpcs }: QuestFormProps) {
   const router = useRouter();
   const isEdit = !!quest;
 
   const [name, setName] = useState(quest?.name ?? "");
   const [status, setStatus] = useState<QuestStatus>(quest?.status ?? "LEAD");
   const [description, setDescription] = useState(quest?.description ?? "");
+  const [questGiver, setQuestGiver] = useState<RelationOption[]>(
+    quest?.questGiver ? [quest.questGiver] : []
+  );
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   useFormGuard(dirty);
@@ -60,16 +66,29 @@ export function QuestForm({ campaignId, quest }: QuestFormProps) {
       };
 
       if (isEdit) {
-        await updateQuest(quest.id, {
+        const result = await updateQuest(quest.id, {
           ...data,
           description: description || null,
+          questGiverNpcId: questGiver[0]?.id ?? null,
         });
+        if (!result.ok) {
+          toast.error(result.error);
+          return;
+        }
         toast.success("Quest updated.");
         router.push(`/quests/${quest.id}`);
       } else {
-        const newQuest = await createQuest({ ...data, campaignId });
+        const result = await createQuest({
+          ...data,
+          campaignId,
+          questGiverNpcId: questGiver[0]?.id,
+        });
+        if (!result.ok) {
+          toast.error(result.error);
+          return;
+        }
         toast.success("Quest created.");
-        router.push(`/quests/${newQuest.id}`);
+        router.push(`/quests/${result.data.id}`);
       }
     } catch {
       toast.error("Failed to save quest.");
@@ -108,6 +127,21 @@ export function QuestForm({ campaignId, quest }: QuestFormProps) {
               ))}
             </select>
           </div>
+        </div>
+
+        {/* Quest giver */}
+        <div className="rounded-lg border border-border p-4 sm:max-w-sm">
+          <RelationPicker
+            label={<><User className="h-4 w-4" /> Quest Giver</>}
+            options={allNpcs}
+            selected={questGiver}
+            onChange={(next) => {
+              setQuestGiver(next);
+              setDirty(true);
+            }}
+            placeholder="Search NPCs..."
+            single
+          />
         </div>
 
         {/* Description */}

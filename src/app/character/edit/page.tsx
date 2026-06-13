@@ -8,6 +8,10 @@ import {
   CharacterEditForm,
   CharacterEditFormActions,
 } from "@/components/character/character-edit-form";
+import type { JSONContent } from "@tiptap/react";
+
+// Prisma returns Json fields as JsonValue; these columns always hold Tiptap docs.
+const asTiptap = (v: unknown) => v as JSONContent | null;
 
 export const dynamic = "force-dynamic";
 
@@ -41,21 +45,21 @@ export default async function EditCharacterPage() {
     level: profile.level,
     portrait: profile.portrait,
     summary: profile.summary,
-    personality: profile.personality,
-    ideals: profile.ideals,
-    bonds: profile.bonds,
-    flaws: profile.flaws,
-    voiceMannerisms: profile.voiceMannerisms,
-    compass: profile.compass,
-    contradictions: profile.contradictions,
-    pocketPhrases: profile.pocketPhrases,
-    reminders: profile.reminders,
-    currentGoals: profile.currentGoals,
-    fears: profile.fears,
+    personality: asTiptap(profile.personality),
+    ideals: asTiptap(profile.ideals),
+    bonds: asTiptap(profile.bonds),
+    flaws: asTiptap(profile.flaws),
+    voiceMannerisms: asTiptap(profile.voiceMannerisms),
+    compass: asTiptap(profile.compass),
+    contradictions: asTiptap(profile.contradictions),
+    pocketPhrases: asTiptap(profile.pocketPhrases),
+    reminders: asTiptap(profile.reminders),
+    currentGoals: asTiptap(profile.currentGoals),
+    fears: asTiptap(profile.fears),
     sections: profile.sections.map((s) => ({
       id: s.id,
       type: s.type as "OVERVIEW" | "BUILD" | "BACKSTORY",
-      content: s.content,
+      content: asTiptap(s.content),
     })),
   };
 

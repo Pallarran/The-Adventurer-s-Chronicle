@@ -23,7 +23,7 @@ import { RelationPicker, type RelationOption } from "@/components/shared/relatio
 import { ImageUpload } from "@/components/shared/image-upload";
 import { createNpc, updateNpc } from "@/lib/actions/npcs";
 import { toast } from "sonner";
-import { Shield } from "lucide-react";
+import { Shield, MapPin } from "lucide-react";
 import type { JSONContent } from "@tiptap/react";
 import type { NpcStatus, AlignmentStance } from "@/generated/prisma/client";
 import type { NpcDetail } from "@/types";
@@ -57,12 +57,14 @@ interface NpcFormProps {
   campaignId: string;
   npc?: NpcDetail;
   allOrganizations: RelationOption[];
+  allLocations: RelationOption[];
 }
 
 export function NpcForm({
   campaignId,
   npc,
   allOrganizations,
+  allLocations,
 }: NpcFormProps) {
   const router = useRouter();
   const isEdit = !!npc;
@@ -82,15 +84,19 @@ export function NpcForm({
   const [selectedOrg, setSelectedOrg] = useState<RelationOption[]>(
     npc?.organization ? [npc.organization] : []
   );
+  const [selectedLocation, setSelectedLocation] = useState<RelationOption[]>(
+    npc?.currentLocation ? [npc.currentLocation] : []
+  );
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   useFormGuard(dirty);
 
   // ── Mention → picker auto-sync ──
   const suppressedOrgs = useRef(new Set<string>());
+  const suppressedLocations = useRef(new Set<string>());
 
-  // Seed suppressed set in edit mode: mentions already in notes but NOT in
-  // the organization field were intentionally excluded by the user previously.
+  // Seed suppressed sets in edit mode: mentions already in notes but NOT in
+  // the picker fields were intentionally excluded by the user previously.
   const initializedRef = useRef(false);
   useEffect(() => {
     if (initializedRef.current || !npc?.notesBody) return;
@@ -98,6 +104,8 @@ export function NpcForm({
     const mentions = extractMentionsFromContent(npc.notesBody as JSONContent);
     const orgId = selectedOrg[0]?.id;
     for (const m of mentions.organization) if (m.id !== orgId) suppressedOrgs.current.add(m.id);
+    const locationId = selectedLocation[0]?.id;
+    for (const m of mentions.location) if (m.id !== locationId) suppressedLocations.current.add(m.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -109,7 +117,14 @@ export function NpcForm({
     });
   }, []);
 
-  // Sync mentions from editor content into organization picker
+  const handleLocationChange = useCallback((next: RelationOption[]) => {
+    setSelectedLocation((prev) => {
+      for (const p of prev) if (!next.some((n) => n.id === p.id)) suppressedLocations.current.add(p.id);
+      return next;
+    });
+  }, []);
+
+  // Sync mentions from editor content into pickers
   const handleNotesChange = useCallback((content: JSONContent) => {
     setNotesBody(content);
     setDirty(true);
@@ -120,6 +135,13 @@ export function NpcForm({
     setSelectedOrg((prev) => {
       if (prev.length > 0) return prev;
       const toAdd = mentions.organization.find((m) => !suppressedOrgs.current.has(m.id));
+      return toAdd ? [{ id: toAdd.id, name: toAdd.label }] : prev;
+    });
+
+    // Current location — single select, only auto-set if currently empty
+    setSelectedLocation((prev) => {
+      if (prev.length > 0) return prev;
+      const toAdd = mentions.location.find((m) => !suppressedLocations.current.has(m.id));
       return toAdd ? [{ id: toAdd.id, name: toAdd.label }] : prev;
     });
   }, []);
@@ -134,7 +156,7 @@ export function NpcForm({
   }, []);
 
   const handleOptionChange = useCallback(
-    (category: FormOptionCategory, setOptions: (opts: string[]) => void) => ({
+    (category: FormOptionCategory, setOptions: React.Dispatch<React.SetStateAction<string[]>>) => ({
       onAdd: (opt: string) => {
         setOptions((prev) => {
           const next = [...prev, opt];
@@ -171,22 +193,36 @@ export function NpcForm({
         alignmentStance: partyMember ? undefined : alignmentStance,
         partyMember,
         organizationId: selectedOrg[0]?.id || undefined,
+        currentLocationId: selectedLocation[0]?.id || undefined,
         notesBody: notesBody ?? undefined,
         mainImage: mainImage ?? undefined,
       };
 
       if (isEdit) {
-        await updateNpc(npc.id, {
+        const result = await updateNpc(npc.id, {
           ...data,
+          aliasTitle: aliasTitle || null,
+          gender: gender || null,
+          classRole: classRole || null,
+          race: race || null,
           organizationId: data.organizationId ?? null,
+          currentLocationId: data.currentLocationId ?? null,
           mainImage: mainImage,
         });
+        if (!result.ok) {
+          toast.error(result.error);
+          return;
+        }
         toast.success("NPC updated.");
         router.push(`/npcs/${npc.id}`);
       } else {
-        const newNpc = await createNpc({ ...data, campaignId });
+        const result = await createNpc({ ...data, campaignId });
+        if (!result.ok) {
+          toast.error(result.error);
+          return;
+        }
         toast.success("NPC created.");
-        router.push(`/npcs/${newNpc.id}`);
+        router.push(`/npcs/${result.data.id}`);
       }
     } catch {
       toast.error("Failed to save NPC.");
@@ -310,16 +346,28 @@ export function NpcForm({
         </div>
       </div>
 
-      {/* Relations — bordered card */}
-      <div className="rounded-lg border border-border p-4 sm:max-w-sm">
-        <RelationPicker
-          label={<><Shield className="h-4 w-4" /> Organization</>}
-          options={allOrganizations}
-          selected={selectedOrg}
-          onChange={handleOrgChange}
-          placeholder="Search organizations..."
-          single
-        />
+      {/* Relations — bordered cards */}
+      <div className="grid grid-cols-1 gap-4 sm:max-w-2xl sm:grid-cols-2">
+        <div className="rounded-lg border border-border p-4">
+          <RelationPicker
+            label={<><Shield className="h-4 w-4" /> Organization</>}
+            options={allOrganizations}
+            selected={selectedOrg}
+            onChange={handleOrgChange}
+            placeholder="Search organizations..."
+            single
+          />
+        </div>
+        <div className="rounded-lg border border-border p-4">
+          <RelationPicker
+            label={<><MapPin className="h-4 w-4" /> Current Location</>}
+            options={allLocations}
+            selected={selectedLocation}
+            onChange={handleLocationChange}
+            placeholder="Search locations..."
+            single
+          />
+        </div>
       </div>
 
       {/* Notes */}

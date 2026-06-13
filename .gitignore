@@ -45,4 +45,8 @@ next-env.d.ts
 # uploads
 /uploads
 
+# docker bind mounts & backups
+/postgres-data
+/backups
+
 /src/generated/prisma

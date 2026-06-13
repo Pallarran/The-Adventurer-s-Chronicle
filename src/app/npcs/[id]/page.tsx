@@ -9,9 +9,9 @@ import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button-variants";
 import {
   Pencil,
-  User,
   Star,
   Shield,
+  MapPin,
   CalendarDays,
   ScrollText,
 } from "lucide-react";
@@ -113,7 +113,7 @@ export default async function NpcDetailPage({
       </div>
 
       {/* Relations — bordered cards (matches form card order) */}
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-lg border border-border p-4">
           <div className="mb-2 flex items-center gap-2 text-sm font-medium">
             <Shield className="h-4 w-4" /> Organization
@@ -126,6 +126,20 @@ export default async function NpcDetailPage({
             </div>
           ) : (
             <p className="text-sm italic text-muted-foreground/60">None</p>
+          )}
+        </div>
+        <div className="rounded-lg border border-border p-4">
+          <div className="mb-2 flex items-center gap-2 text-sm font-medium">
+            <MapPin className="h-4 w-4" /> Current Location
+          </div>
+          {npc.currentLocation ? (
+            <div className="flex flex-wrap gap-1.5">
+              <Link href={`/locations/${npc.currentLocation.id}`} className={cn(badgeVariants({variant: "secondary"}))}>
+                {npc.currentLocation.name}
+              </Link>
+            </div>
+          ) : (
+            <p className="text-sm italic text-muted-foreground/60">Unknown</p>
           )}
         </div>
         <div className="rounded-lg border border-border p-4">

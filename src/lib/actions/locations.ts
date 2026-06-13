@@ -2,11 +2,15 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import type { Prisma } from "@/generated/prisma/client";
 import type { LocationListItem, LocationDetail } from "@/types";
 import { plainJson } from "@/lib/plain-json";
-
-type JsonValue = Prisma.JsonValue;
+import { createEntityActions } from "@/lib/actions/entity-factory";
+import {
+  locationCreateSchema,
+  locationUpdateSchema,
+  type CreateLocationData,
+  type UpdateLocationData,
+} from "@/lib/validation/entities";
 
 const locationListInclude = {
   parentLocation: { select: { id: true, name: true } },
@@ -61,93 +65,67 @@ export async function getLocation(id: string): Promise<LocationDetail | null> {
   }) as Promise<LocationDetail | null>;
 }
 
-interface CreateLocationData {
-  campaignId: string;
-  name: string;
-  aliasTitle?: string;
-  type?: string;
-  parentLocationId?: string;
-  notesBody?: JsonValue;
-  mainImage?: string;
-  organizationIds?: string[];
-}
+const locationActions = createEntityActions({
+  label: "location",
+  basePath: "/locations",
+  delegate: prisma.location,
+  createSchema: locationCreateSchema,
+  updateSchema: locationUpdateSchema,
+  performCreate: (data) =>
+    prisma.location.create({
+      data: {
+        campaignId: data.campaignId,
+        name: data.name,
+        aliasTitle: data.aliasTitle,
+        type: data.type,
+        parentLocationId: data.parentLocationId || null,
+        notesBody: plainJson(data.notesBody),
+        mainImage: data.mainImage,
+        organizations: data.organizationIds?.length
+          ? { create: data.organizationIds.map((organizationId) => ({ organizationId })) }
+          : undefined,
+      },
+    }),
+  performUpdate: async (id, data) => {
+    if (data.organizationIds !== undefined) {
+      await prisma.locationOrganization.deleteMany({ where: { locationId: id } });
+    }
+
+    return prisma.location.update({
+      where: { id, deletedAt: null },
+      data: {
+        name: data.name,
+        aliasTitle: data.aliasTitle,
+        type: data.type,
+        parentLocationId: data.parentLocationId,
+        notesBody: plainJson(data.notesBody),
+        mainImage: data.mainImage,
+        organizations: data.organizationIds?.length
+          ? { create: data.organizationIds.map((organizationId) => ({ organizationId })) }
+          : undefined,
+      },
+    });
+  },
+});
 
 export async function createLocation(data: CreateLocationData) {
-  const location = await prisma.location.create({
-    data: {
-      campaignId: data.campaignId,
-      name: data.name,
-      aliasTitle: data.aliasTitle,
-      type: data.type,
-      parentLocationId: data.parentLocationId || null,
-      notesBody: plainJson(data.notesBody),
-      mainImage: data.mainImage,
-      organizations: data.organizationIds?.length
-        ? { create: data.organizationIds.map((organizationId) => ({ organizationId })) }
-        : undefined,
-    },
-  });
-
-  revalidatePath("/locations");
-  return location;
-}
-
-interface UpdateLocationData {
-  name?: string;
-  aliasTitle?: string;
-  type?: string;
-  parentLocationId?: string | null;
-  notesBody?: JsonValue;
-  mainImage?: string | null;
-  organizationIds?: string[];
+  return locationActions.create(data);
 }
 
 export async function updateLocation(id: string, data: UpdateLocationData) {
-  const deletes = [];
-  if (data.organizationIds !== undefined) {
-    deletes.push(prisma.locationOrganization.deleteMany({ where: { locationId: id } }));
-  }
-  if (deletes.length) await prisma.$transaction(deletes);
-
-  const location = await prisma.location.update({
-    where: { id, deletedAt: null },
-    data: {
-      name: data.name,
-      aliasTitle: data.aliasTitle,
-      type: data.type,
-      parentLocationId: data.parentLocationId,
-      notesBody: plainJson(data.notesBody),
-      mainImage: data.mainImage,
-      organizations: data.organizationIds?.length
-        ? { create: data.organizationIds.map((organizationId) => ({ organizationId })) }
-        : undefined,
-    },
-  });
-
-  revalidatePath("/locations");
-  revalidatePath(`/locations/${id}`);
-  return location;
+  return locationActions.update(id, data);
 }
 
 export async function deleteLocation(id: string) {
-  await prisma.location.update({
-    where: { id },
-    data: { deletedAt: new Date() },
-  });
-  revalidatePath("/locations");
-  revalidatePath(`/locations/${id}`);
+  return locationActions.softDelete(id);
 }
 
 export async function restoreLocation(id: string) {
-  await prisma.location.update({
-    where: { id },
-    data: { deletedAt: null },
-  });
-  revalidatePath("/locations");
+  return locationActions.restore(id);
 }
 
 export async function purgeLocation(id: string) {
-  await prisma.location.delete({ where: { id } });
+  return locationActions.purge(id);
 }
 
 export async function updateLocationImagePosition(id: string, positionY: number) {

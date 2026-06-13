@@ -2,11 +2,16 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import type { AlignmentStance, Prisma } from "@/generated/prisma/client";
+import type { AlignmentStance } from "@/generated/prisma/client";
 import type { OrganizationListItem, OrganizationDetail } from "@/types";
 import { plainJson } from "@/lib/plain-json";
-
-type JsonValue = Prisma.JsonValue;
+import { createEntityActions } from "@/lib/actions/entity-factory";
+import {
+  organizationCreateSchema,
+  organizationUpdateSchema,
+  type CreateOrganizationData,
+  type UpdateOrganizationData,
+} from "@/lib/validation/entities";
 
 const orgListInclude = {
   baseLocation: { select: { id: true, name: true } },
@@ -57,93 +62,67 @@ export async function getOrganization(id: string): Promise<OrganizationDetail | 
   }) as Promise<OrganizationDetail | null>;
 }
 
-interface CreateOrganizationData {
-  campaignId: string;
-  name: string;
-  type?: string;
-  alignmentStance?: AlignmentStance;
-  baseLocationId?: string;
-  notesBody?: JsonValue;
-  mainImage?: string;
-  npcIds?: string[];
-}
+const organizationActions = createEntityActions({
+  label: "organization",
+  basePath: "/organizations",
+  delegate: prisma.organization,
+  createSchema: organizationCreateSchema,
+  updateSchema: organizationUpdateSchema,
+  performCreate: (data) =>
+    prisma.organization.create({
+      data: {
+        campaignId: data.campaignId,
+        name: data.name,
+        type: data.type,
+        alignmentStance: data.alignmentStance ?? "UNKNOWN",
+        baseLocationId: data.baseLocationId || null,
+        notesBody: plainJson(data.notesBody),
+        mainImage: data.mainImage,
+        npcs: data.npcIds?.length
+          ? { create: data.npcIds.map((npcId) => ({ npcId })) }
+          : undefined,
+      },
+    }),
+  performUpdate: async (id, data) => {
+    if (data.npcIds !== undefined) {
+      await prisma.organizationNpc.deleteMany({ where: { organizationId: id } });
+    }
+
+    return prisma.organization.update({
+      where: { id, deletedAt: null },
+      data: {
+        name: data.name,
+        type: data.type,
+        alignmentStance: data.alignmentStance,
+        baseLocationId: data.baseLocationId,
+        notesBody: plainJson(data.notesBody),
+        mainImage: data.mainImage,
+        npcs: data.npcIds?.length
+          ? { create: data.npcIds.map((npcId) => ({ npcId })) }
+          : undefined,
+      },
+    });
+  },
+});
 
 export async function createOrganization(data: CreateOrganizationData) {
-  const org = await prisma.organization.create({
-    data: {
-      campaignId: data.campaignId,
-      name: data.name,
-      type: data.type,
-      alignmentStance: data.alignmentStance ?? "UNKNOWN",
-      baseLocationId: data.baseLocationId || null,
-      notesBody: plainJson(data.notesBody),
-      mainImage: data.mainImage,
-      npcs: data.npcIds?.length
-        ? { create: data.npcIds.map((npcId) => ({ npcId })) }
-        : undefined,
-    },
-  });
-
-  revalidatePath("/organizations");
-  return org;
-}
-
-interface UpdateOrganizationData {
-  name?: string;
-  type?: string;
-  alignmentStance?: AlignmentStance;
-  baseLocationId?: string | null;
-  notesBody?: JsonValue;
-  mainImage?: string | null;
-  npcIds?: string[];
+  return organizationActions.create(data);
 }
 
 export async function updateOrganization(id: string, data: UpdateOrganizationData) {
-  const deletes = [];
-  if (data.npcIds !== undefined) {
-    deletes.push(prisma.organizationNpc.deleteMany({ where: { organizationId: id } }));
-  }
-  if (deletes.length) await prisma.$transaction(deletes);
-
-  const org = await prisma.organization.update({
-    where: { id, deletedAt: null },
-    data: {
-      name: data.name,
-      type: data.type,
-      alignmentStance: data.alignmentStance,
-      baseLocationId: data.baseLocationId,
-      notesBody: plainJson(data.notesBody),
-      mainImage: data.mainImage,
-      npcs: data.npcIds?.length
-        ? { create: data.npcIds.map((npcId) => ({ npcId })) }
-        : undefined,
-    },
-  });
-
-  revalidatePath("/organizations");
-  revalidatePath(`/organizations/${id}`);
-  return org;
+  return organizationActions.update(id, data);
 }
 
 export async function deleteOrganization(id: string) {
-  await prisma.organization.update({
-    where: { id },
-    data: { deletedAt: new Date() },
-  });
-  revalidatePath("/organizations");
-  revalidatePath(`/organizations/${id}`);
+  return organizationActions.softDelete(id);
 }
 
 export async function restoreOrganization(id: string) {
-  await prisma.organization.update({
-    where: { id },
-    data: { deletedAt: null },
-  });
-  revalidatePath("/organizations");
+  return organizationActions.restore(id);
 }
 
 export async function purgeOrganization(id: string) {
-  await prisma.organization.delete({ where: { id } });
+  return organizationActions.purge(id);
 }
 
 export async function updateOrganizationImagePosition(id: string, positionY: number) {

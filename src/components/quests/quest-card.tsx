@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import {
   DropdownMenu,
@@ -12,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Compass, ScrollText, ChevronDown } from "lucide-react";
 import { updateQuest } from "@/lib/actions/quests";
+import { toast } from "sonner";
 import { QUEST_STATUS_COLORS, QUEST_STATUS_LABELS } from "@/lib/colors";
 import type { QuestListItem } from "@/types";
 import type { QuestStatus } from "@/generated/prisma/client";
@@ -38,7 +38,11 @@ export function QuestCard({ quest }: QuestCardProps) {
     setStatus(newStatus); // optimistic
     startTransition(async () => {
       try {
-        await updateQuest(quest.id, { status: newStatus });
+        const result = await updateQuest(quest.id, { status: newStatus });
+        if (!result.ok) {
+          setStatus(prev); // revert on error
+          toast.error(result.error);
+        }
       } catch {
         setStatus(prev); // revert on error
       }

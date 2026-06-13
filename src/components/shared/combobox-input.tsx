@@ -95,10 +95,7 @@ export function ComboboxInput({
       <PopoverContent
         className="w-[var(--popover-trigger-width)] p-2"
         align="start"
-        onOpenAutoFocus={(e) => {
-          e.preventDefault();
-          inputRef.current?.focus();
-        }}
+        initialFocus={inputRef}
       >
         <Input
           ref={inputRef}

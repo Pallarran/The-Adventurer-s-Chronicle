@@ -1,9 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Skip TS/ESLint in production builds — verified locally before push
+  // Skip TS in production builds — typecheck runs separately (CI / locally)
   typescript: { ignoreBuildErrors: true },
-  eslint: { ignoreDuringBuilds: true },
   experimental: {
     cpus: 2,
   },

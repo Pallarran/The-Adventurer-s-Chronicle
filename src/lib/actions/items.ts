@@ -2,11 +2,15 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import type { Prisma } from "@/generated/prisma/client";
 import type { ItemListItem, ItemDetail } from "@/types";
 import { plainJson } from "@/lib/plain-json";
-
-type JsonValue = Prisma.JsonValue;
+import { createEntityActions } from "@/lib/actions/entity-factory";
+import {
+  itemCreateSchema,
+  itemUpdateSchema,
+  type CreateItemData,
+  type UpdateItemData,
+} from "@/lib/validation/entities";
 
 const itemListInclude = {
   acquiredInSession: { select: { id: true, sessionNumber: true, title: true } },
@@ -47,91 +51,62 @@ export async function getItem(id: string): Promise<ItemDetail | null> {
   }) as Promise<ItemDetail | null>;
 }
 
-interface CreateItemData {
-  campaignId: string;
-  name: string;
-  type?: string;
-  rarity?: string;
-  aura?: string;
-  attunement?: boolean;
-  sold?: boolean;
-  notesBody?: JsonValue;
-  mainImage?: string;
-  acquiredInSessionId?: string;
-}
+const itemActions = createEntityActions({
+  label: "item",
+  basePath: "/items",
+  delegate: prisma.item,
+  createSchema: itemCreateSchema,
+  updateSchema: itemUpdateSchema,
+  performCreate: (data) =>
+    prisma.item.create({
+      data: {
+        campaignId: data.campaignId,
+        name: data.name,
+        type: data.type,
+        rarity: data.rarity,
+        aura: data.aura,
+        attunement: data.attunement ?? false,
+        sold: data.sold ?? false,
+        notesBody: plainJson(data.notesBody),
+        mainImage: data.mainImage,
+        acquiredInSessionId: data.acquiredInSessionId || null,
+      },
+    }),
+  performUpdate: (id, data) =>
+    prisma.item.update({
+      where: { id, deletedAt: null },
+      data: {
+        name: data.name,
+        type: data.type,
+        rarity: data.rarity,
+        aura: data.aura,
+        attunement: data.attunement,
+        sold: data.sold,
+        notesBody: plainJson(data.notesBody),
+        mainImage: data.mainImage,
+        acquiredInSessionId: data.acquiredInSessionId,
+      },
+    }),
+});
 
 export async function createItem(data: CreateItemData) {
-  const item = await prisma.item.create({
-    data: {
-      campaignId: data.campaignId,
-      name: data.name,
-      type: data.type,
-      rarity: data.rarity,
-      aura: data.aura,
-      attunement: data.attunement ?? false,
-      sold: data.sold ?? false,
-      notesBody: plainJson(data.notesBody),
-      mainImage: data.mainImage,
-      acquiredInSessionId: data.acquiredInSessionId || null,
-    },
-  });
-
-  revalidatePath("/items");
-  return item;
-}
-
-interface UpdateItemData {
-  name?: string;
-  type?: string | null;
-  rarity?: string | null;
-  aura?: string | null;
-  attunement?: boolean;
-  sold?: boolean;
-  notesBody?: JsonValue;
-  mainImage?: string | null;
-  acquiredInSessionId?: string | null;
+  return itemActions.create(data);
 }
 
 export async function updateItem(id: string, data: UpdateItemData) {
-  const item = await prisma.item.update({
-    where: { id, deletedAt: null },
-    data: {
-      name: data.name,
-      type: data.type,
-      rarity: data.rarity,
-      aura: data.aura,
-      attunement: data.attunement,
-      sold: data.sold,
-      notesBody: plainJson(data.notesBody),
-      mainImage: data.mainImage,
-      acquiredInSessionId: data.acquiredInSessionId,
-    },
-  });
-
-  revalidatePath("/items");
-  revalidatePath(`/items/${id}`);
-  return item;
+  return itemActions.update(id, data);
 }
 
 export async function deleteItem(id: string) {
-  await prisma.item.update({
-    where: { id },
-    data: { deletedAt: new Date() },
-  });
-  revalidatePath("/items");
-  revalidatePath(`/items/${id}`);
+  return itemActions.softDelete(id);
 }
 
 export async function restoreItem(id: string) {
-  await prisma.item.update({
-    where: { id },
-    data: { deletedAt: null },
-  });
-  revalidatePath("/items");
+  return itemActions.restore(id);
 }
 
 export async function purgeItem(id: string) {
-  await prisma.item.delete({ where: { id } });
+  return itemActions.purge(id);
 }
 
 export async function updateItemImagePosition(id: string, positionY: number) {

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ImageWithCrop } from "@/components/shared/image-crop-button";
 import { updateItemImagePosition, updateItem } from "@/lib/actions/items";
+import { toast } from "sonner";
 import { RARITY_COLORS } from "@/lib/colors";
 import { Package, BadgeDollarSign, PackageOpen } from "lucide-react";
 import type { ItemListItem } from "@/types";
@@ -24,7 +25,11 @@ export function ItemCard({ item }: ItemCardProps) {
     setSold(newSold);
     startTransition(async () => {
       try {
-        await updateItem(item.id, { sold: newSold });
+        const result = await updateItem(item.id, { sold: newSold });
+        if (!result.ok) {
+          setSold(prev);
+          toast.error(result.error);
+        }
       } catch {
         setSold(prev);
       }

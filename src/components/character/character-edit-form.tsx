@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import type { JSONContent } from "@tiptap/react";
 import { useFormGuard } from "@/hooks/use-form-guard";
-import { Save, User, Loader2, Info } from "lucide-react";
+import { Save, User, Info } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

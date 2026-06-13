@@ -1,15 +1,22 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
 import type { QuestStatus } from "@/generated/prisma/client";
 import type { QuestListItem, QuestDetail } from "@/types";
+import { createEntityActions } from "@/lib/actions/entity-factory";
+import {
+  questCreateSchema,
+  questUpdateSchema,
+  type CreateQuestData,
+  type UpdateQuestData,
+} from "@/lib/validation/entities";
 
 const questListInclude = {
   sessions: { include: { session: { select: { id: true, sessionNumber: true } } } },
 } as const;
 
 const questDetailInclude = {
+  questGiver: { select: { id: true, name: true } },
   sessions: { include: { session: { select: { id: true, sessionNumber: true, title: true } } } },
 } as const;
 
@@ -42,67 +49,52 @@ export async function getQuest(id: string): Promise<QuestDetail | null> {
   }) as Promise<QuestDetail | null>;
 }
 
-interface CreateQuestData {
-  campaignId: string;
-  name: string;
-  description?: string;
-  status?: QuestStatus;
-}
+const questActions = createEntityActions({
+  label: "quest",
+  basePath: "/quests",
+  delegate: prisma.quest,
+  createSchema: questCreateSchema,
+  updateSchema: questUpdateSchema,
+  performCreate: (data) =>
+    prisma.quest.create({
+      data: {
+        campaignId: data.campaignId,
+        name: data.name,
+        description: data.description,
+        status: data.status ?? "LEAD",
+        questGiverNpcId: data.questGiverNpcId || null,
+      },
+    }),
+  performUpdate: (id, data) =>
+    prisma.quest.update({
+      where: { id, deletedAt: null },
+      data: {
+        name: data.name,
+        description: data.description,
+        status: data.status,
+        questGiverNpcId: data.questGiverNpcId,
+      },
+    }),
+});
 
 export async function createQuest(data: CreateQuestData) {
-  const quest = await prisma.quest.create({
-    data: {
-      campaignId: data.campaignId,
-      name: data.name,
-      description: data.description,
-      status: data.status ?? "LEAD",
-    },
-  });
-
-  revalidatePath("/quests");
-  return quest;
-}
-
-interface UpdateQuestData {
-  name?: string;
-  description?: string | null;
-  status?: QuestStatus;
+  return questActions.create(data);
 }
 
 export async function updateQuest(id: string, data: UpdateQuestData) {
-  const quest = await prisma.quest.update({
-    where: { id, deletedAt: null },
-    data: {
-      name: data.name,
-      description: data.description,
-      status: data.status,
-    },
-  });
-
-  revalidatePath("/quests");
-  revalidatePath(`/quests/${id}`);
-  return quest;
+  return questActions.update(id, data);
 }
 
 export async function deleteQuest(id: string) {
-  await prisma.quest.update({
-    where: { id },
-    data: { deletedAt: new Date() },
-  });
-  revalidatePath("/quests");
-  revalidatePath(`/quests/${id}`);
+  return questActions.softDelete(id);
 }
 
 export async function restoreQuest(id: string) {
-  await prisma.quest.update({
-    where: { id },
-    data: { deletedAt: null },
-  });
-  revalidatePath("/quests");
+  return questActions.restore(id);
 }
 
 export async function purgeQuest(id: string) {
-  await prisma.quest.delete({ where: { id } });
+  return questActions.purge(id);
 }
 
 export async function getQuestStatusCounts(campaignId: string) {

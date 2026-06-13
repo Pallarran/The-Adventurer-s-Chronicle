@@ -159,17 +159,26 @@ export function OrganizationForm({
       };
 
       if (isEdit) {
-        await updateOrganization(organization.id, {
+        const result = await updateOrganization(organization.id, {
           ...data,
+          type: type || null,
           baseLocationId: baseLocation[0]?.id ?? null,
           mainImage: mainImage,
         });
+        if (!result.ok) {
+          toast.error(result.error);
+          return;
+        }
         toast.success("Organization updated.");
         router.push(`/organizations/${organization.id}`);
       } else {
-        const newOrg = await createOrganization({ ...data, campaignId });
+        const result = await createOrganization({ ...data, campaignId });
+        if (!result.ok) {
+          toast.error(result.error);
+          return;
+        }
         toast.success("Organization created.");
-        router.push(`/organizations/${newOrg.id}`);
+        router.push(`/organizations/${result.data.id}`);
       }
     } catch {
       toast.error("Failed to save organization.");

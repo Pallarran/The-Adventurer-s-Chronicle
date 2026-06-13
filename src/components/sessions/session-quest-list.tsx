@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { Plus, Save, Loader2, X, Compass } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -215,22 +216,31 @@ export function SessionQuestList({
 
         if (row.persisted) {
           // Update existing quest
-          await updateQuest(id, {
+          const result = await updateQuest(id, {
             name: data.name,
             status: data.status,
             description: data.description,
           });
+          if (!result.ok) {
+            toast.error(result.error);
+            return;
+          }
           setQuests((prev) =>
             prev.map((r) => (r.id === id ? { ...r, ...data } : r))
           );
         } else {
           // Create new quest
-          const created = await createQuest({
+          const result = await createQuest({
             campaignId,
             name: data.name,
             status: data.status,
             description: data.description ?? undefined,
           });
+          if (!result.ok) {
+            toast.error(result.error);
+            return;
+          }
+          const created = result.data;
           setQuests((prev) => {
             const updated = prev.map((r) =>
               r.id === id

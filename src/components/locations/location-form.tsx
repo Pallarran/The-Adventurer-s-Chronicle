@@ -140,17 +140,27 @@ export function LocationForm({
       };
 
       if (isEdit) {
-        await updateLocation(location.id, {
+        const result = await updateLocation(location.id, {
           ...data,
+          aliasTitle: aliasTitle || null,
+          type: type || null,
           parentLocationId: selectedParent[0]?.id ?? null,
           mainImage: mainImage,
         });
+        if (!result.ok) {
+          toast.error(result.error);
+          return;
+        }
         toast.success("Location updated.");
         router.push(`/locations/${location.id}`);
       } else {
-        const newLocation = await createLocation({ ...data, campaignId });
+        const result = await createLocation({ ...data, campaignId });
+        if (!result.ok) {
+          toast.error(result.error);
+          return;
+        }
         toast.success("Location created.");
-        router.push(`/locations/${newLocation.id}`);
+        router.push(`/locations/${result.data.id}`);
       }
     } catch {
       toast.error("Failed to save location.");

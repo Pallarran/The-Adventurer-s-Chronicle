@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 import {
   DndContext,
   closestCenter,
@@ -12,6 +12,7 @@ import {
 } from "@dnd-kit/core";
 import {
   SortableContext,
+  sortableKeyboardCoordinates,
   verticalListSortingStrategy,
   useSortable,
 } from "@dnd-kit/sortable";
@@ -167,6 +168,7 @@ function SortableRow({
           {isDraggable ? (
             <button
               type="button"
+              aria-label={`Reorder ${row.label || "row"}`}
               className="cursor-grab touch-none text-muted-foreground/40 hover:text-muted-foreground"
               {...attributes}
               {...listeners}
@@ -414,7 +416,7 @@ export function ProgressionTable({ rows: initialRows, profileId, characterLevel 
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor)
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
   // ── Drag end ──

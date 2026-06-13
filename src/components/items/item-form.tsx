@@ -112,7 +112,7 @@ export function ItemForm({ campaignId, item, allSessions }: ItemFormProps) {
       };
 
       if (isEdit) {
-        await updateItem(item.id, {
+        const result = await updateItem(item.id, {
           ...data,
           type: type || null,
           rarity: rarity || null,
@@ -120,12 +120,20 @@ export function ItemForm({ campaignId, item, allSessions }: ItemFormProps) {
           mainImage: mainImage,
           acquiredInSessionId: acquiredSession[0]?.id || null,
         });
+        if (!result.ok) {
+          toast.error(result.error);
+          return;
+        }
         toast.success("Item updated.");
         router.push(`/items/${item.id}`);
       } else {
-        const newItem = await createItem({ ...data, campaignId });
+        const result = await createItem({ ...data, campaignId });
+        if (!result.ok) {
+          toast.error(result.error);
+          return;
+        }
         toast.success("Item created.");
-        router.push(`/items/${newItem.id}`);
+        router.push(`/items/${result.data.id}`);
       }
     } catch {
       toast.error("Failed to save item.");

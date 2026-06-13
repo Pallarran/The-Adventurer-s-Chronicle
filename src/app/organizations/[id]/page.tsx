@@ -12,7 +12,6 @@ import { OrganizationDeleteButton } from "./delete-button";
 import { ImageLightbox } from "@/components/shared/image-lightbox";
 import { STANCE_COLORS, STANCE_LABELS } from "@/lib/colors";
 import type { JSONContent } from "@tiptap/react";
-import type { AlignmentStance } from "@/generated/prisma/client";
 
 export const dynamic = "force-dynamic";
 

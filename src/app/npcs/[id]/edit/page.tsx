@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { getNpc } from "@/lib/actions/npcs";
 import { getActiveCampaign } from "@/lib/campaign";
 import { getOrganizations } from "@/lib/actions/organizations";
+import { getLocations } from "@/lib/actions/locations";
 import { PageHeaderSetter } from "@/components/layout/page-header-setter";
 import { NpcForm, NpcFormActions } from "@/components/npcs/npc-form";
 
@@ -20,7 +21,10 @@ export default async function EditNpcPage({
   if (!campaign) redirect("/");
   if (!npc) notFound();
 
-  const organizations = await getOrganizations(campaign.id);
+  const [organizations, locations] = await Promise.all([
+    getOrganizations(campaign.id),
+    getLocations(campaign.id),
+  ]);
 
   return (
     <div>
@@ -33,6 +37,7 @@ export default async function EditNpcPage({
         campaignId={campaign.id}
         npc={npc}
         allOrganizations={organizations.map((o) => ({ id: o.id, name: o.name }))}
+        allLocations={locations.map((l) => ({ id: l.id, name: l.name }))}
       />
     </div>
   );

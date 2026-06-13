@@ -17,7 +17,12 @@ export function QuestDeleteButton({ id }: { id: string }) {
 
   const handleDelete = async () => {
     setLoading(true);
-    await deleteQuest(id);
+    const result = await deleteQuest(id);
+    if (!result.ok) {
+      toast.error(result.error);
+      setLoading(false);
+      return;
+    }
     router.push("/quests");
 
     let purged = false;
@@ -32,7 +37,11 @@ export function QuestDeleteButton({ id }: { id: string }) {
         onClick: async () => {
           if (purged) return;
           clearTimeout(purgeTimer);
-          await restoreQuest(id);
+          const restored = await restoreQuest(id);
+          if (!restored.ok) {
+            toast.error(restored.error);
+            return;
+          }
           router.push(`/quests/${id}`);
         },
       },

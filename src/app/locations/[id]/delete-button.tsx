@@ -17,7 +17,12 @@ export function LocationDeleteButton({ id }: { id: string }) {
 
   const handleDelete = async () => {
     setLoading(true);
-    await deleteLocation(id);
+    const result = await deleteLocation(id);
+    if (!result.ok) {
+      toast.error(result.error);
+      setLoading(false);
+      return;
+    }
     router.push("/locations");
 
     let purged = false;
@@ -32,7 +37,11 @@ export function LocationDeleteButton({ id }: { id: string }) {
         onClick: async () => {
           if (purged) return;
           clearTimeout(purgeTimer);
-          await restoreLocation(id);
+          const restored = await restoreLocation(id);
+          if (!restored.ok) {
+            toast.error(restored.error);
+            return;
+          }
           router.push(`/locations/${id}`);
         },
       },

@@ -5,7 +5,7 @@ import { PageHeaderSetter } from "@/components/layout/page-header-setter";
 import { Badge, badgeVariants } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { Pencil, ScrollText } from "lucide-react";
+import { Pencil, ScrollText, User } from "lucide-react";
 import { QuestDeleteButton } from "./delete-button";
 import { QUEST_STATUS_COLORS, QUEST_STATUS_LABELS } from "@/lib/colors";
 
@@ -38,8 +38,8 @@ export default async function QuestDetailPage({
         <QuestDeleteButton id={quest.id} />
       </div>
 
-      {/* Status badge */}
-      <div className="mb-6">
+      {/* Status badge + quest giver */}
+      <div className="mb-6 flex flex-wrap items-center gap-3">
         <Badge
           variant="outline"
           className="text-sm border-transparent"
@@ -51,6 +51,18 @@ export default async function QuestDetailPage({
         >
           {QUEST_STATUS_LABELS[quest.status] ?? quest.status}
         </Badge>
+        {quest.questGiver && (
+          <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            Given by
+            <Link
+              href={`/npcs/${quest.questGiver.id}`}
+              className={cn(badgeVariants({ variant: "secondary" }))}
+            >
+              <User className="mr-1 h-3 w-3" />
+              {quest.questGiver.name}
+            </Link>
+          </span>
+        )}
       </div>
 
       {/* Description */}

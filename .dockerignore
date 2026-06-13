@@ -4,6 +4,8 @@ node_modules
 .env
 .env.local
 uploads
+postgres-data
+backups
 *.md
 .vscode
 *.code-workspace

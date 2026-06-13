@@ -169,17 +169,22 @@ export function SessionForm({
 
     debounceRef.current = setTimeout(async () => {
       try {
-        await updateSession(session.id, {
+        const result = await updateSession(session.id, {
           sessionNumber,
-          title: title || undefined,
+          title: title || null,
           realDatePlayed: new Date(realDatePlayed),
-          inGameDate: inGameDate || undefined,
+          inGameDate: inGameDate || null,
           notesBody: notesBody ?? undefined,
           npcIds: selectedNpcs.map((n) => n.id),
           locationIds: selectedLocations.map((l) => l.id),
           organizationIds: selectedOrgs.map((o) => o.id),
           questIds,
         });
+        if (!result.ok) {
+          toast.error(result.error);
+          setSaveStatus("idle");
+          return;
+        }
         setSaveStatus("saved");
         setDirty(false);
         setTimeout(() => setSaveStatus("idle"), 2000);
@@ -220,14 +225,26 @@ export function SessionForm({
       };
 
       if (isEdit) {
-        await updateSession(session.id, data);
+        const result = await updateSession(session.id, {
+          ...data,
+          title: title || null,
+          inGameDate: inGameDate || null,
+        });
+        if (!result.ok) {
+          toast.error(result.error);
+          return;
+        }
         setDirty(false);
         toast.success("Session saved.");
         router.push(`/sessions/${session.id}`);
       } else {
-        const newSession = await createSession({ ...data, campaignId });
+        const result = await createSession({ ...data, campaignId });
+        if (!result.ok) {
+          toast.error(result.error);
+          return;
+        }
         toast.success("Session created.");
-        router.push(`/sessions/${newSession.id}`);
+        router.push(`/sessions/${result.data.id}`);
       }
     } catch {
       toast.error("Failed to save session.");

@@ -17,7 +17,12 @@ export function NpcDeleteButton({ id }: { id: string }) {
 
   const handleDelete = async () => {
     setLoading(true);
-    await deleteNpc(id);
+    const result = await deleteNpc(id);
+    if (!result.ok) {
+      toast.error(result.error);
+      setLoading(false);
+      return;
+    }
     router.push("/npcs");
 
     let purged = false;
@@ -32,7 +37,11 @@ export function NpcDeleteButton({ id }: { id: string }) {
         onClick: async () => {
           if (purged) return;
           clearTimeout(purgeTimer);
-          await restoreNpc(id);
+          const restored = await restoreNpc(id);
+          if (!restored.ok) {
+            toast.error(restored.error);
+            return;
+          }
           router.push(`/npcs/${id}`);
         },
       },

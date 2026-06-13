@@ -17,7 +17,12 @@ export function OrganizationDeleteButton({ id }: { id: string }) {
 
   const handleDelete = async () => {
     setLoading(true);
-    await deleteOrganization(id);
+    const result = await deleteOrganization(id);
+    if (!result.ok) {
+      toast.error(result.error);
+      setLoading(false);
+      return;
+    }
     router.push("/organizations");
 
     let purged = false;
@@ -32,7 +37,11 @@ export function OrganizationDeleteButton({ id }: { id: string }) {
         onClick: async () => {
           if (purged) return;
           clearTimeout(purgeTimer);
-          await restoreOrganization(id);
+          const restored = await restoreOrganization(id);
+          if (!restored.ok) {
+            toast.error(restored.error);
+            return;
+          }
           router.push(`/organizations/${id}`);
         },
       },

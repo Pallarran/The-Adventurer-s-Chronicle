@@ -107,6 +107,7 @@ model Session {
   itemsAcquired            Item[]         @relation("ItemAcquiredIn")
 
   @@unique([campaignId, sessionNumber])
+  @@index([campaignId, deletedAt])
 }
 
 model Npc {
@@ -137,8 +138,14 @@ model Npc {
   lastAppearanceSessionId  String?
   lastAppearanceSession    Session? @relation("NpcLastAppearance", fields: [lastAppearanceSessionId], references: [id])
 
+  currentLocationId String?
+  currentLocation   Location? @relation("NpcCurrentLocation", fields: [currentLocationId], references: [id], onDelete: SetNull)
+
   sessions      SessionNpc[]
   organizations OrganizationNpc[]
+  questsGiven   Quest[] @relation("QuestGiver")
+
+  @@index([campaignId, deletedAt])
 }
 
 model Location {
@@ -168,6 +175,9 @@ model Location {
   sessions           SessionLocation[]
   organizations      LocationOrganization[]
   basedOrganizations Organization[] @relation("OrgBaseLocation")
+  npcsHere           Npc[] @relation("NpcCurrentLocation")
+
+  @@index([campaignId, deletedAt])
 }
 
 model Organization {
@@ -197,6 +207,8 @@ model Organization {
   npcs        OrganizationNpc[]
   locations   LocationOrganization[]
   primaryNpcs Npc[] @relation("NpcPrimaryOrg")
+
+  @@index([campaignId, deletedAt])
 }
 
 model CharacterProfile {
@@ -307,6 +319,8 @@ model Item {
 
   acquiredInSessionId String?
   acquiredInSession   Session? @relation("ItemAcquiredIn", fields: [acquiredInSessionId], references: [id])
+
+  @@index([campaignId, deletedAt])
 }
 
 model Quest {
@@ -321,7 +335,12 @@ model Quest {
   campaignId String
   campaign   Campaign @relation(fields: [campaignId], references: [id])
 
+  questGiverNpcId String?
+  questGiver      Npc?   @relation("QuestGiver", fields: [questGiverNpcId], references: [id], onDelete: SetNull)
+
   sessions SessionQuest[]
+
+  @@index([campaignId, deletedAt])
 }
 
 // ============================================================

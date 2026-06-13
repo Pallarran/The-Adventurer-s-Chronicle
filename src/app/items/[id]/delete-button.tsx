@@ -17,7 +17,12 @@ export function ItemDeleteButton({ id }: { id: string }) {
 
   const handleDelete = async () => {
     setLoading(true);
-    await deleteItem(id);
+    const result = await deleteItem(id);
+    if (!result.ok) {
+      toast.error(result.error);
+      setLoading(false);
+      return;
+    }
     router.push("/items");
 
     let purged = false;
@@ -32,7 +37,11 @@ export function ItemDeleteButton({ id }: { id: string }) {
         onClick: async () => {
           if (purged) return;
           clearTimeout(purgeTimer);
-          await restoreItem(id);
+          const restored = await restoreItem(id);
+          if (!restored.ok) {
+            toast.error(restored.error);
+            return;
+          }
           router.push(`/items/${id}`);
         },
       },

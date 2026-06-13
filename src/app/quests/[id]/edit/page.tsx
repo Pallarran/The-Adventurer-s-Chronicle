@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { getQuest } from "@/lib/actions/quests";
 import { getActiveCampaign } from "@/lib/campaign";
+import { getNpcs } from "@/lib/actions/npcs";
 import { PageHeaderSetter } from "@/components/layout/page-header-setter";
 import { QuestForm, QuestFormActions } from "@/components/quests/quest-form";
 
@@ -19,6 +20,8 @@ export default async function EditQuestPage({
   if (!campaign) redirect("/");
   if (!quest) notFound();
 
+  const npcs = await getNpcs(campaign.id);
+
   return (
     <div>
       <PageHeaderSetter title={`Edit ${quest.name}`} backHref={`/quests/${id}`} backLabel="Quests & Goals" />
@@ -29,6 +32,7 @@ export default async function EditQuestPage({
       <QuestForm
         campaignId={campaign.id}
         quest={quest}
+        allNpcs={npcs.map((n) => ({ id: n.id, name: n.name }))}
       />
     </div>
   );

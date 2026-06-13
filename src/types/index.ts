@@ -33,6 +33,7 @@ export type NpcListItem = Prisma.NpcGetPayload<{
 export type NpcDetail = Prisma.NpcGetPayload<{
   include: {
     organization: { select: { id: true; name: true } };
+    currentLocation: { select: { id: true; name: true } };
     sessions: { include: { session: { select: { id: true; sessionNumber: true; title: true } } } };
     organizations: { include: { organization: { select: { id: true; name: true } } } };
     firstAppearanceSession: { select: { id: true; sessionNumber: true; title: true } };
@@ -110,6 +111,7 @@ export type QuestListItem = Prisma.QuestGetPayload<{
 
 export type QuestDetail = Prisma.QuestGetPayload<{
   include: {
+    questGiver: { select: { id: true; name: true } };
     sessions: { include: { session: { select: { id: true; sessionNumber: true; title: true } } } };
   };
 }>;

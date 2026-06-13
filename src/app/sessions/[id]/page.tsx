@@ -187,14 +187,14 @@ export default async function SessionDetailPage({
                   >
                     {QUEST_STATUS_LABELS[c.toStatus]}
                   </span>
-                  <span className="truncate font-medium">{c.quest.name}</span>
+                  <span className="shrink-0 font-medium">{c.quest.name}</span>
                   <span className="shrink-0 text-xs text-muted-foreground">
                     {c.fromStatus
                       ? `${QUEST_STATUS_LABELS[c.fromStatus]} → ${QUEST_STATUS_LABELS[c.toStatus]}`
                       : "created"}
                   </span>
                   {c.note && (
-                    <span className="truncate text-xs text-muted-foreground/70">— {c.note}</span>
+                    <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground/70">— {c.note}</span>
                   )}
                 </Link>
               );

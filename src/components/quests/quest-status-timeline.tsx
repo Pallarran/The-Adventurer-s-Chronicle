@@ -91,7 +91,9 @@ export function QuestStatusTimeline({ nodes }: { nodes: TimelineNode[] }) {
                   >
                     <StickyNote className="h-3.5 w-3.5" />
                   </TooltipTrigger>
-                  <TooltipContent className="max-w-xs">{n.note}</TooltipContent>
+                  <TooltipContent className="block max-w-[min(20rem,calc(100vw-2rem))] whitespace-normal break-words text-left">
+                    {n.note}
+                  </TooltipContent>
                 </Tooltip>
               )}
             </div>

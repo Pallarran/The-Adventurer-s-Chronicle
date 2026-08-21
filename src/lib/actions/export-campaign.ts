@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { formatSessionDate } from "@/lib/utils";
 import { tiptapJsonToMarkdown } from "@/lib/tiptap-to-markdown";
 import type { JSONContent } from "@tiptap/react";
 
@@ -346,10 +347,7 @@ export async function exportCampaignMarkdown(
         : `### Session ${session.sessionNumber}`;
       parts.push(title);
 
-      const datePlayed = new Date(session.realDatePlayed).toLocaleDateString(
-        "en-US",
-        { month: "short", day: "numeric", year: "numeric" }
-      );
+      const datePlayed = formatSessionDate(session.realDatePlayed);
       const dateLine = session.inGameDate
         ? `**Date Played:** ${datePlayed} | **In-Game Date:** ${session.inGameDate}`
         : `**Date Played:** ${datePlayed}`;

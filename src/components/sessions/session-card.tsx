@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { CalendarDays } from "lucide-react";
 import { QUEST_STATUS_COLORS } from "@/lib/colors";
+import { formatSessionDate } from "@/lib/utils";
 import { extractTextFromJson } from "@/lib/extract-text";
 import type { SessionListItem } from "@/types";
 
@@ -69,11 +70,7 @@ export function SessionCard({ session }: SessionCardProps) {
         <div className="border-t border-border/50 px-3 py-1.5">
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <CalendarDays className="h-3 w-3 shrink-0" />
-            {new Date(session.realDatePlayed).toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })}
+            {formatSessionDate(session.realDatePlayed)}
             {session.inGameDate && (
               <span className="text-muted-foreground/60">
                 · {session.inGameDate}

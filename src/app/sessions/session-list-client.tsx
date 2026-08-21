@@ -5,6 +5,7 @@ import { SessionCard } from "@/components/sessions/session-card";
 import { SearchInput } from "@/components/shared/search-input";
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown } from "lucide-react";
+import { formatSessionDate } from "@/lib/utils";
 import type { SessionListItem } from "@/types";
 
 type SortOption = "newest" | "oldest" | "number-desc" | "number-asc";
@@ -47,7 +48,7 @@ export function SessionListClient({ sessions, headerActions }: SessionListClient
         (s) =>
           s.sessionNumber.toString().includes(q) ||
           s.title?.toLowerCase().includes(q) ||
-          new Date(s.realDatePlayed).toLocaleDateString().includes(q)
+          formatSessionDate(s.realDatePlayed).toLowerCase().includes(q)
       );
     }
 

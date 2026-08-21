@@ -3,6 +3,7 @@ import { BookOpen, CalendarDays, ArrowRight } from "lucide-react";
 import { getRecentSessions } from "@/lib/actions/sessions";
 import { getQuestStatusCounts } from "@/lib/actions/quests";
 import { extractTextFromJson } from "@/lib/extract-text";
+import { formatSessionDate } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -111,11 +112,7 @@ export async function RecentSessions({ campaignId }: RecentSessionsProps) {
                   </div>
                   <div className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
                     <CalendarDays className="h-3 w-3 shrink-0" />
-                    {new Date(session.realDatePlayed).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
+                    {formatSessionDate(session.realDatePlayed)}
                     {session.inGameDate && (
                       <span className="ml-1 text-muted-foreground/60">
                         · {session.inGameDate}

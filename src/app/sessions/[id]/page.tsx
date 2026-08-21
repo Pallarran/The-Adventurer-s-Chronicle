@@ -6,7 +6,7 @@ import { PageHeaderSetter } from "@/components/layout/page-header-setter";
 import { RichTextDisplay } from "@/components/shared/rich-text-display";
 import { SessionQuestRow } from "@/components/sessions/session-quest-row";
 import { badgeVariants } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { cn, formatSessionDate } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Pencil, CalendarDays, ScrollText, Users, MapPin, Shield, Compass, History } from "lucide-react";
 import { SessionDeleteButton } from "./delete-button";
@@ -50,7 +50,7 @@ export default async function SessionDetailPage({
       <div className="mb-6 flex items-center gap-4 text-sm text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <CalendarDays className="h-3.5 w-3.5 text-gold" />
-          Played {new Date(session.realDatePlayed).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+          Played {formatSessionDate(session.realDatePlayed)}
         </span>
         {session.inGameDate && (
           <>
